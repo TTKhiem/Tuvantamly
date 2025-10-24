@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Document</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <header>
-        <h2 class ="logo">Logo</h2>
-        <nav class = "navigation">
+        <h2 class="logo">Logo</h2>
+        <nav class="navigation">
             <a href="#">Home</a>
             <a href="#">About</a>
             <a href="#">Services</a>
@@ -19,32 +19,99 @@
         </nav>
     </header>
 
-    <div class ="wrapper">
-        <div class ="form-box login">
+    <div class="wrapper">
+        <div class="form-box login {% if form_type == 'login' %}active{% endif %}">
             <h2>Login</h2>
-            <form action="#">
-                <div class ="input-box">
+            <form action="{{ url_for('login') }}" method="POST">
+                <div class="input-box">
                     <label>Email</label>
-                    <span class="icon"><ion-icon name="mail"></ion-icon></span>
-                    <input type="email" required>
-                    
+                    <input type="email" name="email" required>
                 </div>
-                <div class ="input-box">
+                <div class="input-box">
                     <label>Password</label>
-                    <span class="icon"><ion-icon name="lock-closed"></ion-icon></span>
-                    <input type="password" required>
-                    
+                    <input type="password" name="password" required>
                 </div>
-                <div class ="remember-forgot">
+                <div class="remember-forgot">
                     <label><input type="checkbox">Remember me</label>
                     <a href="#">Forgot Password?</a>
                 </div>
-                <div class ="login-register">
-                    <p>Don't have an account? <a href="#" class="register-link">Register</a></p>
+                <button type="submit" class="btn">Login</button>
+                <div class="login-register">
+                    <p>Don't have an account?
+                        <a href="{{ url_for('register_page') }}" class="register-link">Register</a>
+                    </p>
+                </div>
+            </form>
+        </div>
+
+        <div class="form-box register {% if form_type == 'register' %}active{% endif %}">
+            <h2>Registration</h2>
+            <form action="{{ url_for('register') }}" method="POST">
+                <div class="input-box">
+                    <label>Username</label>
+                    <input type="text" name="username" required>
+                </div>
+                <div class="input-box">
+                    <label>Email</label>
+                    <input type="email" name="email" required>
+                </div>
+                <div class="input-box">
+                    <label>Password</label>
+                    <input type="password" name="password" required>
+                </div>
+                <div class="remember-forgot">
+                    <label><input type="checkbox">I agree to the terms & conditions</label>
+                </div>
+                <button type="submit" class="btn">Register</button>
+                <div class="login-register">
+                    <p>Already have an account?
+                        <a href="{{ url_for('home') }}" class="login-link">Login</a>
+                    </p>
+                </div>
             </form>
         </div>
     </div>
-    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
+    <script>
+    const wrapper = document.querySelector('.wrapper');
+    const loginForm = document.querySelector('.form-box.login');
+    const registerForm = document.querySelector('.form-box.register');
+    const registerLink = document.querySelector('.register-link');
+    const loginLink = document.querySelector('.login-link');
+    const btnPopup = document.querySelector('.btnLogin-popup');
+
+    // Ẩn/hiện form khi nhấn nút Login ở navbar
+    btnPopup.addEventListener('click', () => {
+        wrapper.classList.add('active-popup');
+        registerForm.classList.remove('active');
+        loginForm.classList.add('active');
+    });
+
+    // Khi nhấn "Register" -> chuyển sang form đăng ký
+    if (registerLink) {
+        registerLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginForm.classList.remove('active');
+            registerForm.classList.add('active');
+        });
+    }
+
+    // Khi nhấn "Login" trong form đăng ký -> quay lại form đăng nhập
+    if (loginLink) {
+        loginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            registerForm.classList.remove('active');
+            loginForm.classList.add('active');
+        });
+    }
+
+    // Ấn ra ngoài vùng form thì đóng popup
+    wrapper.addEventListener('click', (e) => {
+        if (e.target === wrapper) {
+            wrapper.classList.remove('active-popup');
+        }
+    });
+    </script>
+
 </body>
 </html>

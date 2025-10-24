@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet"');
+@import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
 * {
     margin : 0;
     padding : 0;
@@ -134,12 +134,110 @@ header {
     width: 400px;
     height: 440px;
     background: transparent;
+    /* background: rgba(255, 255, 255, 0.2); */
     border: 2px solid rgba(255,255,255,0.5);
     display: flex;
     border-radius: 20px;
-    backdrop-filter: blur(20px);
+    /* backdrop-filter: blur(20px); */
+    backdrop-filter: blur(15px);
+    transform: scale(0);
     box-shadow: 0 0 30px rgba(0,0,0,0.5);
     justify-content: center;
     align-items: center
+}
+.wrapper.active-popup{
+    transform: scale(1);
+    transition: transform 0.5s ease-in-out;
+}
+.remember-forgot {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9em;
+    margin: 10px 0 20px 0;
+}
+.remember-forgot label input {
+    accent-color: #162938;
+    margin-right:3px;
+    
 
+}
+.remember-forgot a {
+    color: #162938;
+    text-decoration: none;
+}
+.remember-forgot a:hover {
+    text-decoration: underline;
+}
+.login-register {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9em;
+    margin: 10px 0 20px 0;
+}
+.login-register a {
+    color: #162938;
+    text-decoration: none;
+}
+.login-register a:hover {
+    text-decoration: underline;
+}
+.btn{
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    background-color: #162938;
+    color: #fff;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.login-register{
+    justify-content: center;
+
+
+}
+.login-register p a{
+    color: #162938;
+}
+.login-register p a:hover{
+    text-decoration: underline;
+
+}
+.wrapper .icon-close{
+    position: absolute;
+    top:0;
+    right:0;
+    font-size: 1.5em;
+    color:#162938;
+    cursor: pointer;
+
+}
+.form-box h2{
+    font-size: 2em;
+    text-align: center;
+    margin-bottom: 20px;
+    color:#162938;
+}
+.wrapper .form-box.login{
+    /* display: none; */
+}
+/* .wrapper .form-box.register{
+    position: absolute;
+    transform: translateX(400px);
+} */
+.form-box {
+    position: absolute;
+    /* width: 100%; */
+    width: 320px;
+    transition: all 0.4s ease;
+    opacity: 0;
+    transform: scale(0.9);
+    pointer-events: none;
+}
+
+.form-box.active {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: all;
 }
