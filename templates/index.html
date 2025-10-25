@@ -20,6 +20,9 @@
     </header>
 
     <div class="wrapper">
+        <span class="icon-close">
+            <ion-icon name="close-outline"></ion-icon>
+        </span>
         <div class="form-box login {% if form_type == 'login' %}active{% endif %}">
             <h2>Login</h2>
             <form action="{{ url_for('login') }}" method="POST">
@@ -72,46 +75,59 @@
         </div>
     </div>
 
-    <script>
-    const wrapper = document.querySelector('.wrapper');
-    const loginForm = document.querySelector('.form-box.login');
-    const registerForm = document.querySelector('.form-box.register');
-    const registerLink = document.querySelector('.register-link');
-    const loginLink = document.querySelector('.login-link');
-    const btnPopup = document.querySelector('.btnLogin-popup');
+<script>
+const wrapper = document.querySelector('.wrapper');
+const loginForm = document.querySelector('.form-box.login');
+const registerForm = document.querySelector('.form-box.register');
+const registerLink = document.querySelector('.register-link');
+const loginLink = document.querySelector('.login-link');
+const btnPopup = document.querySelector('.btnLogin-popup');
+const iconClose = document.querySelector('.icon-close');
 
-    // Ẩn/hiện form khi nhấn nút Login ở navbar
-    btnPopup.addEventListener('click', () => {
-        wrapper.classList.add('active-popup');
+// Mở popup với form Login
+btnPopup.addEventListener('click', () => {
+    wrapper.classList.add('active-popup');
+    registerForm.classList.remove('active');
+    loginForm.classList.add('active');
+});
+
+if (registerLink) {
+    registerLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        loginForm.classList.remove('active');
+        registerForm.classList.add('active');
+    });
+}
+
+// back to form Login
+if (loginLink) {
+    loginLink.addEventListener('click', (e) => {
+        e.preventDefault();
         registerForm.classList.remove('active');
         loginForm.classList.add('active');
     });
+}
 
-    // Khi nhấn "Register" -> chuyển sang form đăng ký
-    if (registerLink) {
-        registerLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginForm.classList.remove('active');
-            registerForm.classList.add('active');
-        });
-    }
 
-    // Khi nhấn "Login" trong form đăng ký -> quay lại form đăng nhập
-    if (loginLink) {
-        loginLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            registerForm.classList.remove('active');
-            loginForm.classList.add('active');
-        });
-    }
+registerLink.addEventListener('click', () => {
+    wrapper.classList.add('active');
+});
 
-    // Ấn ra ngoài vùng form thì đóng popup
-    wrapper.addEventListener('click', (e) => {
-        if (e.target === wrapper) {
-            wrapper.classList.remove('active-popup');
-        }
-    });
-    </script>
+loginLink.addEventListener('click', () => {
+    wrapper.classList.remove('active');
+});
+
+btnPopup.addEventListener('click', () => {
+    wrapper.classList.add('active-popup');
+});
+
+iconClose.addEventListener('click', () => {
+    wrapper.classList.remove('active-popup');
+});
+
+</script>
+<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 
 </body>
 </html>
