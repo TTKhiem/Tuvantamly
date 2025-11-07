@@ -7,17 +7,124 @@
     <title>Document</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
+<!-- <div id="chatbot-container">
+  <iframe
+    src="https://www.chatbase.co/chatbot-abc123"
+    width="400"
+    height="600"
+    style="border:none; border-radius: 12px;">
+  </iframe>
+</div> -->
+
 <body>
     <header>
-        <h2 class="logo">Logo</h2>
-        <nav class="navigation">
-            <a href="#">Home</a>
-            <a href="#">About</a>
-            <a href="#">Services</a>
-            <a href="#">Contact</a>
-            <button class="btnLogin-popup">Login</button>
-        </nav>
+    <h2 class="logo">Logo</h2>
+    <nav class="navigation">
+        <a href="#home">Home</a>
+        <a href="#about">About us</a>
+        <a href="#services">Services</a>
+        <a href="#therapists">Therapists</a>
+        <a href="#contact">Contact</a>
+        {% if user %}
+    <!-- Nếu đã login: hiển thị avatar -->
+    <div class="user-menu-wrapper">
+        <img src="{{ url_for('static', filename='images/avatar.png') }}" 
+             class="user-avatar" alt="User Avatar">
+        <div class="dropdown">
+            <a href="{{ url_for('user_dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+    </div>
+    {% else %}
+    <!-- Nếu chưa login: hiển thị nút Login -->
+    <button id="btnLoginPopup" class="btnLogin-popup">Login</button>
+    {% endif %}
+
+    </nav>
     </header>
+    <section id="home">
+        <h2>Contact</h2>
+        <p>Thông tin liên hệ...</p>
+    </section>
+    <div class="section-divider">--- NEXT SECTION ---</div>
+    <section id="about">
+    <h2>About Us</h2>
+    <p>Đây là phần giới thiệu về website...</p>
+    </section>
+    <div class="section-divider">--- NEXT SECTION ---</div>
+    <section id="services">
+        <h2>Services</h2>
+        <p>Các dịch vụ mà trang web cung cấp...</p>
+    </section>
+    <div class="section-divider">--- NEXT SECTION ---</div>
+    <section id="therapists">
+    <h2>Our Therapists</h2>
+        <div class="therapist-container">
+
+    <!-- Therapist 1 -->
+    <div class="therapist">
+        <img src="{{ url_for('static', filename='images/1.jpg') }}" alt="Therapist 1">
+        <div class="info">
+            <h3>Lionel Messi</h3>
+            <p class="role">Psychologist</p>
+
+            <h4>Specialized</h4>
+            <ul>
+                <li>Depression, stress, anxiety, and burnout at work</li>
+                <li>Trust issues and building trust</li>
+                <li>Relationship problems with friends, partners, and family</li>
+                <li>Couple therapy, Family Therapy</li>
+            </ul>
+
+            <h4>Qualifying Certifications and Credentials</h4>
+            <ul>
+                <li>Emotionally Focused for couple therapy (EFT)</li>
+            </ul>
+
+            <h4>Education</h4>
+            <ul>
+                <li>Bachelor’s degree in Arts Psychology Major, Thammasat University</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Therapist 2 -->
+    <div class="therapist">
+        <img src="{{ url_for('static', filename='images/2.jpg') }}" alt="Therapist 2">
+        <div class="info">
+            <h3>Cristiano Ronaldo</h3>
+            <p class="role">Psychologist</p>
+
+            <h4>Specialized</h4>
+            <ul>
+                <li>Self-esteem and self-worth</li>
+                <li>Finding life purpose and building motivation</li>
+                <li>Emotional regulation and management</li>
+                <li>Adjustment and adaptation difficulties</li>
+            </ul>
+
+            <h4>Qualifying Certifications and Credentials</h4>
+            <ul>
+                <li>Basic Skills in Cognitive Behavioral Therapy (CBT) workshop</li>
+                <li>Forensic Psychology</li>
+            </ul>
+
+            <h4>Education</h4>
+            <ul>
+                <li>Bachelor’s degree in Arts Psychology Major, Thammasat University</li>
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+
+    </section>
+    <div class="section-divider">--- NEXT SECTION ---</div>
+    <section id="contact">
+        <h2>Contact</h2>
+        <p>Thông tin liên hệ...</p>
+    </section>
 
     <div class="wrapper">
         <span class="icon-close">
@@ -76,6 +183,111 @@
     </div>
 
 <script>
+// const wrapper = document.querySelector('.wrapper');
+// const loginForm = document.querySelector('.form-box.login');
+// const registerForm = document.querySelector('.form-box.register');
+// const registerLink = document.querySelector('.register-link');
+// const loginLink = document.querySelector('.login-link');
+// const btnPopup = document.querySelector('.btnLogin-popup');
+// const iconClose = document.querySelector('.icon-close');
+
+// // Mở popup với form Login
+// btnPopup.addEventListener('click', () => {
+//     wrapper.classList.add('active-popup');
+//     registerForm.classList.remove('active');
+//     loginForm.classList.add('active');
+// });
+
+// if (registerLink) {
+//     registerLink.addEventListener('click', (e) => {
+//         e.preventDefault();
+//         loginForm.classList.remove('active');
+//         registerForm.classList.add('active');
+//     });
+// }
+
+// // back to form Login
+// if (loginLink) {
+//     loginLink.addEventListener('click', (e) => {
+//         e.preventDefault();
+//         registerForm.classList.remove('active');
+//         loginForm.classList.add('active');
+//     });
+// }
+
+    
+// registerLink.addEventListener('click', () => {
+//     wrapper.classList.add('active');
+// });
+
+// loginLink.addEventListener('click', () => {
+//     wrapper.classList.remove('active');
+// });
+
+// btnPopup.addEventListener('click', () => {
+//     wrapper.classList.add('active-popup');
+// });
+
+// iconClose.addEventListener('click', () => {
+//     wrapper.classList.remove('active-popup');
+// });
+    document.addEventListener('DOMContentLoaded', function() {
+        const mainBody = document.querySelector('body');
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('.navigation a'); 
+        
+        
+        const allBgClasses = ['bg-home', 'bg-about', 'bg-services', 'bg-therapists', 'bg-contact'];
+
+        
+        mainBody.classList.add('bg-home'); 
+        
+    
+        const observerOptions = {
+        rootMargin: '-100px 0px -100px 0px', // Đặt vùng kích hoạt vào khoảng giữa viewport
+        threshold: 0 // Kích hoạt ngay khi phần tử đi qua ranh giới
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            // Kiểm tra xem section có đang nằm trong VÙNG KÍCH HOẠT đã định nghĩa
+            if (entry.isIntersecting) {
+                const targetId = entry.target.id; 
+                const newBgClass = `bg-${targetId}`;
+
+                if (allBgClasses.includes(newBgClass)) {
+                    // Xóa và Thêm class background mới
+                    allBgClasses.forEach(className => {
+                        mainBody.classList.remove(className);
+                    });
+                    mainBody.classList.add(newBgClass);
+                    console.log(`[SCROLL] Background chuyển sang: ${newBgClass}`);
+                }
+            }
+        });
+    }, observerOptions);
+
+    sections.forEach(section => {
+        observer.observe(section);
+    });
+
+   e.preventDefault();
+   document.querySelector(`#${targetId}`).scrollIntoView({ behavior: 'smooth' });
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            const targetId = this.getAttribute('href').substring(1);
+            const newBgClass = `bg-${targetId}`;
+            allBgClasses.forEach(className => {
+                mainBody.classList.remove(className);
+            });
+            mainBody.classList.add(newBgClass);
+            console.log(`[CLICK] Background chuyển sang: ${newBgClass}`);
+            
+            
+        });
+    });
+});
 const wrapper = document.querySelector('.wrapper');
 const loginForm = document.querySelector('.form-box.login');
 const registerForm = document.querySelector('.form-box.register');
@@ -83,51 +295,163 @@ const registerLink = document.querySelector('.register-link');
 const loginLink = document.querySelector('.login-link');
 const btnPopup = document.querySelector('.btnLogin-popup');
 const iconClose = document.querySelector('.icon-close');
+const userAvatar = document.querySelector('.user-avatar');
+const dropdown = document.querySelector('.dropdown');
 
-// Mở popup với form Login
-btnPopup.addEventListener('click', () => {
-    wrapper.classList.add('active-popup');
-    registerForm.classList.remove('active');
-    loginForm.classList.add('active');
-});
+if (userAvatar && dropdown) {
+    // Hiện dropdown khi rê vào avatar hoặc dropdown
+    userAvatar.addEventListener('mouseenter', () => {
+        dropdown.style.display = 'block';
+    });
+    dropdown.addEventListener('mouseenter', () => {
+        dropdown.style.display = 'block';
+    });
+
+    // Ẩn dropdown khi chuột rời cả hai
+    userAvatar.addEventListener('mouseleave', () => {
+        setTimeout(() => {
+            if (!dropdown.matches(':hover')) dropdown.style.display = 'none';
+        }, 100);
+    });
+    dropdown.addEventListener('mouseleave', () => {
+        dropdown.style.display = 'none';
+    });
+
+    // Nếu muốn click mới hiện
+    // userAvatar.addEventListener('click', () => {
+    //     dropdown.classList.toggle('show');
+    // });
+}
+
+if (btnPopup) {
+    btnPopup.addEventListener('click', () => {
+        wrapper.classList.add('active-popup');
+        registerForm.classList.remove('active');
+        loginForm.classList.add('active');
+    });
+}
+
+if (iconClose) {
+    iconClose.addEventListener('click', () => {
+        wrapper.classList.remove('active-popup');
+    });
+}
 
 if (registerLink) {
     registerLink.addEventListener('click', (e) => {
         e.preventDefault();
         loginForm.classList.remove('active');
         registerForm.classList.add('active');
+        wrapper.classList.add('active-popup');
     });
 }
 
-// back to form Login
 if (loginLink) {
     loginLink.addEventListener('click', (e) => {
         e.preventDefault();
         registerForm.classList.remove('active');
         loginForm.classList.add('active');
+        wrapper.classList.add('active-popup');
     });
 }
 
+// Scroll và background change
+document.addEventListener('DOMContentLoaded', function() {
+    const mainBody = document.querySelector('body');
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('.navigation a'); 
+    const allBgClasses = ['bg-home', 'bg-about', 'bg-services', 'bg-therapists', 'bg-contact'];
 
-registerLink.addEventListener('click', () => {
-    wrapper.classList.add('active');
+    mainBody.classList.add('bg-home'); 
+
+    const observerOptions = {
+        rootMargin: '-100px 0px -100px 0px',
+        threshold: 0
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const targetId = entry.target.id; 
+                const newBgClass = `bg-${targetId}`;
+                if (allBgClasses.includes(newBgClass)) {
+                    allBgClasses.forEach(className => mainBody.classList.remove(className));
+                    mainBody.classList.add(newBgClass);
+                }
+            }
+        });
+    }, observerOptions);
+
 });
+document.addEventListener('click', function (event) {
+    const dropdown = document.getElementById('dropdownMenu');
+    const avatar = document.getElementById('avatarBtn');
 
-loginLink.addEventListener('click', () => {
-    wrapper.classList.remove('active');
+    if (!avatar.contains(event.target) && !dropdown.contains(event.target)) {
+        setTimeout(() => dropdown.classList.remove('show'), 150);
+    }
+document.addEventListener('DOMContentLoaded', function() {
+    const mainBody = document.querySelector('body');
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('.navigation a'); 
+    const allBgClasses = ['bg-home', 'bg-about', 'bg-services', 'bg-therapists', 'bg-contact'];
+
+    // Nền mặc định khi load
+    // mainBody.classList.add('bg-home'); 
+
+    // const observerOptions = {
+    //     rootMargin: '-100px 0px -100px 0px',
+    //     threshold: 0
+    // };
+
+    // const observer = new IntersectionObserver((entries) => {
+    //     entries.forEach(entry => {
+    //         if (entry.isIntersecting) {
+    //             const targetId = entry.target.id; 
+    //             const newBgClass = `bg-${targetId}`;
+
+    //             if (allBgClasses.includes(newBgClass)) {
+    //                 allBgClasses.forEach(cls => mainBody.classList.remove(cls));
+    //                 mainBody.classList.add(newBgClass);
+    //                 console.log(`[SCROLL] Background chuyển sang: ${newBgClass}`);
+    //             }
+    //         }
+    //     });
+    // }, observerOptions);
+
+    // sections.forEach(section => observer.observe(section));
+    // // Khi click vào link trong navbar
+    // navLinks.forEach(link => {
+    //     link.addEventListener('click', function(e) {
+    //         e.preventDefault();
+    //         const targetId = this.getAttribute('href').substring(1);
+    //         const newBgClass = `bg-${targetId}`;
+    //         allBgClasses.forEach(cls => mainBody.classList.remove(cls));
+    //         mainBody.classList.add(newBgClass);
+    //         document.querySelector(`#${targetId}`).scrollIntoView({ behavior: 'smooth' });
+    //         console.log(`[CLICK] Background chuyển sang: ${newBgClass}`);
+    //     });
+    // });
 });
-
-btnPopup.addEventListener('click', () => {
-    wrapper.classList.add('active-popup');
-});
-
-iconClose.addEventListener('click', () => {
-    wrapper.classList.remove('active-popup');
 });
 
 </script>
 <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
 <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-
+<!-- <iframe
+  src="https://www.chatbase.co/chatbot-abc123"
+  width="400"
+  height="600"
+  style="border:none;">
+</iframe> -->
+<!-- <script>
+(function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="SY-qqVCpEehfQBFqTdi3H";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+</script> -->
+<!-- <iframe
+    src="https://www.chatbase.co/chatbot-iframe/SY-qqVCpEehfQBFqTdi3H"
+    width="100%"
+    style="height: 100%; min-height: 700px"
+    frameborder="0"
+></iframe> -->
 </body>
 </html>

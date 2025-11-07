@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 0;
+        }
+        .dashboard {
+            max-width: 700px;
+            margin: 60px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 22px;
+        }
+        .info {
+            margin-top: 20px;
+            line-height: 1.8;
+            font-size: 16px;
+        }
+        .label {
+            font-weight: bold;
+        }
+        .logout-btn {
+            background-color: #444;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .logout-btn:hover {
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <div class="header">Dashboard</div>
+    <div class="info">
+        <p><span class="label">Tên Tài Khoản:</span> {{ user.username }}</p>
+        <p><span class="label">Email:</span> {{ user.email }}</p>
+        <p><span class="label">Vai trò:</span> {{ user.role }}</p>
+        <p><span class="label">User ID:</span> {{ user.id }}</p>
+        <p><span class="label">Ngày, tháng, năm sinh:</span> {{ user.date_of_birth if user.date_of_birth else "Chưa cập nhật" }}</p>
+        <p><span class="label">Số điện thoại:</span> {{ user.phone if user.phone else "Chưa cập nhật" }}</p>
+        <p><span class ="label">Địa chỉ:</span> {{ user.address if user.address else "Chưa cập nhật" }}</p>
+        <p><span class="label">Ngày tham gia:</span> {{ user.date_joined if user.date_joined else "Chưa có" }}</p>
+
+        <form action="{{ url_for('logout') }}" method="get">
+            <button type="submit" class="logout-btn">Logout</button>
+        </form>
+    </div>
+    <h3 style="margin-top: 40px;">Cập nhật thông tin cá nhân</h3>
+<form action="{{ url_for('update_profile') }}" method="POST">
+    <label for="date_of_birth">Ngày sinh:</label><br>
+    <input type="text" id="date_of_birth" name="date_of_birth" value="{{ user.date_of_birth }}"><br><br>
+
+    <label for="phone">Số điện thoại:</label><br>
+    <input type="text" id="phone" name="phone" value="{{ user.phone }}"><br><br>
+
+    <label for="address">Địa chỉ:</label><br>
+    <input type="text" id="address" name="address" value="{{ user.address }}"><br><br>
+
+    <button type="submit" class="logout-btn">Lưu thay đổi</button>
+</form>
+
+</div>
+
+</body>
+</html>

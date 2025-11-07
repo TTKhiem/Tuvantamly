@@ -1,231 +1,500 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
-* {
-    margin : 0;
-    padding : 0;
-    box-sizing : border-box;
-    font-family: 'Poppins', sans-serif;
+        /* body {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: url('Zoom-Background-4.jpg') no-repeat center center/cover;
+            overflow: hidden;
+        } */
+        /* .wrapper{
+            position: fixed;
+            width: 400px;
+            height: 440px;
+            display: flex;
+            background: transparent;
+        
+            border: 2px solid rgba(255,255,255,0.5);
+            display: flex;
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            transform: scale(0);
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 9999
+        }
+        .wrapper.active-popup{
+            transform: scale(1);
+            transition: transform 0.5s ease-in-out;
+        } */
+        /* body {
+            margin: 0;
+            padding-top: 80px; 
+            font-family: 'Poppins', sans-serif;
+        
+            background-size: cover;
+            display: flex;
+            flex-direction: column; 
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        } */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+        * {
+            margin : 0;
+            padding : 0;
+            box-sizing : border-box;
+            font-family: 'Poppins', sans-serif;
 
+        }
+
+
+
+
+        header, .content, .navigation {
+            position: relative;
+            z-index: 1;
+        }
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px 100px;
+            background: green;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 99;
+
+        }
+        .logo {
+            color: #fff;
+            font-size: 2em;
+            user-select: none;
+        }
+        .navigation a {
+            color: #fff;
+            font-size: 1.1em;
+            margin-left: 40px;
+            text-decoration: none;
+            transition: 0.3s;
+            font-weight: 500;
+            position: relative;
+
+        }
+        .navigation .btnLogin-popup {
+            width:130px;
+            height: 50px;
+            background:transparent;
+            border:2px solid #fff;
+            outline:none;
+            border-radius: 6px;
+            cursor:pointer;
+            font-size: 1.1em;
+            color:#fff;
+            font-weight: 500;
+            margin-left: 40px;
+            transition: .5s;
+
+        }
+        .navigation .btnLogin-popup:hover{
+            background:#fff;
+            color: #162938;
+        }
+        .navigation a::after {
+            content: '';
+            position: absolute;
+            left:0;
+            width: 100%;
+            height: 3px;
+            background: #fff;
+            border-radius: 5px;
+            bottom: -6px;
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform .5s ;
+        }
+        .navigation a:hover::after {
+            transform-origin: left;
+            transform: scaleX(1);
+            
+        }
+        .input-box {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .input-box label {
+            width: 100px; 
+            font-size: 0.95em;
+            color: black;
+        }
+
+        .input-box input {
+            flex: 1;
+            padding: 4px;
+            border: 1px solid #aaa;
+            border-radius: 6px;
+            outline: none;  
+        }
+
+        /* --- CSS THAY THẾ (HOẶC CHỈNH SỬA) TRÊN BODY --- */
+        body {
+            /* ... Giữ nguyên các thuộc tính khác ... */
+            
+            /* Đảm bảo background được gán cho body */
+            background-attachment: fixed;
+            background-size: cover;
+            
+            /* Thêm hiệu ứng chuyển đổi mượt mà cho background */
+            transition: background-image 0.8s ease, background-color 0.8s ease; 
+        }
+
+        /* Xóa background cũ trên #home (hoặc sử dụng class thay thế) */
+        section#home {
+            background: none !important; 
+            /* Dữ liệu nền sẽ được gán qua class trên body */
+        }
+
+        /* --- CÁC CLASS BACKGROUND MỚI CHO BODY --- */
+
+        body.bg-home {
+            /* Background mặc định/Home */
+            background-image: url('background.png');
+            background-color: #f0f0f0; 
+        }
+
+        body.bg-about {
+            /* Ví dụ: Dùng màu nền nhẹ cho About */
+            background-image: url('Zoom-Background-4.jpg');
+            background-color: #e0f7fa; 
+        }
+
+        body.bg-services {
+            /* Ví dụ: Dùng ảnh nền khác cho Services */
+            
+            background-image: url('Zoom-Background-4.jpg'); 
+            /* Thay 'services-background.jpg' bằng ảnh của bạn */
+            background-color: #f0f0f0;
+        }
+
+        body.bg-therapists {
+            /* Ví dụ: Màu nền đậm hơn cho Therapists */
+            background-image: none;
+            background-color: #fce4ec; 
+            /* background-image: url('background.png'); */
+        }
+
+        body.bg-contact {
+            /* Ví dụ: Màu nền trung tính cho Contact */
+            background-image: none;
+            background-color: #eeeeee; 
+            background-image: url('background.png');
+        }
+        .wrapper {
+            position: fixed; /* cố định theo viewport */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0); /* scale(0) khi chưa active */
+            width: 400px;
+            height: 440px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: transparent;
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            z-index: 9999;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .wrapper.active-popup {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        section {
+            padding: 100px 20px; /* tránh bị header che */
+            min-height: 100vh;
+        }
+
+
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            margin: 10px 0 20px 0;
+        }
+        .remember-forgot label input {
+            accent-color: #162938;
+            margin-right:3px;
+            
+
+        }
+        .remember-forgot a {
+            color: #162938;
+            text-decoration: none;
+        }
+        .remember-forgot a:hover {
+            text-decoration: underline;
+        }
+        .login-register {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            margin: 10px 0 20px 0;
+        }
+        .login-register a {
+            color: #162938;
+            text-decoration: none;
+        }
+        .login-register a:hover {
+            text-decoration: underline;
+        }
+        .btn{
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            background-color: #162938;
+            color: #fff;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .login-register{
+            justify-content: center;
+
+
+        }
+        .login-register p a{
+            color: #162938;
+        }
+        .login-register p a:hover{
+            text-decoration: underline;
+
+        }
+        .wrapper .icon-close{
+            position: absolute;
+            top:0;
+            right:0;
+            height: 45px;
+            width: 45px;
+            font-size: 2em;
+            color: #fff;
+            border: 2px solid rgba(255,255,255,0.5);
+            background: #162938;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            overflow: hidden;
+            border-bottom-left-radius: 20px;
+            z-index: 1;
+            cursor: pointer;
+
+        }
+        html {
+        scroll-behavior: smooth; /* Tạo hiệu ứng cuộn mượt */
+        }
+
+        section {
+        padding: 100px 20px; /* Thêm khoảng cách trên dưới */
+        min-height: 100vh; /* Mỗi phần cao bằng 1 màn hình */
+        }
+
+
+        header {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        background-color: green;
+        color: white;
+        z-index: 1000;
+        }
+
+
+
+
+        .wrapper .form-box.login{
+            /* display: none; */
+            
+        }
+        /* .wrapper .form-box.register{
+            position: absolute;
+            transform: translateX(400px);
+        } */
+        .form-box {
+            position: absolute;
+            /* width: 100%; */
+            width: 320px;
+            transition: all 0.4s ease;
+            opacity: 0;
+            transform: scale(0.9);
+            pointer-events: none;
+        }
+
+        .form-box.active {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: all;
+        }
+        /* Style cho phần tử ngăn cách */
+        .section-divider {
+            height: 150px; /* Chiều cao của dải phân cách */
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8); /* Màu trắng trong suốt */
+            color: #162938;
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: 600;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            /* Đảm bảo nó nằm phía trên các section */
+            position: relative; 
+            z-index: 50; 
+        }
+
+        /* Thêm đường kẻ ngang thực sự */
+        .section-divider::before,
+        .section-divider::after {
+            content: '';
+            position: absolute;
+            width: 30%; /* Độ dài của đường kẻ */
+            height: 2px;
+            background-color: #162938;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .section-divider::before {
+            left: 10%; /* Đường kẻ bên trái */
+        }
+
+        .section-divider::after {
+            right: 10%; /* Đường kẻ bên phải */
+        }
+        /* #chatbot-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        } */
+        #therapists {
+        position: relative;
+        z-index: 10;
+        background: rgba(255, 255, 255, 0.8); /* nền mờ để thấy rõ ảnh */
 }
 
- body {
+        /* .therapist-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            padding: 20px;
+        } */
+
+        .therapist-card {
+            background: #fff;
+            width: 280px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 15px;
+            text-align: center;
+        }
+
+        .therapist-card img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .therapist-card h3 {
+            margin-top: 10px;
+            color: #333;
+        }
+
+        .therapist-card ul {
+            text-align: left;
+            margin-top: 8px;
+        }
+        .therapist-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* tự chia cột */
+    gap: 30px;
+    padding: 20px;
+    justify-items: center;
+}
+
+.therapist-container img {
+    width: 250px;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    transition: transform 0.3s ease;
+}
+
+.therapist-container img:hover {
+    transform: scale(1.05);
+}
+.info {
+  text-align: left;
+  max-width: 600px;
+}
+
+.info h3 {
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.info h4 {
+  margin-top: 15px;
+  color: #6c63ff;
+}
+
+.info ul {
+  margin: 5px 0 10px 20px;
+}
+.user-menu-wrapper {
     position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background: url('Zoom-Background-4.jpg') no-repeat center center/cover;
-    overflow: hidden;
+    display: inline-block;
 }
 
-
-header, .content, .navigation {
-    position: relative;
-    z-index: 1;
-}
-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    padding: 20px 100px;
-    background: green;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    z-index: 99;
-
-}
-.logo {
-    color: #fff;
-    font-size: 2em;
-    user-select: none;
-}
-.navigation a {
-    color: #fff;
-    font-size: 1.1em;
-    margin-left: 40px;
-    text-decoration: none;
-    transition: 0.3s;
-    font-weight: 500;
-    position: relative;
-
-}
-.navigation .btnLogin-popup {
-    width:130px;
-    height: 50px;
-    background:transparent;
-    border:2px solid #fff;
-    outline:none;
-    border-radius: 6px;
-    cursor:pointer;
-    font-size: 1.1em;
-    color:#fff;
-    font-weight: 500;
-    margin-left: 40px;
-    transition: .5s;
-
-}
-.navigation .btnLogin-popup:hover{
-    background:#fff;
-    color: #162938;
-}
-.navigation a::after {
-    content: '';
-    position: absolute;
-    left:0;
-    width: 100%;
-    height: 3px;
-    background: #fff;
-    border-radius: 5px;
-    bottom: -6px;
-    transform: scaleX(0);
-    transform-origin: right;
-    transition: transform .5s ;
-}
-.navigation a:hover::after {
-    transform-origin: left;
-    transform: scaleX(1);
-    
-}
-.input-box {
-    display: flex;
-    align-items: center;
-    margin-bottom: 12px;
-}
-
-.input-box label {
-    width: 100px; 
-    font-size: 0.95em;
-    color: black;
-}
-
-.input-box input {
-    flex: 1;
-    padding: 4px;
-    border: 1px solid #aaa;
-    border-radius: 6px;
-    outline: none;
-}
-.wrapper{
-    position: relative;
-    width: 400px;
-    height: 440px;
-    background: transparent;
-    /* background: rgba(255, 255, 255, 0.2); */
-    border: 2px solid rgba(255,255,255,0.5);
-    display: flex;
-    border-radius: 20px;
-    /* backdrop-filter: blur(20px); */
-    backdrop-filter: blur(15px);
-    transform: scale(0);
-    box-shadow: 0 0 30px rgba(0,0,0,0.5);
-    justify-content: center;
-    align-items: center
-}
-.wrapper.active-popup{
-    transform: scale(1);
-    transition: transform 0.5s ease-in-out;
-}
-.remember-forgot {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.9em;
-    margin: 10px 0 20px 0;
-}
-.remember-forgot label input {
-    accent-color: #162938;
-    margin-right:3px;
-    
-
-}
-.remember-forgot a {
-    color: #162938;
-    text-decoration: none;
-}
-.remember-forgot a:hover {
-    text-decoration: underline;
-}
-.login-register {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.9em;
-    margin: 10px 0 20px 0;
-}
-.login-register a {
-    color: #162938;
-    text-decoration: none;
-}
-.login-register a:hover {
-    text-decoration: underline;
-}
-.btn{
-    width: 100%;
-    padding: 10px;
-    border: none;
-    border-radius: 6px;
-    background-color: #162938;
-    color: #fff;
-    font-size: 1em;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-.login-register{
-    justify-content: center;
-
-
-}
-.login-register p a{
-    color: #162938;
-}
-.login-register p a:hover{
-    text-decoration: underline;
-
-}
-.wrapper .icon-close{
-    position: absolute;
-    top:0;
-    right:0;
-    height: 45px;
+.user-avatar {
     width: 45px;
-    font-size: 2em;
-    color: #fff;
-    border: 2px solid rgba(255,255,255,0.5);
-    background: #162938;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 0 30px rgba(0,0,0,0.5);
-    overflow: hidden;
-    border-bottom-left-radius: 20px;
-    z-index: 1;
+    height: 45px;
+    border-radius: 50%;
     cursor: pointer;
-
-}
-.form-box h2{
-    font-size: 2em;
-    text-align: center;
-    margin-bottom: 20px;
-    color:#162938;
-}
-.wrapper .form-box.login{
-    /* display: none; */
-}
-/* .wrapper .form-box.register{
-    position: absolute;
-    transform: translateX(400px);
-} */
-.form-box {
-    position: absolute;
-    /* width: 100%; */
-    width: 320px;
-    transition: all 0.4s ease;
-    opacity: 0;
-    transform: scale(0.9);
-    pointer-events: none;
+    border: 2px solid #fff;
 }
 
-.form-box.active {
-    opacity: 1;
-    transform: scale(1);
-    pointer-events: all;
+.dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: white;
+    min-width: 120px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    border-radius: 6px;
+    overflow: hidden;
+    z-index: 1000;
+}
+
+.dropdown a {
+    display: block;
+    padding: 10px;
+    text-decoration: none;
+    color: #162938;
+}
+
+.dropdown a:hover {
+    background-color: #f1f1f1;
 }
