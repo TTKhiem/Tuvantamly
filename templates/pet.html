@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Companion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* CSS Cũ (Giữ nguyên) */
+        #speech-bubble { position: absolute; border-radius: .4em; padding: 0.75rem 1rem; transform: translateX(-50%); width: 200px; opacity: 0; transition: opacity 0.3s ease-in-out, top 1.5s ease-in-out, left 1.5s ease-in-out; pointer-events: none; }
+        #speech-bubble.visible { opacity: 1; }
+        #speech-bubble::after { content: ''; position: absolute; bottom: 0; left: 50%; width: 0; height: 0; border: 10px solid transparent; border-bottom: 0; margin-left: -10px; margin-bottom: -10px; }
+        .stat-bar-inner, #pet { transition: all 0.5s ease-in-out; }
+        #pet { width: 50px; height: 50px; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: bold; }
+        .stage-1 { background-color: #fdba74; border: 3px solid #f97316; color: #f97316; }
+        .stage-2 { background-color: #93c5fd; border: 4px solid #3b82f6; color: #3b82f6; box-shadow: 0 0 10px #93c5fd; }
+        .stage-3 { width: 60px; height: 60px; background-color: #fca5a5; border: 4px solid #ef4444; color: #ef4444; border-radius: 40%; font-size: 1.5rem; box-shadow: 0 0 15px #fca5a5; }
+        @keyframes levelUpAnimation { 0% { transform: translate(-50%,-50%) scale(1); box-shadow: 0 0 15px yellow; } 50% { transform: translate(-50%,-50%) scale(1.2); box-shadow: 0 0 30px yellow; } 100% { transform: translate(-50%,-50%) scale(1); box-shadow: none; } }
+        .level-up-animation { animation: levelUpAnimation 1s ease-in-out; }
+        
+        /* --- CSS MỚI CHO DARK MODE --- */
+        .interaction-card {
+            @apply flex items-center p-3 rounded-xl cursor-pointer;
+            @apply transition-all duration-300;
+        }
+        .interaction-card:hover {
+            @apply shadow-lg transform -translate-y-1;
+        }
+        .interaction-card:active {
+            @apply transform scale-95 shadow-inner;
+        }
+        #quest-modal-overlay {
+            @apply fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center transition-opacity duration-300;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 font-sans p-4">
+
+    <div class="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- CỘT BÊN TRÁI: PET VÀ KHU VỰC TƯƠNG TÁC -->
+        <main class="bg-gray-800 p-6 rounded-2xl shadow-lg w-full md:col-span-2">
+            <h1 class="text-2xl font-bold text-center text-white mb-4">My Companion</h1>
+            <h2 class="text-xl font-semibold text-gray-300">
+                Name: <span id="pet-name" class="text-orange-400">{{ pet_name }}</span>
+            </h2>
+            <div class="space-y-3 mt-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300">Happiness 💖</label>
+                    <div class="w-full bg-gray-700 rounded-full h-4 mt-1 overflow-hidden">
+                        <div id="happiness-bar" class="stat-bar-inner bg-pink-500 h-4 rounded-full"></div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300">Energy ⚡</label>
+                    <div class="w-full bg-gray-700 rounded-full h-4 mt-1 overflow-hidden">
+                        <div id="energy-bar" class="stat-bar-inner bg-yellow-400 h-4 rounded-full"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="pet-container" class="w-full h-64 bg-gray-700 border-2 border-gray-600 rounded-xl mt-6 relative overflow-hidden">
+                <div id="pet"></div>
+                <div id="speech-bubble" class="text-gray-800 bg-gray-200" style="--tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);"></div>
+            </div>
+
+            <div class="mt-6">
+                <h3 class="text-lg font-bold text-white mb-3">Interact with Your Pet</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button id="feed-button" class="interaction-card bg-gray-700 hover:bg-gray-600">
+                        <div class="p-3 bg-green-500 bg-opacity-20 rounded-lg mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 2a3 3 0 00-3 3v1H5a2 2 0 00-2 2v1.586l.707.707a6 6 0 008.586 0L15 9.586V8a2 2 0 00-2-2h-2V5a3 3 0 00-3-3z"/>
+                                <path d="M4 11.586l-1.707 1.707A1 1 0 003 15h14a1 1 0 00.707-1.707L16 11.586V10H4v1.586z"/>
+                            </svg>
+                        </div>
+                        <div class="text-left">
+                            <p class="font-semibold text-gray-100">Feed Pet</p>
+                            <p class="text-sm text-gray-400">Cost: 10 🪙</p>
+                        </div>
+                    </button>
+                    <button id="play-button" class="interaction-card bg-gray-700 hover:bg-gray-600">
+                        <div class="p-3 bg-blue-500 bg-opacity-20 rounded-lg mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8.002v3.996a1 1 0 001.555.832l3.197-2a1 1 0 000-1.664l-3.197-2z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="text-left">
+                            <p class="font-semibold text-gray-100">Play with Pet</p>
+                            <p class="text-sm text-gray-400">Costs Energy</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- CỘT BÊN PHẢI: USER INFO VÀ QUESTS -->
+        <aside class="md:col-span-1 space-y-6">
+            <div class="bg-gray-800 p-6 rounded-2xl shadow-lg">
+                 <h3 class="text-lg font-bold text-white mb-3">Your Info</h3>
+                 <p class="text-gray-300">Gold: <span id="user-gold" class="font-semibold text-yellow-400">0</span> 🪙</p>
+                 <p class="text-gray-300 mt-2">Pet Level: <span id="pet-level" class="font-semibold text-blue-400">1</span></p>
+                 <div class="w-full bg-gray-700 rounded-full h-2.5 mt-1">
+                     <div id="pet-exp-bar" class="stat-bar-inner bg-blue-500 h-2.5 rounded-full"></div>
+                 </div>
+                 <p id="pet-exp-text" class="text-xs text-gray-400 text-right mt-1">0 / 100 EXP</p>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-2xl shadow-lg">
+                <h3 class="text-lg font-bold text-white mb-3">Daily Quests</h3>
+                <ul id="quest-list" class="space-y-3"></ul>
+            </div>
+        </aside>
+    </div>
+
+    <!-- MODAL CHO QUEST TƯƠNG TÁC (DARK MODE) -->
+    <div id="quest-modal-overlay" class="hidden">
+        <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl shadow-2xl w-full max-w-md mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modal-title" class="text-xl font-bold text-white">Quest Title</h2>
+                <button id="modal-close-button" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            </div>
+            <div id="modal-content">
+                <!-- Nội dung của Quiz hoặc Puzzle sẽ được chèn vào đây -->
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DOM Selectors ---
+        const petElement = document.getElementById('pet'); const speechBubble = document.getElementById('speech-bubble'); const happinessBar = document.getElementById('happiness-bar'); const energyBar = document.getElementById('energy-bar'); const userGold = document.getElementById('user-gold'); const petLevel = document.getElementById('pet-level'); const petExpBar = document.getElementById('pet-exp-bar'); const petExpText = document.getElementById('pet-exp-text'); const questList = document.getElementById('quest-list'); const petNameElement = document.getElementById('pet-name'); const feedButton = document.getElementById('feed-button'); const playButton = document.getElementById('play-button');
+        const modalOverlay = document.getElementById('quest-modal-overlay'); const modalTitle = document.getElementById('modal-title'); const modalContent = document.getElementById('modal-content'); const modalCloseButton = document.getElementById('modal-close-button');
+
+        // --- State Variables ---
+        let currentPetX = 50, currentPetY = 50, speechBubbleTimer, previousLevel = 1;
+        let activeInteractiveQuest = null;
+
+        // --- UPDATEUI ĐÃ CẬP NHẬT CHO DARK MODE ---
+        function updateUI(data) {
+            if (data.pet.level > previousLevel) { petElement.classList.add('level-up-animation'); setTimeout(() => petElement.classList.remove('level-up-animation'), 1000); }
+            previousLevel = data.pet.level; happinessBar.style.width = `${data.pet.happiness}%`; energyBar.style.width = `${data.pet.energy}%`;
+            petLevel.textContent = data.pet.level; petNameElement.textContent = data.pet.name;
+            const expPercent = (data.pet.experience / data.pet.exp_to_next_level) * 100;
+            petExpBar.style.width = `${expPercent}%`; petExpText.textContent = `${data.pet.experience} / ${data.pet.exp_to_next_level} EXP`;
+            const appearance = data.pet.appearance;
+            if (appearance) { petElement.className = ''; petElement.classList.add(appearance.css_class); petElement.textContent = appearance.face; }
+            userGold.textContent = data.gold;
+            questList.innerHTML = "";
+            data.quests.forEach(quest => {
+                const li = document.createElement('li');
+                const isCompleted = quest.completed;
+                let actionHtml;
+                if (isCompleted) {
+                    actionHtml = `<span class="py-1 px-4 text-sm font-semibold text-gray-400 bg-gray-700 rounded-full">Done</span>`;
+                } else if (quest.type === 'simple') {
+                    actionHtml = `<button class="py-1 px-4 text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors" onclick="completeQuest(${quest.id})">Complete</button>`;
+                } else {
+                    actionHtml = `<button class="py-1 px-4 text-sm font-bold text-white bg-purple-600 hover:bg-purple-500 rounded-lg transition-colors" onclick="startInteractiveQuest(${quest.id})">Start</button>`;
+                }
+                li.className = `flex items-center justify-between p-3 border border-gray-700 rounded-xl`;
+                li.innerHTML = `<span class="flex-1 pr-4 ${isCompleted ? 'text-gray-500 line-through' : 'text-gray-300'}">${quest.title}</span> ${actionHtml}`;
+                questList.appendChild(li);
+            });
+        }
+        
+        // --- CÁC HÀM DỰNG GIAO DIỆN MODAL (DARK MODE) ---
+        function buildQuiz(data) {
+            let optionsHtml = data.options.map(opt => 
+                `<button class="w-full text-left p-3 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-700" onclick="checkQuizAnswer(${opt.correct})">${opt.text}</button>`
+            ).join('');
+            modalContent.innerHTML = `<p class="mb-4 text-gray-300">${data.question}</p><div class="space-y-2">${optionsHtml}</div>`;
+        }
+        function buildPuzzle(data) {
+            modalContent.innerHTML = `
+                <p class="mb-2 text-gray-300">${data.question}</p>
+                <p class="text-2xl font-bold text-center tracking-widest my-4 text-white">${data.scrambled_word}</p>
+                <input id="puzzle-input" type="text" class="w-full p-2 border bg-gray-700 border-gray-600 text-white rounded-md" placeholder="Your answer...">
+                <button class="w-full mt-4 py-2 text-white font-bold bg-green-600 hover:bg-green-500 rounded-lg" onclick="checkPuzzleAnswer('${data.correct_answer}')">Submit</button>`;
+        }
+
+        // --- Các hàm còn lại không cần thay đổi ---
+        window.checkQuizAnswer = function(isCorrect) { if (isCorrect) { alert('Correct!'); completeQuest(activeInteractiveQuest.id); closeModal(); } else { alert('Incorrect, please try again.'); } }
+        window.checkPuzzleAnswer = function(correctAnswer) { const userInput = document.getElementById('puzzle-input').value; if (userInput.trim().toUpperCase() === correctAnswer.toUpperCase()) { alert('Correct!'); completeQuest(activeInteractiveQuest.id); closeModal(); } else { alert('Incorrect, please try again.'); } }
+        function openModal() { modalOverlay.classList.remove('hidden'); }
+        function closeModal() { modalOverlay.classList.add('hidden'); modalContent.innerHTML = ''; activeInteractiveQuest = null; }
+        async function fetchInitialData() { try{const r=await fetch('/api/game_data');const d=await r.json();previousLevel=d.pet.level;updateUI(d)}catch(e){console.error(e)} }
+        window.completeQuest = async function(questId) { try{const r=await fetch(`/api/complete_quest/${questId}`,{method:'POST'});const d=await r.json();updateUI(d)}catch(e){console.error(e)} }
+        window.startInteractiveQuest = async function(questId) { try { const response = await fetch(`/api/start_quest/${questId}`); const quest = await response.json(); activeInteractiveQuest = quest; modalTitle.textContent = quest.title; if (quest.type === 'quiz') buildQuiz(quest.data); else if (quest.type === 'puzzle') buildPuzzle(quest.data); openModal(); } catch (error) { console.error('Error starting quest:', error); } }
+        async function feedPet() { try{const r=await fetch('/api/pet/feed',{method:'POST'});const d=await r.json();if(!r.ok){alert(d.error||'Error')}else{updateUI(d)}}catch(e){console.error(e)} }
+        async function playWithPet() { try{const r=await fetch('/api/pet/play',{method:'POST'});const d=await r.json();updateUI(d)}catch(e){console.error(e)} }
+        function positionSpeechBubble() { const t=petElement.offsetTop;const l=petElement.offsetLeft; const bubble=document.getElementById('speech-bubble'); bubble.style.backgroundColor='#E5E7EB'; bubble.style.color='#1F2937'; const after=bubble.querySelector('::after'); if(after) after.style.borderTopColor='#E5E7EB'; speechBubble.style.top=`${t-speechBubble.offsetHeight-10}px`; speechBubble.style.left=`${l+(petElement.offsetWidth/2)}px`; }
+        function showQuote(text, duration = 4000) { if(speechBubbleTimer)clearTimeout(speechBubbleTimer);speechBubble.textContent=text;positionSpeechBubble();speechBubble.classList.add('visible');speechBubbleTimer=setTimeout(()=>speechBubble.classList.remove('visible'),duration); }
+        function movePet(direction) { const a=25;let x=currentPetX,y=currentPetY;if(direction.includes('left'))x-=a;if(direction.includes('right'))x+=a;if(direction.includes('up'))y-=a;if(direction.includes('down'))y+=a;currentPetX=Math.max(10,Math.min(90,x));currentPetY=Math.max(10,Math.min(90,y));petElement.style.left=`${currentPetX}%`;petElement.style.top=`${currentPetY}%`;if(speechBubble.classList.contains('visible'))positionSpeechBubble(); }
+        async function petActionLoop() { try{const r=await fetch('/api/pet/action');if(!r.ok)throw new Error('');const d=await r.json();happinessBar.style.width=`${d.happiness}%`;energyBar.style.width=`${d.energy}%`;switch(d.action){case 'motivate':showQuote(d.quote);break;case 'wander':movePet(d.direction);break;case 'rest':showQuote('Zzz...',3000);break;}}catch(e){console.error(e);showQuote('Hmm, I feel lost...',5000);} }
+
+        // --- INITIALIZATION ---
+        fetchInitialData();
+        setInterval(petActionLoop, 7000);
+        feedButton.addEventListener('click', feedPet);
+        playButton.addEventListener('click', playWithPet);
+        modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+        modalCloseButton.addEventListener('click', closeModal);
+    });
+    </script>
+</body>
+</html>
