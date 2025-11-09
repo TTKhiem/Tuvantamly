@@ -5,7 +5,7 @@ from flask import Flask, jsonify, render_template
 from datetime import date
 
 ### --- PET SYSTEM (Không thay đổi) --- ###
-# ... (Toàn bộ class Pet của bạn giữ nguyên, tôi sẽ rút gọn nó ở đây)
+
 EVOLUTION_STAGES = {1: {"name_template": "Young {}", "appearance": {"face": "^_^", "css_class": "stage-1"}}, 5: {"name_template": "Energetic {}", "appearance": {"face": "O_O", "css_class": "stage-2"}}, 10: {"name_template": "Wise {}", "appearance": {"face": "(`-´)", "css_class": "stage-3"}}}
 class Pet:
     def __init__(self, pet_id, user_id, name, level=1, happiness=50, energy=100, experience=0): self.pet_id=pet_id; self.user_id=user_id; self.base_name=name; self.name=name; self.level=level; self.happiness=happiness; self.energy=energy; self.experience=experience; self.exp_to_next_level=self._calculate_exp_for_level(level); self.appearance={}; self._update_evolution_stage()
