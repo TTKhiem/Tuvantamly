@@ -142,62 +142,183 @@
 
         /* --- CSS THAY THẾ (HOẶC CHỈNH SỬA) TRÊN BODY --- */
         body {
-            /* ... Giữ nguyên các thuộc tính khác ... */
             
-            /* Đảm bảo background được gán cho body */
             background-attachment: fixed;
             background-size: cover;
-            
-            /* Thêm hiệu ứng chuyển đổi mượt mà cho background */
+            background-color: #f7f5f3;
+          
             transition: background-image 0.8s ease, background-color 0.8s ease; 
         }
 
-        /* Xóa background cũ trên #home (hoặc sử dụng class thay thế) */
+
         section#home {
             background: none !important; 
-            /* Dữ liệu nền sẽ được gán qua class trên body */
+          
         }
 
-        /* --- CÁC CLASS BACKGROUND MỚI CHO BODY --- */
+       
 
         body.bg-home {
-            /* Background mặc định/Home */
+          
             background-image: url('background.png');
             background-color: #f0f0f0; 
+            background-size: cover;
+            background-position: center;
         }
+        .hero-section {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        min-height: 100vh;
+        color: #4a4a4a;
+        background: rgba(255, 255, 255, 0.4); /* lớp mờ trong suốt để thấy nền phía sau */
+        overflow: hidden;
+        padding: 0 20px;
+        }
+
+            .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.7); /* lớp phủ sáng */
+            backdrop-filter: blur(3px);
+            }
+
+            .hero-content {
+            position: relative;
+            max-width: 800px;
+            z-index: 2;
+            }
+
+            .hero-subtitle {
+            font-size: 1.3rem;
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: #6c4e35;
+            }
+
+            .hero-title {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #d9742a;
+            margin-bottom: 20px;
+            }
+
+            .hero-text {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #5a5a5a;
+            margin-bottom: 30px;
+            }
+
+            .hero-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            }
+
+            /* Nút Book (cam) */
+            .btn-orange {
+            background-color: #f37c41;
+            color: white;
+            padding: 12px 28px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.3s;
+            }
+            .btn-orange:hover {
+            background-color: #e86b2b;
+            }
+
+            /* Nút Facebook (xanh) */
+            .btn-blue {
+            background-color: #1877f2;
+            color: white;
+            padding: 12px 28px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            }
+            .btn-blue:hover {
+            background-color: #0d63d6;
+            }
 
         body.bg-about {
             /* Ví dụ: Dùng màu nền nhẹ cho About */
-            background-image: url('Zoom-Background-4.jpg');
+            /* background-image: url('Zoom-Background-4.jpg'); */
             background-color: #e0f7fa; 
+            padding-bottom: 120px;
         }
+/* Container chính của phần About */
+.about-container {
+    display: flex; 
+    margin: 0 auto;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 60px;
+    flex-wrap: wrap; /* Để tự xuống hàng khi màn hình nhỏ */
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 40px;
+    /* flex-direction: row; */
+}
 
+.about-text {
+    
+    width: 100%; /* Đảm bảo nó không bị quá hẹp khi không có max-width */
+    max-width: 480px; /* **Giới hạn khung chữ** (ví dụ: 480px hoặc 40%) */
+    
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+
+.about-text h2 {
+    color: #6c4e35;
+    font-size: 2.5em;
+    margin-bottom: 15px;
+}
+
+
+.about-text p {
+    color: #1a1a1a; 
+    font-size: 1.1em;
+    line-height: 1.6;
+    
+}
+        
         body.bg-services {
-            /* Ví dụ: Dùng ảnh nền khác cho Services */
+           
             
             background-image: url('Zoom-Background-4.jpg'); 
-            /* Thay 'services-background.jpg' bằng ảnh của bạn */
+           
             background-color: #f0f0f0;
         }
 
         body.bg-therapists {
-            /* Ví dụ: Màu nền đậm hơn cho Therapists */
+            
             background-image: none;
             background-color: #fce4ec; 
-            /* background-image: url('background.png'); */
+            
         }
 
         body.bg-contact {
-            /* Ví dụ: Màu nền trung tính cho Contact */
+            
             background-image: none;
             background-color: #eeeeee; 
             background-image: url('background.png');
         }
         .wrapper {
-            position: fixed; /* cố định theo viewport */
+            position: fixed; 
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) scale(0); /* scale(0) khi chưa active */
+            transform: translate(-50%, -50%) scale(0); 
             width: 400px;
             height: 440px;
             display: flex;
@@ -217,7 +338,7 @@
         }
 
         section {
-            padding: 100px 20px; /* tránh bị header che */
+            padding: 100px 20px; 
             min-height: 100vh;
         }
 
@@ -298,12 +419,12 @@
 
         }
         html {
-        scroll-behavior: smooth; /* Tạo hiệu ứng cuộn mượt */
+        scroll-behavior: smooth; 
         }
 
         section {
-        padding: 100px 20px; /* Thêm khoảng cách trên dưới */
-        min-height: 100vh; /* Mỗi phần cao bằng 1 màn hình */
+        padding: 100px 20px; 
+        min-height: 100vh; 
         }
 
 
@@ -323,10 +444,7 @@
             /* display: none; */
             
         }
-        /* .wrapper .form-box.register{
-            position: absolute;
-            transform: translateX(400px);
-        } */
+        
         .form-box {
             position: absolute;
             /* width: 100%; */
@@ -342,30 +460,30 @@
             transform: scale(1);
             pointer-events: all;
         }
-        /* Style cho phần tử ngăn cách */
+        
         .section-divider {
-            height: 150px; /* Chiều cao của dải phân cách */
+            height: 150px; 
             width: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: rgba(255, 255, 255, 0.8); /* Màu trắng trong suốt */
+            background-color: rgba(255, 255, 255, 0.8); 
             color: #162938;
             text-align: center;
             font-size: 1.5em;
             font-weight: 600;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            /* Đảm bảo nó nằm phía trên các section */
+           
             position: relative; 
             z-index: 50; 
         }
 
-        /* Thêm đường kẻ ngang thực sự */
+       
         .section-divider::before,
         .section-divider::after {
             content: '';
             position: absolute;
-            width: 30%; /* Độ dài của đường kẻ */
+            width: 30%; 
             height: 2px;
             background-color: #162938;
             top: 50%;
@@ -373,23 +491,17 @@
         }
 
         .section-divider::before {
-            left: 10%; /* Đường kẻ bên trái */
+            left: 10%; 
         }
 
         .section-divider::after {
-            right: 10%; /* Đường kẻ bên phải */
+            right: 10%; 
         }
-        /* #chatbot-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 9999; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        } */
+        
         #therapists {
         position: relative;
         z-index: 10;
-        background: rgba(255, 255, 255, 0.8); /* nền mờ để thấy rõ ảnh */
+        background: rgba(255, 255, 255, 0.8); 
 }
 
         /* .therapist-container {
@@ -426,12 +538,14 @@
             margin-top: 8px;
         }
         .therapist-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* tự chia cột */
+    display: flex;
+    flex-wrap: nowrap; /* ❌ Không cho xuống hàng */
+    justify-content: center; /* Canh giữa toàn bộ dãy */
     gap: 30px;
     padding: 20px;
-    justify-items: center;
+    overflow-x: auto; /* ✅ Nếu có quá nhiều người, có thể cuộn ngang */
 }
+
 
 .therapist-container img {
     width: 250px;
