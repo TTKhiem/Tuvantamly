@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Companion</title>
-    <!-- === DÒNG QUAN TRỌNG NHẤT ĐÃ ĐƯỢC SỬA LẠI === -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* CSS gốc của bạn */
         #speech-bubble { position: absolute; border-radius: .4em; padding: 0.75rem 1rem; transform: translateX(-50%); width: 200px; opacity: 0; transition: opacity 0.3s ease-in-out, top 1.5s ease-in-out, left 1.5s ease-in-out; pointer-events: none; }
         #speech-bubble.visible { opacity: 1; }
         #speech-bubble::after { content: ''; position: absolute; bottom: 0; left: 50%; width: 0; height: 0; border: 10px solid transparent; border-bottom: 0; margin-left: -10px; margin-bottom: -10px; }
@@ -28,7 +26,6 @@
 <body class="bg-gray-900 font-sans p-4">
 
     <div class="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Cột bên trái -->
         <main class="bg-gray-800 p-6 rounded-2xl shadow-lg w-full md:col-span-2">
             <h1 class="text-2xl font-bold text-center text-white mb-4">My Companion</h1>
             <h2 class="text-xl font-semibold text-gray-300">Name: <span id="pet-name" class="text-orange-400">{{ pet_name }}</span><span id="pet-mood" class="text-sm text-cyan-400 ml-2 font-normal"></span></h2>
@@ -69,8 +66,6 @@
     </div>
 
     <script>
-        // Toàn bộ JavaScript giữ nguyên như phiên bản trước
-        // ... (Sao chép lại toàn bộ phần <script> từ câu trả lời trước của tôi)
         document.addEventListener('DOMContentLoaded', () => {
             const petElement = document.getElementById('pet'), speechBubble = document.getElementById('speech-bubble'), happinessBar = document.getElementById('happiness-bar'), energyBar = document.getElementById('energy-bar'), userGold = document.getElementById('user-gold'), petLevel = document.getElementById('pet-level'), petExpBar = document.getElementById('pet-exp-bar'), petExpText = document.getElementById('pet-exp-text'), questList = document.getElementById('quest-list'), petNameElement = document.getElementById('pet-name'), feedButton = document.getElementById('feed-button'), playButton = document.getElementById('play-button'), petMoodElement = document.getElementById('pet-mood'), modalOverlay = document.getElementById('quest-modal-overlay'), modalTitle = document.getElementById('modal-title'), modalContent = document.getElementById('modal-content'), modalCloseButton = document.getElementById('modal-close-button');
             const shopButton = document.getElementById('shop-button'), shopModalOverlay = document.getElementById('shop-modal-overlay'), shopCloseButton = document.getElementById('shop-close-button'), shopItemsGrid = document.getElementById('shop-items-grid'), inventoryList = document.getElementById('inventory-list');
