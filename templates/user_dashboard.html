@@ -63,7 +63,12 @@
         <p><span class="label">Số điện thoại:</span> {{ user.phone if user.phone else "Chưa cập nhật" }}</p>
         <p><span class ="label">Địa chỉ:</span> {{ user.address if user.address else "Chưa cập nhật" }}</p>
         <p><span class="label">Ngày tham gia:</span> {{ user.date_joined if user.date_joined else "Chưa có" }}</p>
-
+        <p><span class="label">Ngày tham gia:</span> {{ user.date_joined if user.date_joined else "Chưa có" }}</p>
+        <a href="{{ url_for('chat_interface') }}" style="background-color: #007bff; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block;">
+            Chat với AI ngay 💬
+        </a>
+    </div>
+    <form action="{{ url_for('logout') }}" method="get">
         <form action="{{ url_for('logout') }}" method="get">
             <button type="submit" class="logout-btn">Logout</button>
         </form>

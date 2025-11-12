@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Therapist Workspace</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; height: 100vh; display: flex; }
+        
+        /* Layout chia đôi màn hình */
+        .container { display: flex; width: 100%; height: 100%; }
+        
+        /* CỘT TRÁI: Khung Chat */
+        .chat-section { flex: 2; display: flex; flex-direction: column; border-right: 1px solid #ddd; background: white; }
+        .chat-header { padding: 20px; border-bottom: 1px solid #eee; font-weight: bold; background: #fff; }
+        .chat-window { flex: 1; padding: 20px; overflow-y: auto; background: #f9f9f9; }
+        .input-area { padding: 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; background: #fff; }
+        
+        /* CỘT PHẢI: AI Copilot */
+        .ai-section { flex: 1; background: #eef2f6; padding: 20px; overflow-y: auto; border-left: 1px solid #ccc;}
+        .ai-card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .ai-title { font-weight: bold; color: #007bff; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+        
+        /* Bong bóng chat */
+        .message { padding: 10px 15px; border-radius: 15px; margin-bottom: 10px; max-width: 80%; word-wrap: break-word; }
+        .student-msg { background: #e4e6eb; color: black; align-self: flex-start; }
+        .therapist-msg { background: #007bff; color: white; align-self: flex-end; margin-left: auto; }
+
+        /* Nút gợi ý */
+        .suggestion-btn {
+            display: block; width: 100%; text-align: left;
+            padding: 10px; margin-bottom: 8px;
+            background: #fff; border: 1px solid #007bff; color: #007bff;
+            border-radius: 8px; cursor: pointer; transition: 0.2s;
+            font-size: 0.9em;
+        }
+        .suggestion-btn:hover { background: #007bff; color: white; }
+        
+        input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 20px; outline: none; }
+        button.send-btn { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="chat-section">
+        <div class="chat-header">
+            Đang tư vấn cho: Nguyễn Văn A (Student)
+        </div>
+        <div class="chat-window" id="chat-window">
+            <div class="message student-msg">Em không muốn sống nữa.</div>
+        </div>
+        <form class="input-area" onsubmit="sendMessage(event)">
+            <input type="text" id="msg-input" placeholder="Nhập tin nhắn tư vấn..." autocomplete="off">
+            <button type="submit" class="send-btn">Gửi</button>
+        </form>
+    </div>
+
+    <div class="ai-section">
+        <div class="ai-card">
+            <div class="ai-title">🤖 Trợ lý AI</div>
+            <p style="font-size: 0.85em; color: #666;">AI sẽ đọc tin nhắn cuối cùng của học sinh và gợi ý cách trả lời.</p>
+            
+            <button onclick="getSuggestions()" style="width:100%; padding:8px; background:#28a745; color:white; border:none; border-radius:5px; cursor:pointer; margin-bottom:15px;">
+                💡 Phân tích & Gợi ý ngay
+            </button>
+
+            <div id="suggestion-container">
+                </div>
+        </div>
+
+        <div class="ai-card">
+            <div class="ai-title">📊 Radar Cảm xúc</div>
+            <div style="font-size: 0.9em;">
+                Rủi ro: <span style="color: green; font-weight: bold;">Thấp</span><br>
+                Cảm xúc chính: <span style="color: #555;">Lo âu, Căng thẳng</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. Hàm gửi tin nhắn (Cơ bản)
+    function sendMessage(e) {
+        e.preventDefault();
+        const input = document.getElementById('msg-input');
+        const msg = input.value.trim();
+        if(!msg) return;
+
+        // Hiển thị tin nhắn của Therapist
+        addMessage(msg, 'therapist-msg');
+        input.value = '';
+        
+        // TODO: Gửi tin nhắn này xuống Backend để lưu vào DB
+    }
+
+    function addMessage(text, className) {
+        const div = document.createElement('div');
+        div.className = `message ${className}`;
+        div.innerText = text;
+        document.getElementById('chat-window').appendChild(div);
+    }
+
+    // 2. HÀM GỌI AI GỢI Ý (QUAN TRỌNG)
+    async function getSuggestions() {
+        const container = document.getElementById('suggestion-container');
+        container.innerHTML = '<p style="font-size:0.8em;">🔄 Đang suy nghĩ...</p>';
+
+        // Lấy tin nhắn cuối cùng của học sinh (Mô phỏng lấy từ giao diện)
+        // Trong thực tế, bạn lấy text của div .student-msg cuối cùng
+        const messages = document.querySelectorAll('.student-msg');
+        const lastMsg = messages.length > 0 ? messages[messages.length - 1].innerText : "";
+
+        if (!lastMsg) {
+            container.innerHTML = '<p style="color:red; font-size:0.8em;">Chưa có tin nhắn nào từ học sinh.</p>';
+            return;
+        }
+
+        try {
+            // Gọi API mà chúng ta đã viết ở Backend
+            const res = await fetch('/api/therapist/suggest', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ 
+                    message: lastMsg,
+                    context: [] 
+                })
+            });
+
+            const data = await res.json();
+            container.innerHTML = ''; // Xóa trạng thái loading
+
+            // Tạo nút cho từng gợi ý
+            createSuggestionButton("Thấu cảm ❤️", data.empathetic, container);
+            createSuggestionButton("Khơi gợi ❓", data.inquisitive, container);
+            createSuggestionButton("Giải pháp 🛡️", data.reassurance, container);
+
+        } catch (err) {
+            console.error(err);
+            container.innerHTML = '<p style="color:red">Lỗi kết nối AI.</p>';
+        }
+    }
+
+    function createSuggestionButton(label, text, parent) {
+        if (!text) return;
+        const btn = document.createElement('button');
+        btn.className = 'suggestion-btn';
+        btn.innerHTML = `<strong>${label}</strong><br>${text}`;
+        
+        // Khi bấm vào gợi ý -> Tự điền vào ô nhập liệu
+        btn.onclick = () => {
+            const input = document.getElementById('msg-input');
+            input.value = text;
+            input.focus();
+        };
+        parent.appendChild(btn);
+    }
+</script>
+
+</body>
+</html>
