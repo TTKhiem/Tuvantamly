@@ -1,0 +1,104 @@
+{% extends 'chat_base.html' %} 
+{% block content %}
+<div class="message-box chat-page">
+  <h2>Mã phòng: {{code}}</h2>
+  <div class="messages" id="messages"></div>
+  <div class="inputs">
+    <input
+      type="text"
+      placeholder="Tin nhắn..."
+      name="message"
+      id="message"
+    />
+    <button type="button" name="send" id="send-btn" >
+      Gửi
+    </button>
+  </div>
+</div>
+
+<script type="text/javascript">
+  var socketio = io();
+  const myUsername = "{{ name }}"; 
+  const messages = document.getElementById("messages");
+  const messageInput = document.getElementById("message");
+
+  /**
+   * Creates and appends a message to the chat box.
+   * @param {string} name - The sender's name
+   * @param {string} msg - The message content
+   * @param {string} timestamp - The server-provided timestamp
+   * @param {boolean} [shouldScroll=true] - Whether to scroll to the bottom
+   */
+  const createMessage = (name, msg, timestamp, shouldScroll = true) => {
+    const messageType = (name === myUsername) ? 'own' : 'other';
+    
+    // Use the timestamp from the server.
+    // Fallback to client time ONLY if server somehow doesn't provide one.
+    const displayTimestamp = timestamp ? timestamp : new Date().toLocaleString();
+
+    const content = `
+    <div class="message ${messageType}">
+        ${messageType === 'other' ? `<strong>${name}</strong>` : ''}
+        <span>${msg}</span>
+        <span class="timestamp">
+            ${displayTimestamp}
+        </span>
+    </div>
+    `;
+    messages.innerHTML += content;
+    if (shouldScroll) {
+        messages.scrollTop = messages.scrollHeight;
+    }
+  };
+
+  /**
+   * Sends the message from the input box to the server.
+   */
+  const sendMessage = () => {
+    const message = messageInput.value;
+    if (message == "") return;
+    
+    // 1. Emit the message to the server
+    socketio.emit("message", { data: message });
+    
+    // 2. DO NOT create the message locally.
+    // The server will broadcast it back to us (and everyone else).
+    // This prevents duplicates and ensures we use the server's timestamp.
+    
+    // 3. Clear input and re-focus
+    messageInput.value = "";
+    messageInput.focus();
+  };
+
+  // --- Event Listeners ---
+
+  document.getElementById("send-btn").addEventListener("click", sendMessage);
+
+  messageInput.addEventListener("keypress", function(event) {
+      if (event.key === "Enter") {
+          event.preventDefault(); 
+          sendMessage();
+      }
+  });
+
+  // --- Socket.IO Handlers ---
+
+  // This is the ONLY function that should add messages to the UI.
+  socketio.on("message", (data) => {
+    // We no longer check if (data.name !== myUsername)
+    // We render ALL messages from the server, including our own.
+    createMessage(data.name, data.message, data.timestamp, true);
+  });
+</script>
+
+{% for msg in messages %}
+<script type="text/javascript">
+  // Pass the history (name, message, AND timestamp) to the createMessage function
+  createMessage("{{msg.name}}", "{{msg.message}}", "{{msg.timestamp}}");
+</script>
+{% endfor %} 
+
+<script type="text/javascript">
+  messages.scrollTop = messages.scrollHeight;
+</script>
+{% endblock %}

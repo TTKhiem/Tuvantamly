@@ -26,6 +26,7 @@
         <a href="#therapists">Therapists</a>
         <a href="#contact">Contact</a>
         {% if user %}
+        <a href="{{ url_for('chat_home') }}">Chat Tư vấn</a>
     <!-- Nếu đã login: hiển thị avatar -->
     <div class="user-menu-wrapper">
         <img src="{{ url_for('static', filename='images/avatar.png') }}" 

@@ -1,0 +1,26 @@
+{% extends 'chat_base.html' %} 
+{% block content %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <ul class=flashes>
+        {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+{% endwith %}
+
+<form method="post" action="{{ url_for('chat_room_post') }}" class="buttons">
+  <h3>Chào mừng, {{ name }}!</h3>
+  <h4>Tham gia hoặc Tạo phòng chat</h4>
+  
+  <div class="join">
+    <input type="text" placeholder="Nhập mã phòng" name="code" />
+    <button type="submit" name="join">Vào phòng</button>
+  </div>
+  <button type="submit" name="create" class="create-btn">Tạo phòng mới</button>
+  <br>
+  <a href="{{ url_for('home') }}" style="margin-top: 20px; display: inline-block;">Quay về trang chủ</a>
+</form>
+{% endblock %}
