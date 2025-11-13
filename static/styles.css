@@ -1,4 +1,4 @@
-        /* body {
+/* body {
             position: relative;
             display: flex;
             justify-content: center;
@@ -39,7 +39,7 @@
             overflow-x: hidden;
             scroll-behavior: smooth;
         } */
-        @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+        @import url('[https://fonts.googleapis.com/css2?family=Poppins&display=swap](https://fonts.googleapis.com/css2?family=Poppins&display=swap)');
         * {
             margin : 0;
             padding : 0;
@@ -246,6 +246,8 @@
             .btn-blue:hover {
             background-color: #0d63d6;
             }
+
+        /* === 'body.bg-resources' STYLE REMOVED FROM HERE === */
 
         body.bg-about {
             /* Ví dụ: Dùng màu nền nhẹ cho About */
