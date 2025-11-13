@@ -83,6 +83,12 @@ def analyze_user_input(message):
 
 def summarize_conversation(history_list):
     if not client: return "Không thể tóm tắt do thiếu API Key."
+    
+    # --- ADDED FIX ---
+    if not history_list:
+        return "Không có nội dung để tóm tắt."
+    # --- END OF FIX ---
+
     transcript = "\n".join([f"{h['role']}: {h['message']}" for h in history_list])
     prompt = f"""
     Bạn là một trợ lý AI có nhiệm vụ tóm tắt các cuộc hội thoại giữa một sinh viên và một chatbot tư vấn tâm lý để gửi cho chuyên gia.
@@ -177,6 +183,66 @@ def logout():
     session.clear()
     return redirect(url_for('home'))
 
+# --- UPDATED RESOURCES ROUTE ---
+@app.route('/resources')
+def resources():
+    if 'user_id' not in session:
+        flash("Vui lòng đăng nhập để xem tài nguyên.", "error")
+        return redirect(url_for('home'))
+
+    user = {'username': session['username'], 'role': session.get('role')}
+    db = get_db()
+    user_id = session['user_id']
+    
+    # Lấy tất cả 'analysis_json' của user
+    history_rows = db.execute(
+        "SELECT analysis_json FROM chat_history WHERE user_id = ? AND analysis_json IS NOT NULL", 
+        (user_id,)
+    ).fetchall()
+
+    # --- Condition 1: No chat history ---
+    if not history_rows:
+        return render_template('resources.html', user=user, error_message="Vui lòng trò chuyện trước khi xem tài nguyên.")
+
+    # --- Find all "problems" (intents) ---
+    problem_tags = set()
+    for row in history_rows:
+        try:
+            analysis = json.loads(row['analysis_json'])
+            intent = analysis.get('intent')
+            if intent and intent != 'unknown':
+                problem_tags.add(intent)
+        except:
+            continue # Bỏ qua nếu JSON lỗi
+
+    # --- Condition 3: Chat exists, but no clear problems ---
+    if not problem_tags:
+        videos = db.execute("SELECT * FROM videos").fetchall()
+        ebooks = db.execute("SELECT * FROM ebooks").fetchall()
+        headline = "Tài nguyên chung"
+    
+    # --- Condition 2: Chat exists with clear problems ---
+    else:
+        # Xây dựng câu query SQL động
+        # VD: "SELECT * FROM videos WHERE tags LIKE ? OR tags LIKE ?"
+        video_query = "SELECT * FROM videos WHERE " + " OR ".join(["tags LIKE ?"] * len(problem_tags))
+        ebook_query = "SELECT * FROM ebooks WHERE " + " OR ".join(["tags LIKE ?"] * len(problem_tags))
+        
+        # VD: ['%exam_stress%', '%feeling_lonely%']
+        query_params = [f'%{tag}%' for tag in problem_tags]
+        
+        videos = db.execute(video_query, query_params).fetchall()
+        ebooks = db.execute(ebook_query, query_params).fetchall()
+        headline = "Tài nguyên dành riêng cho bạn"
+
+    return render_template('resources.html', 
+                           user=user, 
+                           videos=videos, 
+                           ebooks=ebooks, 
+                           headline=headline)
+# --- END OF UPDATED ROUTE ---
+
+
 @app.route('/your_therapists')
 def your_therapists():
     return render_template('user_dashboard.html', user={'username': 'Demo'}) # Cần sửa logic thực tế sau
@@ -201,6 +267,10 @@ def api_chat():
     
     # AI Phân tích
     analysis = analyze_user_input(user_msg)
+    
+    # Update the last message in history (the user's) to include its analysis
+    session['chat_history'][-1]['analysis'] = analysis
+    
     risk = analysis.get('risk_level', 'low')
     intent = analysis.get('intent', 'unknown')
     
@@ -259,10 +329,18 @@ def api_chat_complete():
     
     # Lưu vào DB
     db = get_db()
+    
     # 1. Lưu Chat History
     for msg in history:
-        db.execute("INSERT INTO chat_history (user_id, role, message) VALUES (?, ?, ?)",
-                   (session['user_id'], msg['role'], msg['message']))
+        # Get the analysis object (it will be None for bot messages)
+        analysis_data = msg.get('analysis')
+        
+        # Convert it to a text string if it exists
+        analysis_str = json.dumps(analysis_data) if analysis_data else None
+
+        # --- THIS LINE IS NOW INDENTED (FIXED) ---
+        db.execute("INSERT INTO chat_history (user_id, role, message, analysis_json) VALUES (?, ?, ?, ?)",
+                       (session['user_id'], msg['role'], msg['message'], analysis_str))
     
     # 2. Lưu Summary
     db.execute("INSERT INTO intake_summary (user_id, summary_content, risk_level) VALUES (?, ?, ?)",
@@ -281,6 +359,41 @@ def therapist_workspace():
         return redirect(url_for('home'))
     
     return render_template('therapist_chat.html')
+
+# --- ADD THIS NEW FUNCTION FOR DEBUGGING ---
+@app.route('/check_db')
+def check_db():
+    """
+    A temporary debug route to quickly check the chat_history table.
+    """
+    if 'user_id' not in session:
+        return "You must be logged in to check the DB.", 403
+        
+    db = get_db()
+    
+    # Get all chat history, newest first
+    history_rows = db.execute(
+        "SELECT * FROM chat_history ORDER BY timestamp DESC"
+    ).fetchall()
+    
+    # Build a simple HTML page to display the results
+    output = "<h1>Chat History Check</h1>"
+    output += f"<h3>Found {len(history_rows)} messages.</h3><hr>"
+    
+    for row in history_rows:
+        output += "<div style='border-bottom: 1px solid #ccc; padding: 10px;'>"
+        output += f"<p><b>ID:</b> {row['id']}</p>"
+        output += f"<p><b>User ID:</b> {row['user_id']}</p>"
+        output += f"<p><b>Role:</b> {row['role']}</p>"
+        output += f"<p><b>Message:</b> {row['message']}</p>"
+        output += f"<p style='color: blue; background: #eee;'><b>ANALYSIS:</b> {row['analysis_json']}</p>"
+        output += f"<p><b>Timestamp:</b> {row['timestamp']}</p>"
+        output += "</div>"
+        
+    if not history_rows:
+        output += "<p>No history found.</p>"
+
+    return output
 
 
 # --- MAIN ---
