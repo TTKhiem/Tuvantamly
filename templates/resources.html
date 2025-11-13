@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài Nguyên Hỗ Trợ</title>
+    <!-- Use the same main stylesheet for the header -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        /* --- Styles for this page only --- */
+        body {
+            background-color: #f4f6f9; /* A light, clean background */
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .content-wrapper {
+            max-width: 1200px;
+            /* --- THIS IS THE FIX --- */
+            /* Changed margin: 40px auto; to 120px auto 40px auto; */
+            /* This adds 120px of space at the top to clear the header */
+            margin: 120px auto 40px auto;
+            /* --- END OF FIX --- */
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        /* --- FIX 1: Style for the "no chat" message --- */
+        .no-chat-message {
+            text-align: center;
+            padding: 40px;
+        }
+        .no-chat-message h1 {
+            color: #d9534f; /* A gentle error/warning color */
+        }
+        .no-chat-message p {
+            font-size: 1.1rem;
+            color: #555;
+        }
+        /* --- End of Fix 1 Styles --- */
+
+        h2 {
+            color: #555;
+            font-size: 1.5rem;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 5px;
+        }
+        
+        /* --- Carousel Styles --- */
+        .carousel {
+            position: relative;
+            width: 100%;
+            padding: 10px 0;
+        }
+
+        .carousel-container {
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .carousel-track {
+            display: flex;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .card {
+            flex-shrink: 0;
+            width: 270px; 
+            margin: 0 10px;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-thumbnail {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            background-color: #eee;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        /* --- FIX FOR PROBLEM 2: LONG TITLES --- */
+        .card-title {
+            padding: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #333;
+
+            /* New multi-line truncation logic */
+            height: 3.8em; /* Gives space for 2 lines */
+            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* Limit to 2 lines */
+            -webkit-box-orient: vertical;
+        }
+
+        .carousel-arrow {
+            position: absolute;
+            top: 50%;
+            margin-top: -35px; /* Aligns with middle of thumbnail */
+            transform: translateY(-50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .carousel-arrow:hover {
+            background-color: #fff;
+        }
+
+        .arrow-prev {
+            left: -22px;
+        }
+
+        .arrow-next {
+            right: -22px;
+        }
+        
+        /* --- Video Modal Styles (Pop-up) --- */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.7); /* Dim background */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            position: relative;
+            background-color: #fefefe;
+            margin: auto;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transform: scale(0.9);
+            opacity: 0;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+        
+        .modal.is-open {
+            display: flex;
+        }
+        .modal.is-open .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+        
+        .modal-header {
+            padding: 15px 20px;
+            background-color: #fff;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+        
+        .modal-title {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 20px;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: #000;
+        }
+        
+        .modal-body {
+            padding: 0;
+            overflow: hidden;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            height: 0;
+            overflow: hidden;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .card {
+                width: 220px; /* Slightly smaller on mobile */
+            }
+            .carousel-arrow {
+                left: 5px;
+                top: 40%;
+            }
+            .arrow-next {
+                right: 5px;
+            }
+            .modal-content {
+                width: 95%;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    
+    <!-- Header (Copied from index.html) -->
+    <header>
+        <h2 class="logo">Logo</h2>
+        <nav class="navigation">
+            <a href="{{ url_for('home') }}">Home</a>
+            <a href="{{ url_for('resources') }}">Resources</a>
+            <a href="{{ url_for('home') }}#about">About us</a>
+            {% if user %}
+            <div class="user-menu-wrapper">
+                <img src="{{ url_for('static', filename='images/avatar.png') }}" class="user-avatar" alt="User Avatar">
+                <div class="dropdown">
+                    <a href="{{ url_for('user_dashboard') }}">Dashboard</a>
+                    <a href="{{ url_for('logout') }}">Logout</a>
+                    <a href="{{ url_for('your_therapists') }}">Your therapists</a>
+                </div>
+            </div>
+            {% else %}
+            <button id="btnLoginPopup" class="btnLogin-popup">Login</button>
+            {% endif %}
+        </nav>
+    </header>
+
+    <!-- Main Page Content -->
+    <div class="content-wrapper">
+
+        <!-- --- FIX FOR PROBLEM 1: "NO CHAT" MESSAGE --- -->
+        <!-- This Jinja block now correctly handles all 3 conditions -->
+        {% if error_message %}
+            <!-- Condition 1: User hasn't chatted -->
+            <div class="no-chat-message">
+                <h1>{{ error_message }}</h1>
+                <p>Hãy trò chuyện với chatbot để chúng tôi có thể hiểu và đề xuất tài nguyên phù hợp nhất với bạn.</p>
+            </div>
+        
+        {% else %}
+            <!-- Conditions 2 & 3: User has chatted -->
+            <h1>{{ headline }}</h1>
+            
+            <!-- --- Video Carousel --- -->
+            <!-- We also check if the videos list is not empty -->
+            {% if videos %}
+                <h2>Videos Hỗ Trợ</h2>
+                <div class="carousel" id="video-carousel">
+                    <div class="carousel-container">
+                        <div class="carousel-track" id="video-track">
+                            
+                            <!-- Jinja loop builds the cards on the server -->
+                            {% for video in videos %}
+                            <div class="card video-card" data-video-id="{{ video.youtube_video_id }}" data-title="{{ video.title }}">
+                                <!-- Thumbnail link is auto-generated -->
+                                <img src="https://img.youtube.com/vi/{{ video.youtube_video_id }}/hqdefault.jpg" alt="{{ video.title }}" class="card-thumbnail">
+                                <div class="card-title">{{ video.title }}</div>
+                            </div>
+                            {% endfor %}
+                            
+                        </div>
+                    </div>
+                    <button class="carousel-arrow arrow-prev" id="video-prev">&lt;</button>
+                    <button class="carousel-arrow arrow-next" id="video-next">&gt;</button>
+                </div>
+            {% endif %}
+
+            <!-- --- E-book Carousel --- -->
+            <!-- We also check if the ebooks list is not empty -->
+            {% if ebooks %}
+                <h2>E-books & Tài Liệu</h2>
+                <div class="carousel" id="ebook-carousel">
+                    <div class="carousel-container">
+                        <div class="carousel-track" id="ebook-track">
+
+                            <!-- Jinja loop builds the cards on the server -->
+                            {% for ebook in ebooks %}
+                            <div class="card ebook-card" data-pdf-link="{{ ebook.pdf_link }}">
+                                <img src="{{ ebook.thumbnail_image_link }}" alt="{{ ebook.title }}" class="card-thumbnail">
+                                <div class="card-title">{{ ebook.title }}</div>
+                            </div>
+                            {% endfor %}
+                            
+                        </div>
+                    </div>
+                    <button class="carousel-arrow arrow-prev" id="ebook-prev">&lt;</button>
+                    <button class="carousel-arrow arrow-next" id="ebook-next">&gt;</button>
+                </div>
+            {% endif %}
+            
+            <!-- Case where user chatted, but no resources were found -->
+            {% if not videos and not ebooks %}
+                <div class="no-chat-message">
+                    <h3>Không tìm thấy tài nguyên phù hợp</h3>
+                    <p>Chúng tôi không tìm thấy tài nguyên nào khớp với các chủ đề trò chuyện của bạn. Hãy thử xem các <a href="{{ url_for('resources') }}?all=true">tài nguyên chung</a> của chúng tôi.</p>
+                </div>
+            {% endif %}
+
+        {% endif %}
+        <!-- --- END OF FIX 1 --- -->
+
+    </div>
+
+    <!-- --- Video Modal (Pop-up) --- -->
+    <div id="videoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="modalVideoTitle">Video Title</span>
+                <span class="close-button" id="modalClose">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="video-container">
+                    <iframe id="videoIframe" src="" frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Wait for the full page to load before running scripts
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            /**
+             * ----------------------------------------------------------------
+             * CAROUSEL LOGIC
+             * ----------------------------------------------------------------
+             */
+            function setupCarousel(carouselId) {
+                const carousel = document.getElementById(carouselId);
+                // If the carousel element isn't on the page, stop.
+                if (!carousel) { return; }
+                
+                const track = carousel.querySelector('.carousel-track');
+                const prevBtn = carousel.querySelector('.arrow-prev');
+                const nextBtn = carousel.querySelector('.arrow-next');
+                const items = carousel.querySelectorAll('.card');
+
+                // If any core parts are missing (like no items), hide controls and stop.
+                if (!track || !prevBtn || !nextBtn || items.length === 0) {
+                    if (prevBtn) prevBtn.style.display = 'none';
+                    if (nextBtn) nextBtn.style.display = 'none';
+                    return;
+                }
+
+                let currentIndex = 0;
+                let itemWidth = 0; // Will be calculated
+                let itemsToShow = 0; // Will be calculated
+                let maxIndex = 0; // Will be calculated
+                
+                function calculateMetrics() {
+                    if (items.length === 0) return;
+                    // Recalculate item width and items to show
+                    itemWidth = items[0].offsetWidth + (parseFloat(getComputedStyle(items[0]).marginRight) * 2);
+                    if (itemWidth <= 0) itemWidth = 290; // Fallback width
+
+                    itemsToShow = Math.floor(carousel.querySelector('.carousel-container').offsetWidth / itemWidth);
+                    if (itemsToShow < 1) { itemsToShow = 1; }
+                    
+                    maxIndex = items.length - itemsToShow;
+                    if (maxIndex < 0) { maxIndex = 0; }
+                    
+                    if (currentIndex > maxIndex) { currentIndex = maxIndex; }
+                }
+
+                function updateTrack() {
+                    track.style.transform = `translateX(-${currentIndex * itemWidth}px)`;
+                    
+                    // Hide arrows if carousel is not scrollable
+                    if (items.length <= itemsToShow) {
+                        prevBtn.style.display = 'none';
+                        nextBtn.style.display = 'none';
+                    } else {
+                        // Logic for *non-looping* arrows (better UX)
+                        // prevBtn.style.display = (currentIndex === 0) ? 'none' : 'flex';
+                        // nextBtn.style.display = (currentIndex >= maxIndex) ? 'none' : 'flex';
+
+                        // Logic for *looping* arrows
+                        prevBtn.style.display = 'flex';
+                        nextBtn.style.display = 'flex';
+                    }
+                }
+
+                nextBtn.addEventListener('click', function() {
+                    calculateMetrics(); // Recalculate on click just in case
+                    if (currentIndex < maxIndex) {
+                        currentIndex++;
+                    } else {
+                        currentIndex = 0; // Loop back to start
+                    }
+                    updateTrack();
+                });
+
+                prevBtn.addEventListener('click', function() {
+                    calculateMetrics(); // Recalculate on click
+                    if (currentIndex > 0) {
+                        currentIndex--;
+                    } else {
+                        currentIndex = maxIndex; // Loop back to end
+                    }
+                    updateTrack();
+                });
+
+                // Recalculate all metrics on window resize
+                window.addEventListener('resize', function() {
+                    calculateMetrics();
+                    updateTrack();
+                });
+                
+                // Initial calculation and drawing
+                // Use a small delay to ensure CSS has loaded
+                setTimeout(() => {
+                    calculateMetrics();
+                    updateTrack();
+                }, 100);
+            }
+
+            // Setup both carousels
+            setupCarousel('video-carousel');
+            setupCarousel('ebook-carousel');
+
+            /**
+             * ----------------------------------------------------------------
+             * VIDEO MODAL LOGIC
+             * ----------------------------------------------------------------
+             */
+            const modal = document.getElementById('videoModal');
+            const modalClose = document.getElementById('modalClose');
+            const videoIframe = document.getElementById('videoIframe');
+            const modalVideoTitle = document.getElementById('modalVideoTitle');
+            const videoCards = document.querySelectorAll('.video-card');
+
+            if(modal && modalClose && videoIframe && modalVideoTitle) {
+                for (const card of videoCards) {
+                    card.addEventListener('click', function() {
+                        const videoId = card.dataset.videoId;
+                        const title = card.dataset.title;
+                        
+                        // This is the fixed URL without autoplay
+                        const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0`;
+                        
+                        modalVideoTitle.textContent = title;
+                        videoIframe.src = embedUrl;
+                        modal.classList.add('is-open');
+                    });
+                }
+                
+                function closeModal() {
+                    modal.classList.remove('is-open');
+                    videoIframe.src = ''; // Stop video playback
+                }
+
+                modalClose.addEventListener('click', closeModal);
+
+                // Also close modal by clicking on the dim background
+                modal.addEventListener('click', function(event) {
+                    if (event.target === modal) {
+                        closeModal();
+                    }
+                });
+            }
+
+            /**
+             * ----------------------------------------------------------------
+             * E-BOOK CLICK LOGIC
+             * ----------------------------------------------------------------
+             */
+            const ebookCards = document.querySelectorAll('.ebook-card');
+            for (const card of ebookCards) {
+                card.addEventListener('click', function() {
+                    const pdfLink = card.dataset.pdfLink;
+                    // Ensure the link is not null or empty before trying to open
+                    if (pdfLink) {
+                        window.open(pdfLink, '_blank'); 
+                    }
+                });
+            }
+
+        });
+    </script>
+</body>
+</html>

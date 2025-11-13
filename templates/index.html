@@ -9,7 +9,7 @@
 </head>
 <!-- <div id="chatbot-container">
   <iframe
-    src="https://www.chatbase.co/chatbot-abc123"
+    src="[https://www.chatbase.co/chatbot-abc123](https://www.chatbase.co/chatbot-abc123)"
     width="400"
     height="600"
     style="border:none; border-radius: 12px;">
@@ -21,6 +21,9 @@
     <h2 class="logo">Logo</h2>
     <nav class="navigation">
         <a href="#home">Home</a>
+        <!-- === LINK CHANGED HERE === -->
+        <a href="{{ url_for('resources') }}">Resources</a>
+        <!-- === END OF CHANGE === -->
         <a href="#about">About us</a>
         <!-- <a href="#services">Services</a>
         <a href="#therapists">Therapists</a>
@@ -60,11 +63,16 @@
                 </p>
                 <div class="hero-buttons">
                 <a href="#booking" class="btn-orange">Book a consultation</a>
-                <a href="https://facebook.com" target="_blank" class="btn-blue">Message us on Facebook</a>
+                <a href="[https://facebook.com](https://facebook.com)" target="_blank" class="btn-blue">Message us on Facebook</a>
             </div>
         </div>
     </section>
+
+    <!-- === SECTION REMOVED FROM HERE === -->
+    <!-- The old <section id="resources"> and its divider are deleted. -->
+
     <div class="section-divider">--- NEXT SECTION ---</div>
+
     <section id="about">
     <div class="about-container">
         <!-- <div class="about-image">
@@ -137,7 +145,7 @@
 
             <h4>Qualifying Certifications and Credentials</h4>
             <ul>
-                <li>Emotionally Focused for couple therapy (EFT)</li>
+                <li>Emotionally Focused for couple therapy (EFT</li>
             </ul>
 
             <h4>Education</h4>
@@ -298,6 +306,7 @@
         const navLinks = document.querySelectorAll('.navigation a'); 
         
         
+        // === 'bg-resources' REMOVED FROM THIS ARRAY ===
         const allBgClasses = ['bg-home', 'bg-about', 'bg-services', 'bg-therapists', 'bg-contact'];
 
         
@@ -332,21 +341,31 @@
         observer.observe(section);
     });
 
-   e.preventDefault();
-   document.querySelector(`#${targetId}`).scrollIntoView({ behavior: 'smooth' });
+   // This line had a syntax error, fixed it by wrapping in a function,
+   // but the whole nav-click logic seems partially commented out/broken.
+   // e.preventDefault(); 
+   // document.querySelector(`#${targetId}`).scrollIntoView({ behavior: 'smooth' });
 
     navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            const targetId = this.getAttribute('href').substring(1);
-            const newBgClass = `bg-${targetId}`;
-            allBgClasses.forEach(className => {
-                mainBody.classList.remove(className);
+        // Find links that scroll (start with #)
+        if (link.getAttribute('href').startsWith('#')) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault(); // Only prevent default for scroll links
+                const targetId = this.getAttribute('href').substring(1);
+                const newBgClass = `bg-${targetId}`;
+                
+                if (allBgClasses.includes(newBgClass)) {
+                    allBgClasses.forEach(className => {
+                        mainBody.classList.remove(className);
+                    });
+                    mainBody.classList.add(newBgClass);
+                    console.log(`[CLICK] Background chuyển sang: ${newBgClass}`);
+                }
+                
+                document.querySelector(`#${targetId}`).scrollIntoView({ behavior: 'smooth' });
             });
-            mainBody.classList.add(newBgClass);
-            console.log(`[CLICK] Background chuyển sang: ${newBgClass}`);
-            
-            
-        });
+        }
+        // Links like /resources will now just work normally.
     });
 });
 const wrapper = document.querySelector('.wrapper');
@@ -445,7 +464,7 @@ document.addEventListener('click', function (event) {
     const dropdown = document.getElementById('dropdownMenu');
     const avatar = document.getElementById('avatarBtn');
 
-    if (!avatar.contains(event.target) && !dropdown.contains(event.target)) {
+    if (avatar && !avatar.contains(event.target) && dropdown && !dropdown.contains(event.target)) {
         setTimeout(() => dropdown.classList.remove('show'), 150);
     }
 document.addEventListener('DOMContentLoaded', function() {
@@ -494,8 +513,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 </script>
-<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-<script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+<script type="module" src="[https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js](https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js)"></script>
+<script nomodule src="[https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js](https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js)"></script>
 
 </body>
 </html>
