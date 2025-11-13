@@ -20,3 +20,4 @@ Run the code -> Control C (cancel server) -> type "python seed_db.py" in termina
 - The database is saved in seed_db
 - Video has 3 columns (title, youtube_video_id and tags), do note that youtube_video_id is ONLY THE ID (after the "v=" part and before the "&t")
 - E-book has 4 columns (title, pdf_link, thumbnail_image_link, tags), pdf and thumbnail are the full url
+- After updating, delete the database and repeat running the code
