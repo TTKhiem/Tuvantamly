@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,14 +8,17 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom styles for the pet and dashboard */
-        body { font-family: 'Inter', sans-serif; }
-        .stat-bar-inner { transition: width 0.5s ease-in-out; }
-        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .stat-bar-inner {
+            transition: width 0.5s ease-in-out;
+        }
+
         #pet {
             width: 60px;
             height: 60px;
-            background-color: #fdba74; /* orange-300 */
-            border: 4px solid #f97316; /* orange-600 */
             border-radius: 50%;
             position: absolute;
             top: 50%;
@@ -24,22 +28,63 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem; /* 24px */
+            font-size: 1.5rem;
             font-weight: bold;
-            color: #f97316; /* orange-600 */
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
-        /* Pet evolution styles from your old file */
-        .stage-1 { background-color: #fdba74; border: 3px solid #f97316; color: #f97316; }
-        .stage-2 { background-color: #93c5fd; border: 4px solid #3b82f6; color: #3b82f6; box-shadow: 0 0 10px #93c5fd; }
-        .stage-3 { width: 60px; height: 60px; background-color: #fca5a5; border: 4px solid #ef4444; color: #ef4444; border-radius: 40%; font-size: 1.5rem; box-shadow: 0 0 15px #fca5a5; }
+
+        /* Pet evolution styles */
+        .stage-1 {
+            background-color: #fdba74;
+            border: 3px solid #f97316;
+            color: #f97316;
+        }
+
+        .stage-2 {
+            background-color: #93c5fd;
+            border: 4px solid #3b82f6;
+            color: #3b82f6;
+            box-shadow: 0 0 10px #93c5fd;
+        }
+
+        .stage-3 {
+            width: 60px;
+            height: 60px;
+            background-color: #fca5a5;
+            border: 4px solid #ef4444;
+            color: #ef4444;
+            border-radius: 40%;
+            font-size: 1.5rem;
+            box-shadow: 0 0 15px #fca5a5;
+        }
+
+        @keyframes levelUpAnimation {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                box-shadow: 0 0 15px yellow
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
+                box-shadow: 0 0 30px yellow
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                box-shadow: none
+            }
+        }
+
+        .level-up-animation {
+            animation: levelUpAnimation 1s ease-in-out
+        }
 
         #speech-bubble {
             position: absolute;
-            background: white;
+            background: #E5E7EB;
+            color: #1F2937;
+            /* Dark text on light bubble */
             border-radius: .4em;
             padding: 0.75rem 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             transform: translateX(-50%);
             width: 200px;
             opacity: 0;
@@ -47,7 +92,11 @@
             pointer-events: none;
             z-index: 10;
         }
-        #speech-bubble.visible { opacity: 1; }
+
+        #speech-bubble.visible {
+            opacity: 1;
+        }
+
         #speech-bubble::after {
             content: '';
             position: absolute;
@@ -56,134 +105,162 @@
             width: 0;
             height: 0;
             border: 10px solid transparent;
-            border-top-color: white;
+            border-top-color: #E5E7EB;
+            /* Match bubble background */
             border-bottom: 0;
             margin-left: -10px;
             margin-bottom: -10px;
         }
 
-        /* Simple Tab styles */
-        .tab-button { transition: all 0.2s ease; }
-        .tab-button.active { border-color: #3b82f6; color: #3b82f6; background-color: #eff6ff; }
-        .tab-panel { display: none; }
-        .tab-panel.active { display: block; }
+        /* Tab styles */
+        .tab-button {
+            transition: all 0.2s ease;
+        }
 
-        /* Custom Quest/Shop styles */
-        .item-card { transition: all 0.2s ease-in-out; }
-        .item-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07); }
-        .item-card-icon { font-size: 3rem; line-height: 1; }
+        .tab-button.active {
+            border-color: #3b82f6;
+            color: #60a5fa;
+            background-color: rgba(59, 130, 246, 0.1);
+        }
 
-        /* Quest Modal Styles (from your old file) */
-        #quest-modal-overlay {
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        /* Quest/Shop styles */
+        .item-card {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .item-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .item-card-icon {
+            font-size: 3rem;
+            line-height: 1;
+        }
+
+        /* Modal Styles */
+        #quest-modal-overlay,
+        #chat-modal-overlay {
             position: fixed;
             inset: 0;
-            background-color: rgba(0,0,0,0.7);
-            /* display: flex;
-            align-items: center;
-            justify-content: center; */
+            background-color: rgba(0, 0, 0, 0.7);
             transition: opacity 0.3s ease-in-out;
             z-index: 50;
         }
-        #breathing-circle { transition: transform 3s ease-in-out; }
-        .hidden { display: none; }
+
+        #breathing-circle {
+            transition: transform 3s ease-in-out;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* CSS MỚI CHO CHATBOT */
+        .chat-message-container {
+            display: flex;
+            align-items: flex-end;
+            gap: 0.75rem;
+        }
+
+        .chat-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .chat-message-container.user {
+            justify-content: flex-end;
+        }
     </style>
 </head>
-<body class="bg-gray-100">
+
+<body class="bg-gray-900 text-gray-300">
 
     <div class="container mx-auto p-4 max-w-4xl">
-        
-        <!-- Header -->
-        <header class="flex justify-between items-center bg-white p-4 rounded-lg shadow-md mb-6">
+
+        <header class="flex justify-between items-center bg-gray-800 p-4 rounded-lg shadow-md mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Chào, <span class="text-blue-600">{{ username }}</span>!</h1>
-                <p class="text-sm text-gray-500">Đây là trang quản lý pet và nhiệm vụ của bạn.</p>
+                <h1 class="text-2xl font-bold text-gray-200">Chào, <span class="text-blue-400">{{ username }}</span>!</h1>
+                <p class="text-sm text-gray-400">Đây là trang quản lý pet và nhiệm vụ của bạn.</p>
             </div>
-            <a href="{{ url_for('home') }}" class="text-sm text-blue-500 hover:underline">&larr; Quay về Trang chủ</a>
+            <a href="{{ url_for('home') }}" class="text-sm text-blue-400 hover:underline">&larr; Quay về Trang chủ</a>
         </header>
 
-        <!-- Main Dashboard -->
-        <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-md">
 
-            <!-- Tabs -->
-            <div class="border-b border-gray-200 mb-6">
+            <!-- Tabs Navigation -->
+            <div class="border-b border-gray-700 mb-6">
                 <nav class="-mb-px flex space-x-6" aria-label="Tabs">
-                    <button data-tab="pet" class="tab-button active whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                        Bạn Đồng Hành
-                    </button>
-                    <button data-tab="quests" class="tab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                        Nhiệm Vụ
-                    </button>
-                    <button data-tab="shop" class="tab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                        Cửa Hàng
-                    </button>
-                    <button data-tab="inventory" class="tab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                        Túi Đồ
-                    </button>
+                    <button data-tab="pet" class="tab-button active whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-400 hover:text-gray-200 hover:border-gray-500">Bạn Đồng Hành</button>
+                    <button data-tab="quests" class="tab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-400 hover:text-gray-200 hover:border-gray-500">Nhiệm Vụ</button>
+                    <button data-tab="shop" class="tab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-400 hover:text-gray-200 hover:border-gray-500">Cửa Hàng</button>
+                    <button data-tab="inventory" class="tab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-400 hover:text-gray-200 hover:border-gray-500">Túi Đồ</button>
                 </nav>
             </div>
 
-            <!-- Tab Panels -->
+            <!-- Tabs Content -->
             <div>
                 <!-- Pet Panel -->
                 <div id="panel-pet" class="tab-panel active">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        
-                        <!-- Left Side: Pet Box -->
+
+                        <!-- Pet Display -->
                         <div>
-                            <h3 class="text-lg font-semibold text-gray-700 mb-2" id="pet-name">Đang tải...</h3>
+                            <h3 class="text-lg font-semibold text-gray-200 mb-2" id="pet-name">Đang tải...</h3>
                             <div id="pet-container" class="w-full h-80 bg-green-100 border-4 border-green-300 rounded-lg relative overflow-hidden shadow-inner">
                                 <div id="pet">(•_•)</div>
-                                <div id="speech-bubble" class="text-sm text-gray-700">...</div>
+                                <div id="speech-bubble" class="text-sm">...</div>
                             </div>
                         </div>
 
-                        <!-- Right Side: Stats & Actions -->
+                        <!-- Pet Stats and Actions -->
                         <div class="space-y-4">
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-700">Thông số</h3>
+                                <h3 class="text-lg font-semibold text-gray-200">Thông số</h3>
                                 <div class="space-y-3 mt-2">
-                                    <!-- Level -->
-                                    <div class="text-sm font-medium">
-                                        Cấp độ: <span id="level-text" class="text-blue-600 font-bold">1</span>
-                                        (<span id="exp-text">0/100</span> EXP)
-                                    </div>
-                                    <!-- Happiness Bar -->
+                                    <div class="text-sm font-medium">Cấp độ: <span id="level-text" class="text-blue-400 font-bold">1</span> (<span id="exp-text">0/100</span>)</div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700">Hạnh phúc 💖</label>
-                                        <div class="w-full bg-gray-200 rounded-full h-4 mt-1 overflow-hidden">
-                                            <div id="happiness-bar" class="stat-bar-inner bg-pink-400 h-4 rounded-full" style="width: 50%"></div>
+                                        <label class="block text-sm font-medium text-gray-300">Hạnh phúc 💖</label>
+                                        <div class="w-full bg-gray-700 rounded-full h-4 mt-1 overflow-hidden">
+                                            <div id="happiness-bar" class="stat-bar-inner bg-pink-500 h-4 rounded-full" style="width: 50%"></div>
                                         </div>
                                     </div>
-                                    <!-- Energy Bar -->
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700">Năng lượng ⚡</label>
-                                        <div class="w-full bg-gray-200 rounded-full h-4 mt-1 overflow-hidden">
+                                        <label class="block text-sm font-medium text-gray-300">Năng lượng ⚡</label>
+                                        <div class="w-full bg-gray-700 rounded-full h-4 mt-1 overflow-hidden">
                                             <div id="energy-bar" class="stat-bar-inner bg-yellow-400 h-4 rounded-full" style="width: 100%"></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Actions -->
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-700">Hành động</h3>
-                                <p class="text-sm text-gray-500 mb-3">Tương tác với pet của bạn!</p>
-                                <div class="flex space-x-3">
-                                    <button id="btn-feed" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition">
-                                        Cho ăn (10 Vàng)
-                                    </button>
-                                    <button id="btn-play" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition">
-                                        Chơi
-                                    </button>
+                                <h3 class="text-lg font-semibold text-gray-200">Hành động</h3>
+                                <p class="text-sm text-gray-400 mb-3">Tương tác với pet của bạn!</p>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <button id="btn-feed" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition">Cho ăn (10 Vàng)</button>
+                                    <button id="btn-play" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">Chơi</button>
+                                    <button id="btn-chat" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition">Trò chuyện</button>
                                 </div>
                             </div>
 
-                            <!-- Status -->
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-700">Trạng thái</h3>
-                                <p class="text-md text-gray-600 mt-2">
-                                    Tâm trạng: <span id="mood-text" class="font-semibold text-indigo-600">Vui vẻ 😊</span>
-                                </p>
+                                <h3 class="text-lg font-semibold text-gray-200">Trạng thái</h3>
+                                <p class="text-md text-gray-300 mt-2">Tâm trạng: <span id="mood-text" class="font-semibold text-indigo-400">Vui vẻ 😊</span></p>
                             </div>
                         </div>
                     </div>
@@ -192,11 +269,10 @@
                 <!-- Quests Panel -->
                 <div id="panel-quests" class="tab-panel">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-semibold text-gray-800">Nhiệm vụ Hàng ngày</h3>
-                        <p class="text-sm text-gray-600">Hoàn thành để nhận EXP và Vàng!</p>
+                        <h3 class="text-xl font-semibold text-gray-200">Nhiệm vụ Hàng ngày</h3>
+                        <p class="text-sm text-gray-400">Hoàn thành để nhận EXP và Vàng!</p>
                     </div>
                     <div id="quest-list" class="space-y-3">
-                        <!-- Quests will be dynamically inserted here -->
                         <p class="text-gray-500">Đang tải nhiệm vụ...</p>
                     </div>
                 </div>
@@ -204,22 +280,18 @@
                 <!-- Shop Panel -->
                 <div id="panel-shop" class="tab-panel">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-semibold text-gray-800">Cửa Hàng</h3>
-                        <p class="text-sm text-gray-600">
-                            Vàng của bạn: <span id="gold-text-shop" class="font-bold text-yellow-600">0</span>
-                        </p>
+                        <h3 class="text-xl font-semibold text-gray-200">Cửa Hàng</h3>
+                        <p class="text-sm text-gray-400">Vàng của bạn: <span id="gold-text-shop" class="font-bold text-yellow-400">0</span></p>
                     </div>
                     <div id="shop-list" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <!-- Shop items will be dynamically inserted here -->
                         <p class="text-gray-500">Đang tải vật phẩm...</p>
                     </div>
                 </div>
 
                 <!-- Inventory Panel -->
                 <div id="panel-inventory" class="tab-panel">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Túi Đồ</h3>
+                    <h3 class="text-xl font-semibold text-gray-200 mb-4">Túi Đồ</h3>
                     <div id="inventory-list" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <!-- Inventory items will be dynamically inserted here -->
                         <p class="text-gray-500">Túi đồ của bạn trống trơn.</p>
                     </div>
                 </div>
@@ -228,31 +300,41 @@
         </div>
     </div>
 
-    <!-- Quest Modal (Merged from your old file) -->
+    <!-- Quest Modal -->
     <div id="quest-modal-overlay" class="hidden flex items-center justify-center">
         <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl shadow-2xl w-full max-w-md mx-4">
             <div class="flex justify-between items-center mb-4">
                 <h2 id="modal-title" class="text-xl font-bold text-white">Quest Title</h2>
                 <button id="modal-close-button" class="text-gray-400 hover:text-white text-2xl">&times;</button>
             </div>
-            <div id="modal-content" class="text-gray-300">
-                <!-- Interactive quest content will be injected here -->
+            <div id="modal-content" class="text-gray-300"></div>
+        </div>
+    </div>
+
+    <!-- Chatbot Modal -->
+    <div id="chat-modal-overlay" class="hidden flex items-center justify-center">
+        <div class="bg-gray-800 border border-gray-700 p-0 rounded-xl shadow-2xl w-full max-w-lg mx-4 flex flex-col h-[70vh]">
+            <div class="flex justify-between items-center p-4 border-b border-gray-700 flex-shrink-0">
+                <h2 id="chat-modal-title" class="text-xl font-bold text-white">Trò chuyện</h2>
+                <button id="chat-close-button" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            </div>
+            <div id="chat-log" class="flex-grow p-4 space-y-4 overflow-y-auto flex flex-col"></div>
+            <div class="p-4 border-t border-gray-700 flex items-center flex-shrink-0">
+                <input type="text" id="chat-input" class="w-full p-2 bg-gray-700 border border-gray-600 text-white rounded-md focus:ring-2 focus:ring-purple-500" placeholder="Nói gì đó với pet...">
+                <button id="chat-send-button" class="ml-2 px-4 py-2 text-white font-bold bg-purple-600 hover:bg-purple-700 rounded-md transition-colors">Gửi</button>
             </div>
         </div>
     </div>
-    <!-- End Quest Modal -->
-
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // --- STATE VARIABLES ---
+            let speechBubbleTimer, currentPetX = 50,
+                currentPetY = 50,
+                previousLevel = 1,
+                activeInteractiveQuest = null;
 
-            // --- STATE ---
-            let speechBubbleTimer;
-            let currentPetX = 50, currentPetY = 50;
-            let previousLevel = 1; // For level up animation
-            let activeInteractiveQuest = null; // For modal logic
-
-            // --- SELECTORS ---
+            // --- DOM ELEMENTS ---
             const petElement = document.getElementById('pet');
             const petContainer = document.getElementById('pet-container');
             const speechBubble = document.getElementById('speech-bubble');
@@ -262,24 +344,29 @@
             const expText = document.getElementById('exp-text');
             const petNameText = document.getElementById('pet-name');
             const moodText = document.getElementById('mood-text');
-
             const questList = document.getElementById('quest-list');
             const shopList = document.getElementById('shop-list');
             const inventoryList = document.getElementById('inventory-list');
             const goldTextShop = document.getElementById('gold-text-shop');
-
             const btnFeed = document.getElementById('btn-feed');
             const btnPlay = document.getElementById('btn-play');
-
+            const btnChat = document.getElementById('btn-chat');
             const tabButtons = document.querySelectorAll('.tab-button');
             const tabPanels = document.querySelectorAll('.tab-panel');
 
-            // --- NEW: Quest Modal Selectors ---
+            // Quest Modal Elements
             const modalOverlay = document.getElementById('quest-modal-overlay');
             const modalTitle = document.getElementById('modal-title');
             const modalContent = document.getElementById('modal-content');
             const modalCloseButton = document.getElementById('modal-close-button');
 
+            // Chat Modal Elements
+            const chatModalOverlay = document.getElementById('chat-modal-overlay');
+            const chatModalTitle = document.getElementById('chat-modal-title');
+            const chatLog = document.getElementById('chat-log');
+            const chatInput = document.getElementById('chat-input');
+            const chatSendButton = document.getElementById('chat-send-button');
+            const chatCloseButton = document.getElementById('chat-close-button');
 
             // --- API HELPERS ---
             const api = {
@@ -287,10 +374,15 @@
                 petAction: () => safeFetch('/api/pet/action'),
                 feedPet: () => safeFetch('/api/pet/feed', { method: 'POST' }),
                 playWithPet: () => safeFetch('/api/pet/play', { method: 'POST' }),
-                startQuest: (id) => safeFetch(`/api/start_quest/${id}`), // New
+                startQuest: (id) => safeFetch(`/api/start_quest/${id}`),
                 completeQuest: (id) => safeFetch(`/api/complete_quest/${id}`, { method: 'POST' }),
                 getShopItems: () => safeFetch('/api/shop/items'),
                 buyItem: (id) => safeFetch(`/api/shop/buy/${id}`, { method: 'POST' }),
+                petChat: (message) => safeFetch('/api/pet/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                }),
             };
 
             async function safeFetch(url, options = {}) {
@@ -308,30 +400,24 @@
             }
 
             // --- RENDER FUNCTIONS ---
-            
             function renderPet(pet) {
                 if (!pet) return;
-                
-                // Level up animation
-                if (pet.level > previousLevel) { 
-                    petElement.classList.add('level-up-animation'); 
-                    setTimeout(() => petElement.classList.remove('level-up-animation'), 1000); 
+                if (pet.level > previousLevel) {
+                    petElement.classList.add('level-up-animation');
+                    setTimeout(() => petElement.classList.remove('level-up-animation'), 1000);
                 }
                 previousLevel = pet.level;
-
                 happinessBar.style.width = `${pet.happiness}%`;
                 energyBar.style.width = `${pet.energy}%`;
                 levelText.textContent = pet.level;
                 expText.textContent = `${pet.experience}/${pet.exp_to_next_level} EXP`;
                 petNameText.textContent = pet.name;
                 moodText.textContent = pet.mood;
-                
-                // Update appearance
                 const appearance = pet.appearance;
-                if (appearance && appearance.css_class && appearance.face) { 
-                    petElement.className = ''; // Clear old classes
-                    petElement.classList.add(appearance.css_class); 
-                    petElement.textContent = appearance.face; 
+                if (appearance && appearance.css_class && appearance.face) {
+                    petElement.className = '';
+                    petElement.classList.add(appearance.css_class);
+                    petElement.textContent = appearance.face;
                 } else {
                     petElement.textContent = '(•_•)';
                 }
@@ -345,26 +431,22 @@
                 }
                 quests.forEach(q => {
                     const questEl = document.createElement('div');
-                    questEl.className = 'flex items-center justify-between p-4 bg-gray-50 rounded-lg border';
-                    
+                    questEl.className = 'flex items-center justify-between p-4 bg-gray-700 rounded-lg border border-gray-600';
                     let actionHtml;
                     const isCompleted = q.completed;
-                    
                     if (isCompleted) {
-                        actionHtml = `<span class="py-1 px-4 text-sm font-semibold text-gray-400 bg-gray-200 rounded-full cursor-not-allowed">Done</span>`;
+                        actionHtml = `<span class="py-1 px-4 text-sm font-semibold text-gray-400 bg-gray-800 rounded-full cursor-not-allowed">Done</span>`;
                     } else if (q.type === 'simple') {
-                        actionHtml = `<button data-quest-id="${q.id}" class="btn-complete-quest text-sm font-medium py-2 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 text-white">Hoàn thành</button>`;
+                        actionHtml = `<button data-quest-id="${q.id}" class="btn-complete-quest text-sm font-medium py-2 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white">Hoàn thành</button>`;
                     } else {
-                        actionHtml = `<button data-quest-id="${q.id}" class="btn-start-quest text-sm font-medium py-2 px-4 rounded-lg bg-purple-500 hover:bg-purple-600 text-white">Bắt đầu</button>`;
+                        actionHtml = `<button data-quest-id="${q.id}" class="btn-start-quest text-sm font-medium py-2 px-4 rounded-lg bg-purple-600 hover:bg-purple-700 text-white">Bắt đầu</button>`;
                     }
-                    
                     questEl.innerHTML = `
                         <div>
-                            <p class="font-medium ${isCompleted ? 'line-through text-gray-500' : 'text-gray-800'}">${q.title}</p>
-                            <p class="text-sm text-green-600">+${q.reward_exp} EXP, +${q.reward_gold} Vàng</p>
+                            <p class="font-medium ${isCompleted ? 'line-through text-gray-500' : 'text-gray-200'}">${q.title}</p>
+                            <p class="text-sm text-green-400">+${q.reward_exp} EXP, +${q.reward_gold} Vàng</p>
                         </div>
-                        ${actionHtml}
-                    `;
+                        ${actionHtml}`;
                     questList.appendChild(questEl);
                 });
             }
@@ -378,15 +460,12 @@
                 }
                 items.forEach(item => {
                     const itemEl = document.createElement('div');
-                    itemEl.className = 'item-card border rounded-lg p-4 text-center bg-white shadow-sm';
+                    itemEl.className = 'item-card border border-gray-700 rounded-lg p-4 text-center bg-gray-700 shadow-sm';
                     itemEl.innerHTML = `
                         <div class="item-card-icon">${item.icon}</div>
-                        <p class="font-semibold mt-2">${item.name}</p>
-                        <p class="text-sm text-gray-500">${item.type === 'food' ? `+${item.value} Hạnh phúc` : 'Trang trí'}</p>
-                        <button data-item-id="${item.id}" class="btn-buy-item mt-3 w-full bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-bold py-2 px-3 rounded">
-                            Mua (${item.price} Vàng)
-                        </button>
-                    `;
+                        <p class="font-semibold mt-2 text-gray-200">${item.name}</p>
+                        <p class="text-sm text-gray-400">${item.type === 'food' ? `+${item.value} Hạnh phúc` : 'Trang trí'}</p>
+                        <button data-item-id="${item.id}" class="btn-buy-item mt-3 w-full bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-bold py-2 px-3 rounded"> Mua (${item.price} Vàng) </button>`;
                     shopList.appendChild(itemEl);
                 });
             }
@@ -399,12 +478,11 @@
                 }
                 inventory.forEach(item => {
                     const itemEl = document.createElement('div');
-                    itemEl.className = 'border rounded-lg p-4 text-center bg-gray-50';
+                    itemEl.className = 'border border-gray-700 rounded-lg p-4 text-center bg-gray-700';
                     itemEl.innerHTML = `
                         <div class="item-card-icon">${item.icon}</div>
-                        <p class="font-semibold mt-2">${item.name}</p>
-                        <p class="text-sm text-gray-500">${item.type}</p>
-                    `;
+                        <p class="font-semibold text-gray-200 mt-2">${item.name}</p>
+                        <p class="text-sm text-gray-400">${item.type}</p>`;
                     inventoryList.appendChild(itemEl);
                 });
             }
@@ -413,7 +491,7 @@
                 goldTextShop.textContent = gold;
             }
 
-            // --- PET ACTIONS ---
+            // --- UI & PET INTERACTION ---
             function showPetQuote(text, duration = 4000) {
                 if (speechBubbleTimer) clearTimeout(speechBubbleTimer);
                 speechBubble.textContent = text;
@@ -432,7 +510,8 @@
 
             function movePet(direction) {
                 const moveAmount = 30;
-                let newX = currentPetX, newY = currentPetY;
+                let newX = currentPetX,
+                    newY = currentPetY;
                 if (direction.includes('left')) newX -= moveAmount;
                 if (direction.includes('right')) newX += moveAmount;
                 if (direction.includes('up')) newY -= moveAmount;
@@ -441,11 +520,11 @@
                 currentPetY = Math.max(10, Math.min(90, newY));
                 petElement.style.left = `${currentPetX}%`;
                 petElement.style.top = `${currentPetY}%`;
-                if (speechBubble.classList.contains('visible')) positionSpeechBubble();
+                if (speechBubble.classList.contains('visible')) {
+                    positionSpeechBubble();
+                }
             }
 
-            // --- MAIN LOGIC ---
-            
             async function loadGameData() {
                 const data = await api.getGameData();
                 if (data) {
@@ -459,7 +538,7 @@
             async function petActionLoop() {
                 const data = await api.petAction();
                 if (data) {
-                    renderPet(data); // Pet action API returns full pet object
+                    renderPet(data);
                     switch (data.action) {
                         case 'motivate':
                             showPetQuote(data.quote);
@@ -475,7 +554,6 @@
             }
 
             // --- EVENT HANDLERS ---
-            
             async function handleFeedClick() {
                 const data = await api.feedPet();
                 if (data) {
@@ -496,7 +574,6 @@
             async function handleQuestListClick(e) {
                 const completeButton = e.target.closest('.btn-complete-quest');
                 const startButton = e.target.closest('.btn-start-quest');
-                
                 if (completeButton) {
                     const questId = completeButton.dataset.questId;
                     const data = await api.completeQuest(questId);
@@ -516,7 +593,6 @@
                 if (!e.target.matches('.btn-buy-item')) return;
                 const itemId = e.target.dataset.itemId;
                 if (!itemId) return;
-                
                 const data = await api.buyItem(itemId);
                 if (data) {
                     renderInventory(data.inventory);
@@ -528,16 +604,13 @@
             function handleTabClick(e) {
                 const clickedTab = e.target.closest('.tab-button');
                 if (!clickedTab) return;
-
                 const tabId = clickedTab.dataset.tab;
-                
                 tabButtons.forEach(btn => btn.classList.remove('active'));
                 tabPanels.forEach(panel => panel.classList.remove('active'));
-
                 clickedTab.classList.add('active');
                 document.getElementById(`panel-${tabId}`).classList.add('active');
             }
-            
+
             function showToast(message, type = 'info') {
                 const toast = document.createElement('div');
                 const bgColor = type === 'error' ? 'bg-red-500' : (type === 'success' ? 'bg-green-500' : 'bg-blue-500');
@@ -547,35 +620,39 @@
                 setTimeout(() => toast.remove(), 3000);
             }
 
-            // --- NEW: INTERACTIVE QUEST LOGIC (Merged) ---
-
+            // --- INTERACTIVE QUESTS ---
             async function startInteractiveQuest(questId) {
                 const quest = await api.startQuest(questId);
                 if (!quest) {
                     showToast("Không thể bắt đầu nhiệm vụ này.", "error");
                     return;
                 }
-                
                 activeInteractiveQuest = quest;
                 modalTitle.textContent = quest.title;
-
                 if (quest.type === 'quiz') buildQuiz(quest.data);
                 else if (quest.type === 'puzzle') buildPuzzle(quest.data);
                 else if (quest.type === 'journaling') buildJournaling(quest.data);
                 else if (quest.type === 'breathing') buildBreathing(quest.data);
-                
                 openModal();
             }
-            
-            function openModal() { modalOverlay.classList.remove('hidden'); }
-            function closeModal() { modalOverlay.classList.add('hidden'); modalContent.innerHTML = ''; activeInteractiveQuest = null; }
 
-            // Builders for modal content
+            function openModal() {
+                modalOverlay.classList.remove('hidden');
+            }
+
+            function closeModal() {
+                modalOverlay.classList.add('hidden');
+                modalContent.innerHTML = '';
+                activeInteractiveQuest = null;
+            }
+
             function buildQuiz(data) {
-                let optionsHtml = data.options.map(opt => 
+                let optionsHtml = data.options.map(opt =>
                     `<button class="w-full text-left p-3 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-700" onclick="checkQuizAnswer(${opt.correct})">${opt.text}</button>`
                 ).join('');
-                modalContent.innerHTML = `<p class="mb-4 text-gray-300">${data.question}</p><div class="space-y-2">${optionsHtml}</div>`;
+                modalContent.innerHTML = `
+                    <p class="mb-4 text-gray-300">${data.question}</p>
+                    <div class="space-y-2">${optionsHtml}</div>`;
             }
 
             function buildPuzzle(data) {
@@ -583,14 +660,14 @@
                     <p class="mb-2 text-gray-300">${data.question}</p>
                     <p class="text-2xl font-bold text-center tracking-widest my-4 text-white">${data.scrambled_word}</p>
                     <input id="puzzle-input" type="text" class="w-full p-2 border bg-gray-700 border-gray-600 text-white rounded-md" placeholder="Your answer...">
-                    <button class="w-full mt-4 py-2 text-white font-bold bg-green-600 hover:bg-green-500 rounded-lg" onclick="checkPuzzleAnswer('${data.correct_answer}')">Submit</button>`;
+                    <button class="w-full mt-4 py-2 text-white font-bold bg-green-600 hover:bg-green-700 rounded-lg" onclick="checkPuzzleAnswer('${data.correct_answer}')">Submit</button>`;
             }
 
             function buildJournaling(data) {
                 modalContent.innerHTML = `
                     <p class="mb-4 text-gray-300">${data.prompt}</p>
                     <textarea id="journal-input" rows="5" class="w-full p-3 border bg-gray-700 border-gray-600 text-white rounded-md focus:ring-2 focus:ring-blue-500" placeholder="Hãy viết ra suy nghĩ của bạn..."></textarea>
-                    <button class="w-full mt-4 py-2 text-white font-bold bg-green-600 hover:bg-green-500 rounded-lg transition-colors" onclick="submitJournal()">Hoàn Thành</button>`;
+                    <button class="w-full mt-4 py-2 text-white font-bold bg-green-600 hover:bg-green-700 rounded-lg transition-colors" onclick="submitJournal()">Hoàn Thành</button>`;
             }
 
             function buildBreathing(data) {
@@ -604,7 +681,6 @@
                 startBreathingAnimation(data.duration_seconds);
             }
 
-            // Functions to check answers (now attached to window)
             window.checkQuizAnswer = async function(isCorrect) {
                 if (isCorrect) {
                     showToast('Chính xác!', 'success');
@@ -648,10 +724,9 @@
                     else if (states[stateIndex] === "Thở ra") circle.style.transform = 'scale(1)';
                     stateIndex = (stateIndex + 1) % 4;
                 }
-                
                 setTimeout(() => {
                     animateState();
-                    const animationInterval = setInterval(animateState, 4000); // 4s per state
+                    const animationInterval = setInterval(animateState, 4000);
                     let timeLeft = duration;
                     const timerInterval = setInterval(async () => {
                         timeLeft--;
@@ -663,14 +738,13 @@
                             circle.style.transform = 'scale(1)';
                             completeBtn.disabled = false;
                             completeBtn.classList.replace('bg-gray-600', 'bg-green-600');
-                            completeBtn.classList.replace('cursor-not-allowed', 'hover:bg-green-500');
+                            completeBtn.classList.replace('cursor-not-allowed', 'hover:bg-green-700');
                             completeBtn.onclick = () => completeActiveQuest();
                         }
                     }, 1000);
                 }, 1000);
             }
 
-            // Helper to complete quest from modal
             async function completeActiveQuest() {
                 if (!activeInteractiveQuest) return;
                 const data = await api.completeQuest(activeInteractiveQuest.id);
@@ -682,30 +756,110 @@
                 closeModal();
             }
 
+            // --- CHATBOT FUNCTIONS ---
+            function openChat() {
+                chatLog.innerHTML = '';
+                addMessageToChatLog(`Chào bạn, tớ là ${petNameText.textContent} đây! Bạn muốn tâm sự điều gì?`, 'bot', {
+                    pet_face: petElement.textContent,
+                    pet_mood: moodText.textContent
+                });
+                chatModalOverlay.classList.remove('hidden');
+                chatInput.focus();
+            }
+
+            function closeChat() {
+                chatModalOverlay.classList.add('hidden');
+            }
+
+            function addMessageToChatLog(message, sender, petData = {}) {
+                const messageContainer = document.createElement('div');
+                messageContainer.className = 'chat-message-container';
+                const messageBubble = document.createElement('div');
+                messageBubble.className = 'w-fit max-w-xs p-3 rounded-lg break-words';
+                messageBubble.textContent = message;
+
+                if (sender === 'user') {
+                    messageContainer.classList.add('user');
+                    messageBubble.classList.add('bg-blue-600', 'text-white');
+                    messageContainer.appendChild(messageBubble);
+                } else {
+                    const avatar = document.createElement('div');
+                    avatar.className = 'chat-avatar bg-gray-700 border border-gray-600 text-cyan-400';
+                    avatar.textContent = petData.pet_face || '...';
+                    messageBubble.classList.add('bg-gray-600', 'text-white');
+                    messageContainer.appendChild(avatar);
+                    messageContainer.appendChild(messageBubble);
+                    chatModalTitle.textContent = `Trò chuyện với ${petNameText.textContent} ${petData.pet_mood || ''}`;
+                }
+                chatLog.appendChild(messageContainer);
+                chatLog.scrollTop = chatLog.scrollHeight;
+            }
+
+            async function handleSendMessage() {
+                const message = chatInput.value.trim();
+                if (!message) return;
+                addMessageToChatLog(message, 'user');
+                chatInput.value = '';
+                chatSendButton.disabled = true;
+                petElement.textContent = 'O_O';
+
+                const typingIndicator = document.createElement('div');
+                typingIndicator.id = 'typing-indicator';
+                typingIndicator.className = 'chat-message-container';
+                typingIndicator.innerHTML = `
+                    <div class="chat-avatar bg-gray-700 border border-gray-600 text-cyan-400">...</div>
+                    <div class="p-3 rounded-lg bg-gray-600 text-gray-400">Pet is typing...</div>`;
+                chatLog.appendChild(typingIndicator);
+                chatLog.scrollTop = chatLog.scrollHeight;
+
+                const data = await api.petChat(message);
+                typingIndicator.remove();
+
+                if (data && data.reply) {
+                    addMessageToChatLog(data.reply, 'bot', data);
+                } else {
+                    addMessageToChatLog("Tớ gặp lỗi rồi, không thể trả lời...", 'bot', { pet_face: '(`-´)' });
+                }
+
+                const latestData = await api.getGameData();
+                if (latestData) renderPet(latestData.pet);
+                chatSendButton.disabled = false;
+            }
+
 
             // --- INITIALIZATION ---
             function init() {
-                // Set up event listeners
+                // Event Listeners
                 tabButtons.forEach(btn => btn.addEventListener('click', handleTabClick));
                 btnFeed.addEventListener('click', handleFeedClick);
                 btnPlay.addEventListener('click', handlePlayClick);
-                questList.addEventListener('click', handleQuestListClick); // Updated
+                questList.addEventListener('click', handleQuestListClick);
                 shopList.addEventListener('click', handleBuyItemClick);
-
-                // Modal listeners
-                modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+                modalOverlay.addEventListener('click', (e) => {
+                    if (e.target === modalOverlay) closeModal()
+                });
                 modalCloseButton.addEventListener('click', closeModal);
+                btnChat.addEventListener('click', openChat);
+                chatCloseButton.addEventListener('click', closeChat);
+                chatModalOverlay.addEventListener('click', (e) => {
+                    if (e.target === chatModalOverlay) closeChat()
+                });
+                chatSendButton.addEventListener('click', handleSendMessage);
+                chatInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') handleSendMessage()
+                });
 
-                // Load initial data
+                // Initial data load
                 loadGameData();
-                renderShop(); // Shop items are static, load them once
+                renderShop();
 
-                // Start pet action loop
-                setInterval(petActionLoop, 6000); // Pet acts every 6 seconds
+                // Start pet's background actions loop
+                setInterval(petActionLoop, 6000);
             }
 
             init();
         });
     </script>
 </body>
+
 </html>
