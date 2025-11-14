@@ -1,0 +1,171 @@
+{
+  "videos": [
+    {
+      "title": "Cách giảm stress và áp lực trước mọi kỳ thi (VN)",
+      "youtube_video_id": "gvogjpLTb50",
+      "tags": "exam_stress"
+    },
+    {
+      "title": "Học sinh cuối cấp căng thẳng vì áp lực thi cử (VN)",
+      "youtube_video_id": "Ha6guNv9fOA",
+      "tags": "exam_stress"
+    },
+    {
+      "title": "Managing Exam Stress (EN)",
+      "youtube_video_id": "Pw8E_IehaSo",
+      "tags": "exam_stress"
+    },
+    {
+      "title": "Khi người lớn cô đơn (VN)",
+      "youtube_video_id": "NcyDxazsMWY",
+      "tags": "feeling_lonely"
+    },
+    {
+      "title": "Loneliness crisis (EN)",
+      "youtube_video_id": "vFp5su6oUj8",
+      "tags": "feeling_lonely"
+    },
+    {
+      "title": "Coping with loneliness (EN)",
+      "youtube_video_id": "jEVlYGJyDdE",
+      "tags": "feeling_lonely"
+    },
+    {
+      "title": "How to get over toxic relationship? | Tô Nhi A | TEDxUEF (VN)",
+      "youtube_video_id": "GFqgmX-szyg",
+      "tags": "relationship_problem"
+    },
+    {
+      "title": "Window of Love: Husband Depressed Because His Wife Is Cold (EN)",
+      "youtube_video_id": "uAWt9dy4WrE",
+      "tags": "relationship_problem"
+    },
+    {
+      "title": "Signs your partner is losing interest (EN)",
+      "youtube_video_id": "lsv2WPz5ggs",
+      "tags": "relationship_problem"
+    },
+    {
+      "title": "Depression and Anxiety – Vietnamese subtitles (VN)",
+      "youtube_video_id": "buwiaxS8Y8I",
+      "tags": "general_sadness"
+    },
+    {
+      "title": "Feeling Depressed, Happy and Other Emotions (VN subs)",
+      "youtube_video_id": "8Eknws6s4zU",
+      "tags": "general_sadness"
+    },
+    {
+      "title": "Looking after your mental health (VN)",
+      "youtube_video_id": "TjlVFLQgpxM",
+      "tags": "general_sadness"
+    },
+    {
+      "title": "Suicide Prevention – 988 Line PSA (VN)",
+      "youtube_video_id": "GLjngVF0N6g",
+      "tags": "suicidal_ideation"
+    },
+    {
+      "title": "Discover Mental Health in Vietnam with Elizabeth Nguyen (EN)",
+      "youtube_video_id": "0VwjcUSP1kQ",
+      "tags": "suicidal_ideation"
+    },
+    {
+      "title": "Teen Suicide Prevention (EN)",
+      "youtube_video_id": "3BByqa7bhto",
+      "tags": "suicidal_ideation"
+    }
+  ],
+  "ebooks": [
+    {
+      "title": "A Practical Guide: Stress and Stress Management (VN)",
+      "pdf_link": "https://www.scribd.com/document/785466483/A-Practical-Guide-Stress-and-Stress-Management-Vietnamese",
+      "thumbnail_image_link": "https://placehold.co/400x300/FFF9C4/333?text=E-Book+Cover",
+      "tags": "exam_stress"
+    },
+    {
+      "title": "The Little Book of Exam Stress – Help for Young People (EN)",
+      "pdf_link": "https://cypsp.hscni.net/wp-content/uploads/2022/04/The-little-book-of-Exam-Stress-Help-for-young-people-English.pdf",
+      "thumbnail_image_link": "https://placehold.co/400x300/FFF9C4/333?text=E-Book+Cover",
+      "tags": "exam_stress"
+    },
+    {
+      "title": "Managing Exam Stress (EN)",
+      "pdf_link": "https://images.assettype.com/whiteswanfoundation/2020-06/0c88e822-1c40-4edd-a180-c81d9601e74a/Managing_exam_stress_White_Swan_Foundation.pdf",
+      "thumbnail_image_link": "https://placehold.co/400x300/FFF9C4/333?text=E-Book+Cover",
+      "tags": "exam_stress"
+    },
+    {
+      "title": "Mental Health Support Guide (Loneliness) (EN)",
+      "pdf_link": "https://www.mentalhealth.org.uk/sites/default/files/2022-07/mhf-mental-health-awareness-week-2022-loneliness-support-guide.pdf",
+      "thumbnail_image_link": "https://placehold.co/400x300/B3E5FC/333?text=E-Book+Cover",
+      "tags": "feeling_lonely"
+    },
+    {
+      "title": "Coping with Loneliness (EN)",
+      "pdf_link": "https://www.mcgill.ca/student-wellness-hub/files/student-wellness-hub/coping_with_loneliness.pdf",
+      "thumbnail_image_link": "https://placehold.co/400x300/B3E5FC/333?text=E-Book+Cover",
+      "tags": "feeling_lonely"
+    },
+    {
+      "title": "How to Cope with Loneliness (NHS Guide) (EN)",
+      "pdf_link": "https://www.nhsinform.scot/media/3118/nhsinform-how-to-cope-with-loneliness-a5-booklet-v13.pdf",
+      "thumbnail_image_link": "https://placehold.co/400x300/B3E5FC/333?text=E-Book+Cover",
+      "tags": "feeling_lonely"
+    },
+    {
+      "title": "Healthy Relationships 101 (EN)",
+      "pdf_link": "https://therelationshipfoundation.org/wp-content/uploads/2021/02/Healthy-Relationships-101-by-Michael-Jascz-published-by-the-relationship-foundation.pdf",
+      "thumbnail_image_link": "https://placehold.co/400x300/C8E6C9/333?text=E-Book+Cover",
+      "tags": "relationship_problem"
+    },
+    {
+      "title": "Healing After Heartbreak (EN)",
+      "pdf_link": "https://www.scribd.com/document/878045626/Relationship-Healing-Guide",
+      "thumbnail_image_link": "https://placehold.co/400x300/C8E6C9/333?text=E-Book+Cover",
+      "tags": "relationship_problem"
+    },
+    {
+      "title": "You Can Heal Your Life (EN)",
+      "pdf_link": "https://archive.org/download/YouCanHealYourLifeLouiseL.Hay/You%20Can%20Heal%20your%20Life%20-%20Louise%20L.%20Hay.pdf",
+      "thumbnail_image_link": "https://placehold.co/400x300/C8E6C9/333?text=E-Book+Cover",
+      "tags": "relationship_problem"
+    },
+    {
+      "title": "MoodJuice – Depression Self‑Help Guide (EN)",
+      "pdf_link": "https://www.mcgill.ca/counselling/files/counselling/depression_moodjuice_self-help_guide.pdf",
+      "thumbnail_image_link": "https://placehold.co/400x300/D1C4E9/333?text=E-Book+Cover",
+      "tags": "general_sadness"
+    },
+    {
+      "title": "Depression Self‑Help (EN)",
+      "pdf_link": "https://www.scribd.com/document/238369840/Depression-Self-Help",
+      "thumbnail_image_link": "https://placehold.co/400x300/D1C4E9/333?text=E-Book+Cover",
+      "tags": "general_sadness"
+    },
+    {
+      "title": "You Will Get Through This Night (EN)",
+      "pdf_link": "https://en.wikipedia.org/wiki/You_Will_Get_Through_This_Night",
+      "thumbnail_image_link": "https://placehold.co/400x300/D1C4E9/333?text=E-Book+Cover",
+      "tags": "general_sadness"
+    },
+    {
+      "title": "Understanding Mental Disorders (VN)",
+      "pdf_link": "https://headspace.org.au/assets/Uploads/Centres/Meadowbrook/Understanding-psychosis-booklet-Vietnamese.pdf",
+      "thumbnail_image_link": "https://placehold.co/400x300/F8D7DA/721C24?text=E-Book+Cover",
+      "tags": "suicidal_ideation"
+    },
+    {
+      "title": "Overcoming Depression Workbook (EN)",
+      "pdf_link": "https://www.adrian.edu/files/assets/overcomingdepressionworkbook.pdf",
+      "thumbnail_image_link": "https://placehold.co/400x300/F8D7DA/721C24?text=E-Book+Cover",
+      "tags": "suicidal_ideation"
+    },
+    {
+      "title": "The Little Book of Mental Health (EN)",
+      "pdf_link": "https://www.cypsomersethealth.org/images/The_little_book_of_mental_health_-_version_6.pdf",
+      "thumbnail_image_link": "https://placehold.co/400x300/F8D7DA/721C24?text=E-Book+Cover",
+      "tags": "suicidal_ideation"
+    }
+  ]
+}
