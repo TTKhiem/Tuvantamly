@@ -5,8 +5,6 @@ pip install python-dotenv
 pip install Werkzeug
 2. Tạo một file mới tên là .env trong thư mục gốc của dự án.
 Sao chép nội dung dưới đây và dán vào file .env:
-# Key dành cho Chatbot tư vấn chuyên sâu
 GOOGLE_CHATBOT_API_KEY="YOUR_GEMINI_API_KEY_FOR_COUNSELING_HERE"
-# Key dành cho Pet Bot trò chuyện đơn giản
 GOOGLE_PETBOT_API_KEY="YOUR_GEMINI_API_KEY_FOR_THE_PET_HERE"
 
