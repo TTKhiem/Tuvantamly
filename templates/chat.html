@@ -64,7 +64,7 @@
         if(!confirm("Bạn muốn kết thúc và gửi thông tin cho bác sĩ?")) return;
         await fetch('/api/chat/complete', { method: 'POST' });
         alert("Cảm ơn bạn. Cuộc hội thoại đã được lưu vào hồ sơ.");
-        window.location.href = "{{ url_for('user_dashboard') }}";
+        window.location.href = "{{ url_for('dashboard') }}";
     }
 </script>
 </body>
