@@ -6,6 +6,111 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+    <!-- NEW STYLES FOR WIDGETS AND LAYOUT -->
+    <style>
+        /* This creates the main 2-column grid */
+        .page-layout {
+            display: grid;
+            /* Adjust grid as needed. '1fr' is flexible, '320px' is fixed. */
+            grid-template-columns: 1fr 320px;
+            gap: 24px;
+            /* Add padding to keep content off the edges */
+            padding: 24px;
+            position: relative;
+        }
+
+        /* This is the container for the widgets */
+        .sidebar-widgets {
+            /* Fix its position relative to the viewport */
+            position: sticky;
+            top: 100px; /* Position it below your header (adjust as needed) */
+            height: calc(100vh - 120px); /* Make it fill the height minus header/padding */
+            overflow-y: auto; /* Allow scrolling if widgets are tall */
+        }
+
+        /* Base styles for all widgets */
+        .widget {
+            background-color: #f9fafb; /* Light gray background */
+            border: 1px solid #e5e7eb; /* Light border */
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .widget-title {
+            font-size: 1.125rem; /* 18px */
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        /* Pet Preview Widget */
+        .widget-pet {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .widget-pet:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07);
+        }
+        .pet-preview-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .pet-preview-face {
+            font-size: 3rem; /* 48px */
+            line-height: 1;
+            padding: 12px;
+            background-color: #e0e7ff;
+            border-radius: 50%;
+            color: #4f46e5;
+        }
+        .pet-preview-stats {
+            font-size: 0.875rem; /* 14px */
+            color: #4b5563;
+        }
+        .pet-preview-stats span {
+            display: block;
+            margin-top: 4px;
+        }
+        .pet-preview-cta {
+            font-size: 0.75rem; /* 12px */
+            color: #6b7280;
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        /* Quest List Widget */
+        .quest-list {
+            list-style-type: none;
+            padding-left: 0;
+            margin: 0;
+            font-size: 0.875rem; /* 14px */
+        }
+        .quest-list li {
+            padding: 8px 4px;
+            border-bottom: 1px solid #f3f4f6;
+            color: #374151;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .quest-list li:last-child {
+            border-bottom: none;
+        }
+        .quest-list .completed {
+            text-decoration: line-through;
+            color: #9ca3af;
+        }
+    </style>
+    <!-- END NEW STYLES -->
 </head>
 <!-- <div id="chatbot-container">
   <iframe
@@ -25,15 +130,15 @@
         <!-- <a href="#services">Services</a>
         <a href="#therapists">Therapists</a>
         <a href="#contact">Contact</a> -->
-        {% if user %}
+    {% if user %}
     <!-- Nếu đã login: hiển thị avatar -->
     <div class="user-menu-wrapper">
         <img src="{{ url_for('static', filename='images/avatar.png') }}" 
              class="user-avatar" alt="User Avatar">
         <div class="dropdown">
-            <a href="{{ url_for('user_dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
             <a href="{{ url_for('logout') }}">Logout</a>
-            <a href="{{ url_for('your_therapists') }}">Your therapists</a>
+            <a href="{{ url_for('therapist_suggest') }}">therapist_workspace</a>
             <!-- <a href="{{ url_for('logout') }}">Logout</a> -->
         </div>
     </div>
@@ -44,152 +149,135 @@
 
     </nav>
     </header>
-    <section id="home"class="hero-section">
-        <div class="hero-overlay"></div>
-            <div class="hero-content">
-                <h3 class="hero-subtitle">Ligma</h3>
-                <h1 class="hero-title">Your mind, our care</h1>
-                <p class="hero-text">
-                 At <strong>Ligma</strong>, we provide compassionate and confidential
-                psychological care to help you navigate through stress, anxiety, and
-                emotional challenges. Our certified therapists offer individual, couple,
-                and family therapy — both in-person and online — so you can find healing
-                wherever you are.
-                <br><br>
-                    <em>Your mind matters. Your growth matters. Together, we heal.</em>
-                </p>
-                <div class="hero-buttons">
-                <a href="#booking" class="btn-orange">Book a consultation</a>
-                <a href="https://facebook.com" target="_blank" class="btn-blue">Message us on Facebook</a>
+
+    <!-- NEW PAGE LAYOUT WRAPPER -->
+    <div class="page-layout">
+
+        <!-- Main Content Area -->
+        <main class="page-content">
+
+            <section id="home"class="hero-section">
+                <div class="hero-overlay"></div>
+                    <div class="hero-content">
+                        <h3 class="hero-subtitle">Ligma</h3>
+                        <h1 class="hero-title">Your mind, our care</h1>
+                        <p class="hero-text">
+                         At <strong>Ligma</strong>, we provide compassionate and confidential
+                        psychological care to help you navigate through stress, anxiety, and
+                        emotional challenges. Our certified therapists offer individual, couple,
+                        and family therapy — both in-person and online — so you can find healing
+                        wherever you are.
+                        <br><br>
+                            <em>Your mind matters. Your growth matters. Together, we heal.</em>
+                        </p>
+                        <div class="hero-buttons">
+                        <a href="#booking" class="btn-orange">Book a consultation</a>
+                        <a href="https://facebook.com" target="_blank" class="btn-blue">Message us on Facebook</a>
+                    </div>
+                </div>
+            </section>
+            <div class="section-divider">--- NEXT SECTION ---</div>
+            <section id="about">
+            <div class="about-container">
+                <!-- <div class="about-image">
+                    <img src="e9911a57-ffbd-4e46-a072-e30331731916.png" alt="Ligma Team" style="max-width:100%; height:auto;"> -->
+                <!-- </div> -->
+                <div class="about-content-wrapper"> <div class="about-text">
+                        <span class="about-heading-small">ABOUT</span> <h2>Ligma</h2>
+                        <p>
+                            Ligma is a mental health counseling group founded with the mission to make psychological support more accessible for everyone.
+                            We provide individual, couple, and family therapy, both in-person and online, ensuring flexibility and comfort for every client.
+                            
+                        <p>
+                            Whether you are struggling with emotional stress, self-doubt, or communication problems, our professional therapists are here to guide you with compassion and care.
+                            At Ligma, we don’t just listen — we help you heal, grow, and rediscover your inner peace.
+                        </p>
+                        </p>
+                        <hr class="about-divider"> </div>
+                    </div>
             </div>
-        </div>
-    </section>
-    <div class="section-divider">--- NEXT SECTION ---</div>
-    <section id="about">
-    <div class="about-container">
-        <!-- <div class="about-image">
-            <img src="e9911a57-ffbd-4e46-a072-e30331731916.png" alt="Ligma Team" style="max-width:100%; height:auto;"> -->
-        <!-- </div> -->
-        <div class="about-content-wrapper"> <div class="about-text">
-                <span class="about-heading-small">ABOUT</span> <h2>Ligma</h2>
-                <p>
-                    Ligma is a mental health counseling group founded with the mission to make psychological support more accessible for everyone.
-                    We provide individual, couple, and family therapy, both in-person and online, ensuring flexibility and comfort for every client.
-                    
-                <p>
-                    Whether you are struggling with emotional stress, self-doubt, or communication problems, our professional therapists are here to guide you with compassion and care.
-                    At Ligma, we don’t just listen — we help you heal, grow, and rediscover your inner peace.
-                </p>
-                </p>
-                <hr class="about-divider"> </div>
+                    <div class="therapist-container">
+              <div class="therapist-card">
+                <img src="{{ url_for('static', filename='images/1.jpg') }}" alt="Therapist 1">
+                <h3>Lionel Messi</h3>
+                <p class="role">Psychologist</p>
+                <ul>
+                  <li>Depression, stress, anxiety, and burnout at work</li>
+                  <li>Trust issues and building trust</li>
+                  <li>Relationship problems with friends, partners, and family</li>
+                  <li>Couple therapy, Family Therapy</li>
+                </ul>
+              </div>
+        
+              <div class="therapist-card">
+                <img src="{{ url_for('static', filename='images/2.jpg') }}" alt="Therapist 2">
+                <h3>Cristiano Ronaldo</h3>
+                <p class="role">Psychologist</p>
+                <ul>
+                  <li>Self-esteem and self-worth</li>
+                  <li>Finding life purpose and building motivation</li>
+                  <li>Emotional regulation and management</li>
+                  <li>Adjustment and adaptation difficulties</li>
+                </ul>
+              </div>
             </div>
-    </div>
-            <div class="therapist-container">
-      <div class="therapist-card">
-        <img src="{{ url_for('static', filename='images/1.jpg') }}" alt="Therapist 1">
-        <h3>Lionel Messi</h3>
-        <p class="role">Psychologist</p>
-        <ul>
-          <li>Depression, stress, anxiety, and burnout at work</li>
-          <li>Trust issues and building trust</li>
-          <li>Relationship problems with friends, partners, and family</li>
-          <li>Couple therapy, Family Therapy</li>
-        </ul>
-      </div>
+        </section>
+            <!-- ... All your other sections like services, therapists, contact ... -->
+            <!-- ... (I've removed them for brevity, but they would be here) ... -->
 
-      <div class="therapist-card">
-        <img src="{{ url_for('static', filename='images/2.jpg') }}" alt="Therapist 2">
-        <h3>Cristiano Ronaldo</h3>
-        <p class="role">Psychologist</p>
-        <ul>
-          <li>Self-esteem and self-worth</li>
-          <li>Finding life purpose and building motivation</li>
-          <li>Emotional regulation and management</li>
-          <li>Adjustment and adaptation difficulties</li>
-        </ul>
-      </div>
-    </div>
-</section>
-    <!-- <div class="section-divider">--- NEXT SECTION ---</div>
-    <section id="services">
-        <h2>Services</h2>
-        <p>Các dịch vụ mà trang web cung cấp...</p>
-    </section>
-    <div class="section-divider">--- NEXT SECTION ---</div>
-    <section id="therapists"> -->
-    <!-- <h2>Our Therapists</h2>
-        <div class="therapist-container">
+        </main>
+        
+        <!-- NEW WIDGET SIDEBAR -->
+        <!-- This entire sidebar will only show if the user is logged in and has a pet -->
+        {% if user and pet %}
+        <aside class="sidebar-widgets">
+            
+            <!-- Pet Preview Widget -->
+            <a href="{{ url_for('pet_page') }}" class="widget widget-pet">
+                <h3 class="widget-title">{{ pet.name }}</h3>
+                <div class="pet-preview-content">
+                    <!-- Make sure the face appearance data exists -->
+                    <div class="pet-preview-face">{{ pet.appearance.face if pet.appearance else '^_^' }}</div>
+                    <div class="pet-preview-stats">
+                        <strong>Level:</strong> {{ pet.level }}
+                        <span><strong>Mood:</strong> {{ pet.mood }}</span>
+                    </div>
+                </div>
+                <div class="pet-preview-cta">Click to visit your pet!</div>
+            </a>
 
-   
-    <div class="therapist">
-        <img src="{{ url_for('static', filename='images/1.jpg') }}" alt="Therapist 1">
-        <div class="info">
-            <h3>Lionel Messi</h3>
-            <p class="role">Psychologist</p>
+            <!-- Daily Quests Widget -->
+            <div class="widget widget-quests">
+                <h3 class="widget-title">Daily Quests</h3>
+                {% if quests %}
+                <ul class="quest-list">
+                    {% for quest in quests %}
+                    <li class="{{ 'completed' if quest.completed else '' }}">
+                        <span>{{ quest.title }}</span>
+                        <span>{% if quest.completed %}✅{% else %}⏳{% endif %}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="quest-list-empty">No quests available today. Check back tomorrow!</p>
+                {% endif %}
+            </div>
 
-            <h4>Specialized</h4>
-            <ul>
-                <li>Depression, stress, anxiety, and burnout at work</li>
-                <li>Trust issues and building trust</li>
-                <li>Relationship problems with friends, partners, and family</li>
-                <li>Couple therapy, Family Therapy</li>
-            </ul>
+        </aside>
+        {% endif %}
+        <!-- END NEW WIDGET SIDEBAR -->
 
-            <h4>Qualifying Certifications and Credentials</h4>
-            <ul>
-                <li>Emotionally Focused for couple therapy (EFT)</li>
-            </ul>
+    </div> 
+    <!-- END NEW PAGE LAYOUT WRAPPER -->
 
-            <h4>Education</h4>
-            <ul>
-                <li>Bachelor’s degree in Arts Psychology Major, Thammasat University</li>
-            </ul>
-        </div>
-    </div>
-
-    
-    <div class="therapist">
-        <img src="{{ url_for('static', filename='images/2.jpg') }}" alt="Therapist 2">
-        <div class="info">
-            <h3>Cristiano Ronaldo</h3>
-            <p class="role">Psychologist</p>
-
-            <h4>Specialized</h4>
-            <ul>
-                <li>Self-esteem and self-worth</li>
-                <li>Finding life purpose and building motivation</li>
-                <li>Emotional regulation and management</li>
-                <li>Adjustment and adaptation difficulties</li>
-            </ul>
-
-            <h4>Qualifying Certifications and Credentials</h4>
-            <ul>
-                <li>Basic Skills in Cognitive Behavioral Therapy (CBT) workshop</li>
-                <li>Forensic Psychology</li>
-            </ul>
-
-            <h4>Education</h4>
-            <ul>
-                <li>Bachelor’s degree in Arts Psychology Major, Thammasat University</li>
-            </ul>
-        </div>
-    </div>
-
-</div>
-
-
-    </section>
-    <div class="section-divider">--- NEXT SECTION ---</div>
-    <section id="contact">
-        <h2>Contact</h2>
-        <p>Thông tin liên hệ...</p>
-    </section> -->
 
     <div class="wrapper">
        
         <span class="icon-close">
             <ion-icon name="close-outline"></ion-icon>
         </span>
+        
+        <!-- This 'active' class is now controlled by Flask -->
         <div class="form-box login {% if form_type == 'login' %}active{% endif %}">
             <h2>Login</h2>
             <form action="{{ url_for('login') }}" method="POST">
@@ -208,13 +296,14 @@
                 <button type="submit" class="btn">Login</button>
                 <div class="login-register">
                     <p>Don't have an account?
+                        <!-- This now points to your register_page route -->
                         <a href="{{ url_for('register_page') }}" class="register-link">Register</a>
                     </p>
                 </div>
             </form>
         </div>
         
-
+        <!-- This 'active' class is now controlled by Flask -->
         <div class="form-box register {% if form_type == 'register' %}active{% endif %}">
             <h2>Registration</h2>
             <form action="{{ url_for('register') }}" method="POST">
@@ -236,6 +325,7 @@
                 <button type="submit" class="btn">Register</button>
                 <div class="login-register">
                     <p>Already have an account?
+                        <!-- This now points back to the home/login page -->
                         <a href="{{ url_for('home') }}" class="login-link">Login</a>
                     </p>
                 </div>
@@ -244,257 +334,133 @@
     </div>
 
 <script>
-// const wrapper = document.querySelector('.wrapper');
-// const loginForm = document.querySelector('.form-box.login');
-// const registerForm = document.querySelector('.form-box.register');
-// const registerLink = document.querySelector('.register-link');
-// const loginLink = document.querySelector('.login-link');
-// const btnPopup = document.querySelector('.btnLogin-popup');
-// const iconClose = document.querySelector('.icon-close');
-
-// // Mở popup với form Login
-// btnPopup.addEventListener('click', () => {
-//     wrapper.classList.add('active-popup');
-//     registerForm.classList.remove('active');
-//     loginForm.classList.add('active');
-// });
-
-// if (registerLink) {
-//     registerLink.addEventListener('click', (e) => {
-//         e.preventDefault();
-//         loginForm.classList.remove('active');
-//         registerForm.classList.add('active');
-//     });
-// }
-
-// // back to form Login
-// if (loginLink) {
-//     loginLink.addEventListener('click', (e) => {
-//         e.preventDefault();
-//         registerForm.classList.remove('active');
-//         loginForm.classList.add('active');
-//     });
-// }
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // --- 1. SELECTORS ---
+    const wrapper = document.querySelector('.wrapper');
+    const loginForm = document.querySelector('.form-box.login');
+    const registerForm = document.querySelector('.form-box.register');
+    const registerLink = document.querySelector('.register-link');
+    const loginLink = document.querySelector('.login-link');
+    const btnPopup = document.querySelector('.btnLogin-popup');
+    const iconClose = document.querySelector('.icon-close');
+    
+    const userAvatar = document.querySelector('.user-avatar');
+    const dropdown = document.querySelector('.dropdown');
+    
+    const mainBody = document.querySelector('body');
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('.navigation a');
+    const allBgClasses = ['bg-home', 'bg-about', 'bg-services', 'bg-therapists', 'bg-contact'];
 
     
-// registerLink.addEventListener('click', () => {
-//     wrapper.classList.add('active');
-// });
-
-// loginLink.addEventListener('click', () => {
-//     wrapper.classList.remove('active');
-// });
-
-// btnPopup.addEventListener('click', () => {
-//     wrapper.classList.add('active-popup');
-// });
-
-// iconClose.addEventListener('click', () => {
-//     wrapper.classList.remove('active-popup');
-// });
-    document.addEventListener('DOMContentLoaded', function() {
-        const mainBody = document.querySelector('body');
-        const sections = document.querySelectorAll('section');
-        const navLinks = document.querySelectorAll('.navigation a'); 
-        
-        
-        const allBgClasses = ['bg-home', 'bg-about', 'bg-services', 'bg-therapists', 'bg-contact'];
-
-        
-        mainBody.classList.add('bg-home'); 
-        
-    
-        const observerOptions = {
-        rootMargin: '-100px 0px -100px 0px', 
-        threshold: 0
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            
-            if (entry.isIntersecting) {
-                const targetId = entry.target.id; 
-                const newBgClass = `bg-${targetId}`;
-
-                if (allBgClasses.includes(newBgClass)) {
-                   
-                    allBgClasses.forEach(className => {
-                        mainBody.classList.remove(className);
-                    });
-                    mainBody.classList.add(newBgClass);
-                    console.log(`[SCROLL] Background chuyển sang: ${newBgClass}`);
-                }
-            }
+    // --- 2. USER AVATAR DROPDOWN LOGIC ---
+    if (userAvatar && dropdown) {
+        userAvatar.addEventListener('mouseenter', () => {
+            dropdown.style.display = 'block';
         });
-    }, observerOptions);
+        dropdown.addEventListener('mouseenter', () => {
+            dropdown.style.display = 'block';
+        });
 
-    sections.forEach(section => {
-        observer.observe(section);
-    });
+        userAvatar.addEventListener('mouseleave', () => {
+            setTimeout(() => {
+                if (!dropdown.matches(':hover')) dropdown.style.display = 'none';
+            }, 100);
+        });
+        dropdown.addEventListener('mouseleave', () => {
+            dropdown.style.display = 'none';
+        });
+    }
 
-   e.preventDefault();
-   document.querySelector(`#${targetId}`).scrollIntoView({ behavior: 'smooth' });
+    // --- 3. LOGIN/REGISTER POPUP LOGIC ---
+    if (btnPopup) {
+        btnPopup.addEventListener('click', () => {
+            wrapper.classList.add('active-popup');
+            registerForm.classList.remove('active');
+            loginForm.classList.add('active');
+        });
+    }
 
+    if (iconClose) {
+        iconClose.addEventListener('click', () => {
+            wrapper.classList.remove('active-popup');
+        });
+    }
+
+    if (registerLink) {
+        registerLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginForm.classList.remove('active');
+            registerForm.classList.add('active');
+            wrapper.classList.add('active-popup');
+        });
+    }
+
+    if (loginLink) {
+        loginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            registerForm.classList.remove('active');
+            loginForm.classList.add('active');
+            wrapper.classList.add('active-popup');
+        });
+    }
+
+    // --- 4. BACKGROUND SCROLL OBSERVER LOGIC ---
+    if (mainBody) {
+        mainBody.classList.add('bg-home');
+        const observerOptions = {
+            rootMargin: '-100px 0px -100px 0px',
+            threshold: 0
+        };
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const targetId = entry.target.id;
+                    const newBgClass = `bg-${targetId}`;
+                    if (allBgClasses.includes(newBgClass)) {
+                        allBgClasses.forEach(className => mainBody.classList.remove(className));
+                        mainBody.classList.add(newBgClass);
+                    }
+                }
+            });
+        }, observerOptions);
+        sections.forEach(section => observer.observe(section));
+    }
+
+
+    // --- 5. NAVBAR LINK CLICK (THE LOGOUT FIX) ---
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
-            const targetId = this.getAttribute('href').substring(1);
-            const newBgClass = `bg-${targetId}`;
-            allBgClasses.forEach(className => {
-                mainBody.classList.remove(className);
-            });
-            mainBody.classList.add(newBgClass);
-            console.log(`[CLICK] Background chuyển sang: ${newBgClass}`);
-            
-            
-        });
-    });
-});
-const wrapper = document.querySelector('.wrapper');
-const loginForm = document.querySelector('.form-box.login');
-const registerForm = document.querySelector('.form-box.register');
-const registerLink = document.querySelector('.register-link');
-const loginLink = document.querySelector('.login-link');
-const btnPopup = document.querySelector('.btnLogin-popup');
-const iconClose = document.querySelector('.icon-close');
-const userAvatar = document.querySelector('.user-avatar');
-const dropdown = document.querySelector('.dropdown');
+            const href = this.getAttribute('href');
 
-if (userAvatar && dropdown) {
-   
-    userAvatar.addEventListener('mouseenter', () => {
-        dropdown.style.display = 'block';
-    });
-    dropdown.addEventListener('mouseenter', () => {
-        dropdown.style.display = 'block';
-    });
-
-   
-    userAvatar.addEventListener('mouseleave', () => {
-        setTimeout(() => {
-            if (!dropdown.matches(':hover')) dropdown.style.display = 'none';
-        }, 100);
-    });
-    dropdown.addEventListener('mouseleave', () => {
-        dropdown.style.display = 'none';
-    });
-
-  
-}
-
-if (btnPopup) {
-    btnPopup.addEventListener('click', () => {
-        wrapper.classList.add('active-popup');
-        registerForm.classList.remove('active');
-        loginForm.classList.add('active');
-    });
-}
-
-if (iconClose) {
-    iconClose.addEventListener('click', () => {
-        wrapper.classList.remove('active-popup');
-    });
-}
-
-if (registerLink) {
-    registerLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        loginForm.classList.remove('active');
-        registerForm.classList.add('active');
-        wrapper.classList.add('active-popup');
-    });
-}
-
-if (loginLink) {
-    loginLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        registerForm.classList.remove('active');
-        loginForm.classList.add('active');
-        wrapper.classList.add('active-popup');
-    });
-}
-
-
-document.addEventListener('DOMContentLoaded', function() {
-    const mainBody = document.querySelector('body');
-    const sections = document.querySelectorAll('section');
-    const navLinks = document.querySelectorAll('.navigation a'); 
-    const allBgClasses = ['bg-home', 'bg-about', 'bg-services', 'bg-therapists', 'bg-contact'];
-
-    mainBody.classList.add('bg-home'); 
-
-    const observerOptions = {
-        rootMargin: '-100px 0px -100px 0px',
-        threshold: 0
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const targetId = entry.target.id; 
+            // FIX: Only run this logic for "#" anchor links
+            if (href && href.startsWith('#')) {
+                e.preventDefault(); // Stop default anchor jump
+                
+                const targetId = href.substring(1);
+                
+                // Background change logic
                 const newBgClass = `bg-${targetId}`;
                 if (allBgClasses.includes(newBgClass)) {
-                    allBgClasses.forEach(className => mainBody.classList.remove(className));
+                    allBgClasses.forEach(cls => mainBody.classList.remove(cls));
                     mainBody.classList.add(newBgClass);
                 }
+
+                // Smooth scroll logic
+                const targetElement = document.querySelector(`#${targetId}`);
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth' });
+                }
             }
+            // If href is '/logout' or '/user_dashboard', this 'if' block is skipped
+            // and the link works normally, redirecting the page.
         });
-    }, observerOptions);
+    });
 
 });
-document.addEventListener('click', function (event) {
-    const dropdown = document.getElementById('dropdownMenu');
-    const avatar = document.getElementById('avatarBtn');
-
-    if (!avatar.contains(event.target) && !dropdown.contains(event.target)) {
-        setTimeout(() => dropdown.classList.remove('show'), 150);
-    }
-document.addEventListener('DOMContentLoaded', function() {
-    const mainBody = document.querySelector('body');
-    const sections = document.querySelectorAll('section');
-    const navLinks = document.querySelectorAll('.navigation a'); 
-    const allBgClasses = ['bg-home', 'bg-about', 'bg-services', 'bg-therapists', 'bg-contact'];
-
-    // Nền mặc định khi load
-    // mainBody.classList.add('bg-home'); 
-
-    // const observerOptions = {
-    //     rootMargin: '-100px 0px -100px 0px',
-    //     threshold: 0
-    // };
-
-    // const observer = new IntersectionObserver((entries) => {
-    //     entries.forEach(entry => {
-    //         if (entry.isIntersecting) {
-    //             const targetId = entry.target.id; 
-    //             const newBgClass = `bg-${targetId}`;
-
-    //             if (allBgClasses.includes(newBgClass)) {
-    //                 allBgClasses.forEach(cls => mainBody.classList.remove(cls));
-    //                 mainBody.classList.add(newBgClass);
-    //                 console.log(`[SCROLL] Background chuyển sang: ${newBgClass}`);
-    //             }
-    //         }
-    //     });
-    // }, observerOptions);
-
-    // sections.forEach(section => observer.observe(section));
-    // // Khi click vào link trong navbar
-    // navLinks.forEach(link => {
-    //     link.addEventListener('click', function(e) {
-    //         e.preventDefault();
-    //         const targetId = this.getAttribute('href').substring(1);
-    //         const newBgClass = `bg-${targetId}`;
-    //         allBgClasses.forEach(cls => mainBody.classList.remove(cls));
-    //         mainBody.classList.add(newBgClass);
-    //         document.querySelector(`#${targetId}`).scrollIntoView({ behavior: 'smooth' });
-    //         console.log(`[CLICK] Background chuyển sang: ${newBgClass}`);
-    //     });
-    // });
-});
-});
-
 </script>
-<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 
 </body>
