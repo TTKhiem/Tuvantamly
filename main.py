@@ -51,6 +51,74 @@ def init_db():
             db.cursor().executescript(f.read())
         db.commit()
 
+# --- HÀM MỚI ĐỂ SEED TỪ JSON ---
+def seed_db_from_json():
+    """
+    Bơm dữ liệu (seed) cho bảng videos và ebooks từ static/resources.json.
+    Hàm này được thiết kế để chạy một lần khi DB được tạo.
+    """
+    print("--- Bắt đầu seeding Database từ JSON ---")
+    # Đường dẫn tuyệt đối đến file JSON trong thư mục static
+    json_path = os.path.join(app.static_folder, 'resources.json')
+    
+    if not os.path.exists(json_path):
+        print(f"Lỗi: Không tìm thấy file {json_path}. Bỏ qua seeding.")
+        return
+
+    with app.app_context():
+        db = get_db()
+        cursor = db.cursor()
+        
+        try:
+            with open(json_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        except Exception as e:
+            print(f"Lỗi khi đọc file JSON: {e}")
+            return
+
+        # --- Seed Videos ---
+        print("\n--- Seeding Videos ---")
+        added_videos = 0
+        videos = data.get('videos', [])
+        for video in videos:
+            # Kiểm tra xem video đã tồn tại dựa trên youtube_video_id chưa
+            cursor.execute("SELECT id FROM videos WHERE youtube_video_id = ?", (video['youtube_video_id'],))
+            if cursor.fetchone() is None:
+                # Không tìm thấy, thêm mới
+                cursor.execute(
+                    "INSERT INTO videos (title, youtube_video_id, tags) VALUES (?, ?, ?)",
+                    (video['title'], video['youtube_video_id'], video['tags'])
+                )
+                added_videos += 1
+                print(f"  [+] Đã thêm: {video['title']}")
+            else:
+                print(f"  [=] Bỏ qua: '{video['title']}' (đã tồn tại).")
+        
+        # --- Seed E-books ---
+        print("\n--- Seeding E-books ---")
+        added_ebooks = 0
+        ebooks = data.get('ebooks', [])
+        for ebook in ebooks:
+            # Kiểm tra xem ebook đã tồn tại dựa trên pdf_link chưa
+            cursor.execute("SELECT id FROM ebooks WHERE pdf_link = ?", (ebook['pdf_link'],))
+            if cursor.fetchone() is None:
+                # Không tìm thấy, thêm mới
+                cursor.execute(
+                    "INSERT INTO ebooks (title, pdf_link, thumbnail_image_link, tags) VALUES (?, ?, ?, ?)",
+                    (ebook['title'], ebook['pdf_link'], ebook['thumbnail_image_link'], ebook['tags'])
+                )
+                added_ebooks += 1
+                print(f"  [+] Đã thêm: {ebook['title']}")
+            else:
+                print(f"  [=] Bỏ qua: '{ebook['title']}' (đã tồn tại).")
+
+        db.commit()
+        print("\n--- Hoàn tất Seeding! ---")
+        print(f"Đã thêm {added_videos} videos mới.")
+        print(f"Đã thêm {added_ebooks} e-books mới.")
+        print("---------------------------")
+
+
 # --- AI FUNCTIONS ---
 def analyze_user_input(message):
     if not client: return {"intent": "unknown", "risk_level": "low"}
@@ -396,9 +464,10 @@ def check_db():
     return output
 
 
-# --- MAIN ---
+# --- MAIN (ĐÃ CẬP NHẬT) ---
 if __name__ == '__main__':
     if not os.path.exists(DATABASE):
-        init_db() # Tạo DB lần đầu
-        print("Database initialized!")
+        init_db() # 1. Tạo DB từ schema.sql
+        seed_db_from_json() # 2. Bơm dữ liệu tài nguyên từ JSON
+        print("Database initialized and seeded!")
     app.run(host='0.0.0.0', port=5000, debug=True)
