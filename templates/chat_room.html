@@ -1,7 +1,13 @@
-{% extends 'chat_base.html' %} 
+ {% extends 'chat_base.html' %} 
 {% block content %}
 <div class="message-box chat-page">
-  <h2>Mã phòng: {{code}}</h2>
+  
+  <div class="chat-header">
+    <h2>Mã phòng: {{code}}</h2>
+    <a href="{{ url_for('home') }}" class="leave-btn">Rời phòng</a>
+  </div>
+  
+  
   <div class="messages" id="messages"></div>
   <div class="inputs">
     <input
@@ -16,6 +22,7 @@
   </div>
 </div>
 
+<!-- All JavaScript goes in ONE tag -->
 <script type="text/javascript">
   var socketio = io();
   const myUsername = "{{ name }}"; 
@@ -33,7 +40,6 @@
     const messageType = (name === myUsername) ? 'own' : 'other';
     
     // Use the timestamp from the server.
-    // Fallback to client time ONLY if server somehow doesn't provide one.
     const displayTimestamp = timestamp ? timestamp : new Date().toLocaleString();
 
     const content = `
@@ -58,14 +64,8 @@
     const message = messageInput.value;
     if (message == "") return;
     
-    // 1. Emit the message to the server
     socketio.emit("message", { data: message });
     
-    // 2. DO NOT create the message locally.
-    // The server will broadcast it back to us (and everyone else).
-    // This prevents duplicates and ensures we use the server's timestamp.
-    
-    // 3. Clear input and re-focus
     messageInput.value = "";
     messageInput.focus();
   };
@@ -83,22 +83,18 @@
 
   // --- Socket.IO Handlers ---
 
-  // This is the ONLY function that should add messages to the UI.
+  // This handles all NEW incoming messages (including our own)
   socketio.on("message", (data) => {
-    // We no longer check if (data.name !== myUsername)
-    // We render ALL messages from the server, including our own.
     createMessage(data.name, data.message, data.timestamp, true);
   });
-</script>
-
-{% for msg in messages %}
-<script type="text/javascript">
-  // Pass the history (name, message, AND timestamp) to the createMessage function
-  createMessage("{{msg.name}}", "{{msg.message}}", "{{msg.timestamp}}");
-</script>
-{% endfor %} 
-
-<script type="text/javascript">
+  
+  </script>
+<script type="text/javascript"></script>
+  {% for msg in messages %}
+    // We pass 'false' for shouldScroll to prevent the UI
+    // from jumping N times for N messages.
+    createMessage("{{msg.name}}", "{{msg.message}}", "{{msg.timestamp}}", false);
+  {% endfor %} 
   messages.scrollTop = messages.scrollHeight;
 </script>
 {% endblock %}

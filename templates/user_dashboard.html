@@ -48,6 +48,20 @@
         .logout-btn:hover {
             background-color: #000;
         }
+        /* Simple form styling */
+        form label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        form input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; /* Important */
+        }
     </style>
 </head>
 <body>
@@ -63,26 +77,37 @@
         <p><span class="label">Số điện thoại:</span> {{ user.phone if user.phone else "Chưa cập nhật" }}</p>
         <p><span class ="label">Địa chỉ:</span> {{ user.address if user.address else "Chưa cập nhật" }}</p>
         <p><span class="label">Ngày tham gia:</span> {{ user.date_joined if user.date_joined else "Chưa có" }}</p>
+        <!-- NEW: Show current tags -->
+        <p><span class="label">Tags (dùng cho matchmaking):</span> {{ user.tags if user.tags else "Chưa có" }}</p>
 
-        <form action="{{ url_for('logout') }}" method="get">
-            <button type="submit" class="logout-btn">Logout</button>
-        </form>
     </div>
+    
     <h3 style="margin-top: 40px;">Cập nhật thông tin cá nhân</h3>
-<form action="{{ url_for('update_profile') }}" method="POST">
-    <label for="date_of_birth">Ngày sinh:</label><br>
-    <input type="text" id="date_of_birth" name="date_of_birth" value="{{ user.date_of_birth }}"><br><br>
+    
+    <form action="{{ url_for('update_profile') }}" method="POST">
+        <label for="date_of_birth">Ngày sinh:</label>
+        <input type="text" id="date_of_birth" name="date_of_birth" value="{{ user.date_of_birth or '' }}">
 
-    <label for="phone">Số điện thoại:</label><br>
-    <input type="text" id="phone" name="phone" value="{{ user.phone }}"><br><br>
+        <label for="phone">Số điện thoại:</label>
+        <input type="text" id="phone" name="phone" value="{{ user.phone or '' }}">
 
-    <label for="address">Địa chỉ:</label><br>
-    <input type="text" id="address" name="address" value="{{ user.address }}"><br><br>
+        <label for="address">Địa chỉ:</label>
+        <input type="text" id="address" name="address" value="{{ user.address or '' }}">
+        
+        <!-- NEW: Edit tags field -->
+        <label for="tags">Tags (phân cách bằng dấu phẩy):</label>
+        <input type.text" id="tags" name="tags" value="{{ user.tags or '' }}" placeholder="e.g. stress, anxiety, family">
 
-    <button type="submit" class="logout-btn">Lưu thay đổi</button>
-</form>
+        <br><br>
+        <button type="submit" class="logout-btn">Lưu thay đổi</button>
+    </form>
+    
+    <form action="{{ url_for('logout') }}" method="get" style="margin-top: 20px;">
+        <button type="submit" class="logout-btn">Logout</button>
+    </form>
 
 </div>
 
 </body>
 </html>
+

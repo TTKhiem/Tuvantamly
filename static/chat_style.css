@@ -209,6 +209,41 @@ body:has(.chat-page) {
     background: #2980b9;
 }
 
+/* --- NEW STYLES for Leave Button --- */
+
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-grow: 0;
+    flex-shrink: 0;
+    padding: 20px;
+    background: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-bottom: 2px solid #ecf0f1;
+    z-index: 10;
+}
+
+.chat-header h2 {
+    margin: 0;
+    text-align: left;
+}
+
+.leave-btn {
+    padding: 8px 15px;
+    background-color: #dc3545; /* Red color */
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+    white-space: nowrap; /* Prevents button text from wrapping */
+}
+
+.leave-btn:hover {
+    background-color: #c82333; /* Darker red */
+}
+/* --- END of NEW STYLES --- */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
