@@ -1,151 +1,60 @@
 import os
-import json
 import sqlite3
-from flask import Flask, request, jsonify, session, g, render_template, redirect, url_for, flash
-from google import genai
-from google.genai import types
+from flask import Flask, request, jsonify, session, render_template, redirect, url_for, flash
 from dotenv import load_dotenv
-from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-import re
 
+# Import các module đã tách
+import database
+import chatbot
+import pet_system
+
+# --- KHỞI TẠO ỨNG DỤNG ---
 load_dotenv()
 app = Flask(__name__)
-app.secret_key = 'secret-key-change-this-in-production'
-DATABASE = 'mental_health.db'
+app.config['DATABASE'] = database.DATABASE
+app.secret_key = os.getenv("APP_SECRET")
 
-# Cấu hình Gemini AI
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
-MODEL_ID = "gemini-2.5-flash" # Hoặc model bạn đang dùng
+# Lấy các API key từ file .env
+chatbot_api_key = os.getenv("GOOGLE_CHATBOT_API_KEY")
+petbot_api_key = os.getenv("GOOGLE_PETBOT_API_KEY")
 
-# Dữ liệu tư vấn nhanh (Hardcoded database)
-ADVICE_DATABASE = {
-"exam_stress": "Căng thẳng thi cử là điều rất phổ biến. Hãy thử chia nhỏ thời gian học, 45 phút học và 10 phút nghỉ ngơi (phương pháp Pomodoro). Đừng quên hít thở sâu và ngủ đủ giấc nhé.",
-    "feeling_lonely": "Cảm thấy cô đơn thật không dễ chịu. Đây là điều nhiều sinh viên gặp phải. Bạn có thể thử tham gia một CLB của trường hoặc một sự kiện. Phòng tư vấn của trường cũng luôn sẵn sàng lắng nghe.",
-    "relationship_problem": "Các vấn đề trong mối quan hệ có thể rất mệt mỏi. Hãy cho bản thân thời gian để xử lý cảm xúc. Nói chuyện với một người bạn tin tưởng hoặc chuyên gia tư vấn có thể giúp bạn nhìn rõ hơn.",
-    "general_sadness": "Cảm ơn bạn đã chia sẻ. Khi cảm thấy buồn, hãy thử làm một điều nhỏ bạn thích: nghe một bản nhạc, đi dạo. Nếu nó kéo dài, hãy nói chuyện với một chuyên gia nhé.",
-    "unknown": "Cảm ơn bạn đã chia sẻ. Tôi không hoàn toàn chắc mình hiểu rõ ý bạn, nhưng tôi đang lắng nghe. Bạn có thể nói rõ hơn không?",
+# Khởi tạo các Gemini client với các key tương ứng
+chatbot.init_gemini_clients(chatbot_api_key, petbot_api_key)
 
-    "EMERGENCY": "Tôi nhận thấy bạn đang ở trong một tình huống rất khó khăn và cần sự giúp đỡ ngay lập tức. Xin hãy liên hệ: [0366.812.741] hoặc [0918.207.126]. Có người đang chờ để giúp bạn."
-}
+# Đăng ký các hàm database với app
+database.init_app(app)
 
-# --- DATABASE HELPER ---
-def get_db():
-    db = getattr(g, '_database', None)
-    if db is None:
-        db = g._database = sqlite3.connect(DATABASE)
-        db.row_factory = sqlite3.Row
-    return db
 
-@app.teardown_appcontext
-def close_connection(exception):
-    db = getattr(g, '_database', None)
-    if db is not None:
-        db.close()
-
-def init_db():
-    with app.app_context():
-        db = get_db()
-        with app.open_resource('schema.sql', mode='r') as f:
-            db.cursor().executescript(f.read())
-        db.commit()
-
-# --- AI FUNCTIONS ---
-def analyze_user_input(message):
-    if not client: return {"intent": "unknown", "risk_level": "low"}
-    prompt = f"""
-        Bạn là một AI chuyên phân tích tâm lý cho chatbot. 
-        Phân tích tin nhắn của sinh viên sau đây và trả về một đối tượng JSON DUY NHẤT.
-        KHÔNG thêm bất kỳ văn bản nào khác ngoài JSON.
-
-        Tin nhắn: "{message}"
-
-        Hãy phân loại tin nhắn vào MỘT trong các 'intent' sau:
-        - "suicidal_ideation" (có ý định tự tử, tuyệt vọng tột độ, muốn chấm dứt)
-        - "exam_stress" (căng thẳng thi cử, lo lắng về điểm số)
-        - "relationship_problem" (vấn đề tình cảm, chia tay)
-        - "feeling_lonely" (cảm thấy cô đơn, không có bạn)
-        - "general_sadness" (buồn bã chung chung, chán nản)
-        - "unknown" (các chủ đề khác hoặc chào hỏi)
-
-        Đánh giá 'sentiment' (cảm xúc): "positive", "neutral", "negative".
-        Đánh giá 'risk_level': "low", "medium", "high". 
-        'risk_level' BẮT BUỘC phải là 'high' nếu 'intent' là 'suicidal_ideation'.
-    """
-    try:
-        response = client.models.generate_content(model=MODEL_ID, contents=prompt)
-        # Xử lý chuỗi JSON trả về từ AI (đôi khi nó có markdown ```json)
-        text = response.text.strip().replace("```json", "").replace("```", "")
-        return json.loads(text)
-    except:
-        return {"intent": "unknown", "risk_level": "low"}
-
-def summarize_conversation(history_list):
-    if not client: return "Không thể tóm tắt do thiếu API Key."
-    transcript = "\n".join([f"{h['role']}: {h['message']}" for h in history_list])
-    prompt = f"""
-    Bạn là một trợ lý AI có nhiệm vụ tóm tắt các cuộc hội thoại giữa một sinh viên và một chatbot tư vấn tâm lý để gửi cho chuyên gia.
-
-    Vui lòng đọc đoạn hội thoại sau:
-    ---
-    {transcript}
-    ---
-
-    Hãy tóm tắt cuộc hội thoại trên thành một "Kết quả Phân tích Sạch" bao gồm:
-    1.  **Vấn đề chính:** (Các chủ đề chính sinh viên gặp phải, ví dụ: căng thẳng thi cử, cô đơn, v.v.)
-    2.  **Cảm xúc chủ đạo:** (Mức độ tiêu cực, lo lắng, buồn bã?)
-    3.  **Điểm rủi ro (Nếu có):** (Đề cập nếu có bất kỳ dấu hiệu cảnh báo nào, đặc biệt là 'high risk'.)
-    4.  **Lời khuyên đã đưa ra:** (Chatbot đã tư vấn những gì?)
-
-    Format trả về phải ngắn gọn, chuyên nghiệp và bằng tiếng Việt.
-    """
-    try:
-        return client.models.generate_content(model=MODEL_ID, contents=prompt).text
-    except:
-        return "Lỗi khi tóm tắt."
-
-# --- ROUTES: AUTH & DASHBOARD ---
+# --- ROUTES HIỂN THỊ TRANG (PAGE RENDERING) ---
 @app.route('/')
 def home():
-    user = None
-    if 'username' in session:
-        user = {'username': session['username'], 'role': session.get('role')}
-    return render_template('index.html', form_type='login', user=user)
+    user_data, pet_data, quests_data = None, None, None
+    if 'user_id' in session:
+        db = database.get_db()
+        user_data = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
+        pet_obj = pet_system.load_pet(db, session['user_id'])
+        if pet_obj: pet_data = pet_obj.to_dict()
+        quests_data = pet_system.get_daily_quests(db, session['user_id'])
+    return render_template('index.html', user=user_data, pet=pet_data, quests=quests_data, form_type='login')
 
 @app.route('/register_page')
 def register_page():
     return render_template('index.html', form_type='register')
 
-@app.route('/login', methods=['POST'])
-def login():
-    email = request.form.get('email')
-    password = request.form.get('password')
-    
-    db = get_db()
-    user = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
-
-    if user and check_password_hash(user['password'], password):
-        session['user_id'] = user['id']
-        session['username'] = user['username']
-        session['role'] = user['role']
-        flash(f"Chào mừng {user['username']}!", "success")
-        return redirect(url_for('user_dashboard')) # Chuyển thẳng vào dashboard
-    else:
-        flash("Sai email hoặc mật khẩu!", "error")
-        return redirect(url_for('home'))
-
+# --- ROUTES XÁC THỰC (AUTHENTICATION) ---
 @app.route('/register', methods=['POST'])
 def register():
     username = request.form.get('username')
     email = request.form.get('email')
     password = request.form.get('password')
-
-    db = get_db()
+    db = database.get_db()
     try:
         hashed_pw = generate_password_hash(password)
-        db.execute("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", 
+        cursor = db.execute("INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
                    (username, email, hashed_pw))
+        user_id = cursor.lastrowid
+        db.execute("INSERT INTO pets (user_id, name) VALUES (?, ?)", (user_id, "Bạn Đồng Hành"))
         db.commit()
         flash("Đăng ký thành công! Hãy đăng nhập.", "success")
         return redirect(url_for('home'))
@@ -153,36 +62,60 @@ def register():
         flash("Email hoặc Username đã tồn tại!", "error")
         return redirect(url_for('register_page'))
 
-@app.route('/user')
-def user_dashboard():
-    if 'user_id' not in session: return redirect(url_for('home'))
-    
-    db = get_db()
-    user_data = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
-    return render_template('user_dashboard.html', user=user_data)
+@app.route('/login', methods=['POST'])
+def login():
+    email = request.form.get('email')
+    password = request.form.get('password')
+    db = database.get_db()
+    user = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
 
-@app.route('/update_profile', methods=['POST'])
-def update_profile():
-    if 'user_id' not in session: return redirect(url_for('home'))
-    
-    db = get_db()
-    db.execute('''UPDATE users SET date_of_birth=?, phone=?, address=? WHERE id=?''',
-               (request.form['date_of_birth'], request.form['phone'], request.form['address'], session['user_id']))
-    db.commit()
-    flash("Đã cập nhật hồ sơ!", "success")
-    return redirect(url_for('user_dashboard'))
+    if user and check_password_hash(user['password'], password):
+        session['user_id'] = user['id']
+        session['username'] = user['username']
+        session['role'] = user['role']
+        flash(f"Chào mừng {user['username']}!", "success")
+    else:
+        flash("Sai email hoặc mật khẩu!", "error")
+    return redirect(url_for('home'))
 
 @app.route('/logout')
 def logout():
     session.clear()
+    flash("Bạn đã đăng xuất.", "info")
     return redirect(url_for('home'))
 
-@app.route('/your_therapists')
-def your_therapists():
-    return render_template('user_dashboard.html', user={'username': 'Demo'}) # Cần sửa logic thực tế sau
+# --- ROUTES DASHBOARD & USER PROFILE ---
+@app.route('/dashboard')
+def dashboard():
+    if 'user_id' not in session: return redirect(url_for('home'))
 
-# --- ROUTES: CHATBOT (MỚI) ---
+    db = database.get_db()
+    user_data = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
+    return render_template('dashboard.html', user = user_data)
+    
+@app.route('/pet_page')
+def pet_page():
+    if 'user_id' not in session: return redirect(url_for('home'))
+    return render_template('pet.html', username=session.get('username'))
 
+@app.route('/user_profile')
+def user_profile():
+    if 'user_id' not in session: return redirect(url_for('home'))
+    db = database.get_db()
+    user_data = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
+    return render_template('dashboard.html', user=user_data)
+
+@app.route('/update_profile', methods=['POST'])
+def update_profile():
+    if 'user_id' not in session: return redirect(url_for('home'))
+    db = database.get_db()
+    db.execute('''UPDATE users SET date_of_birth=?, phone=?, address=? WHERE id=?''',
+               (request.form['date_of_birth'], request.form['phone'], request.form['address'], session['user_id']))
+    db.commit()
+    flash("Đã cập nhật hồ sơ!", "success")
+    return redirect(url_for('user_profile'))
+
+# --- ROUTES CHATBOT TƯ VẤN ---
 @app.route('/chat')
 def chat_interface():
     if 'user_id' not in session:
@@ -192,100 +125,176 @@ def chat_interface():
 
 @app.route('/api/chat', methods=['POST'])
 def api_chat():
-    data = request.json
-    user_msg = data.get('message')
+    if 'user_id' not in session: return jsonify({"error": "Unauthorized"}), 401
     
-    # Quản lý session chat
+    user_msg = request.json.get('message')
     if 'chat_history' not in session: session['chat_history'] = []
     session['chat_history'].append({"role": "Sinh viên", "message": user_msg})
     
-    # AI Phân tích
-    analysis = analyze_user_input(user_msg)
+    analysis = chatbot.analyze_user_input(user_msg)
     risk = analysis.get('risk_level', 'low')
     intent = analysis.get('intent', 'unknown')
     
-    # Chọn câu trả lời
-    if risk == 'high' or intent == 'suicidal_ideation':
-        bot_msg = ADVICE_DATABASE["EMERGENCY"]
-    else:
-        bot_msg = ADVICE_DATABASE.get(intent, ADVICE_DATABASE["unknown"])
+    bot_msg = chatbot.ADVICE_DATABASE.get("EMERGENCY") if risk == 'high' else chatbot.ADVICE_DATABASE.get(intent, chatbot.ADVICE_DATABASE["unknown"])
         
     session['chat_history'].append({"role": "Chatbot", "message": bot_msg})
     session.modified = True
     
     return jsonify({"response": bot_msg, "analysis": analysis})
 
-@app.route('/api/therapist/suggest', methods=['POST'])
-def therapist_suggest():
-    data = request.json
-    student_msg = data.get('message')
-    context = data.get('context', []) # 3 tin nhắn gần nhất
-    
-    if not client: return jsonify({"error": "No AI"}), 500
-
-    prompt = f"""
-    Bạn là trợ lý tư vấn tâm lý chuyên nghiệp.
-    Học sinh nói: "{student_msg}"
-    Ngữ cảnh trước đó: {context}
-
-    Hãy đưa ra 3 gợi ý phản hồi cho Therapist (ngắn gọn, dưới 30 từ mỗi câu):
-    1. Đồng cảm (Empathetic)
-    2. Hỏi sâu thêm (Inquisitive)
-    3. Trấn an (Reassurance)
-
-    Trả về định dạng JSON thuần túy không markdown:
-    {{
-        "empathetic": "...",
-        "inquisitive": "...",
-        "reassurance": "..."
-    }}
-    """
-    
-    try:
-        response = client.models.generate_content(model=MODEL_ID, contents=prompt)
-        text = response.text.strip().replace("```json", "").replace("```", "")
-        suggestions = json.loads(text)
-        return jsonify(suggestions)
-    except Exception as e:
-        print(e)
-        return jsonify({"error": "Failed to generate"}), 500
-
 @app.route('/api/chat/complete', methods=['POST'])
 def api_chat_complete():
     if 'user_id' not in session: return jsonify({"error": "Unauthorized"}), 401
     
     history = session.get('chat_history', [])
-    summary = summarize_conversation(history)
-    
-    # Lưu vào DB
-    db = get_db()
-    # 1. Lưu Chat History
+    summary = chatbot.summarize_conversation(history)
+    db = database.get_db()
+    user_id = session['user_id']
+
     for msg in history:
         db.execute("INSERT INTO chat_history (user_id, role, message) VALUES (?, ?, ?)",
-                   (session['user_id'], msg['role'], msg['message']))
+                   (user_id, msg['role'], msg['message']))
     
-    # 2. Lưu Summary
-    db.execute("INSERT INTO intake_summary (user_id, summary_content, risk_level) VALUES (?, ?, ?)",
-               (session['user_id'], summary, 'unknown')) # Bạn có thể tính max risk level ở đây
+    db.execute("INSERT INTO intake_summary (user_id, summary_content) VALUES (?, ?)", (user_id, summary))
     db.commit()
     
-    session.pop('chat_history', None) # Xóa session chat
+    session.pop('chat_history', None)
     return jsonify({"summary": summary})
 
-# Route để mở giao diện Therapist
+# --- ROUTES CHO THERAPIST ---
 @app.route('/therapist/workspace')
 def therapist_workspace():
-    # Kiểm tra quyền (nếu muốn chặt chẽ)
-    if 'role' not in session or session['role'] != 'therapist':
+    if session.get('role') != 'therapist':
         flash("Chỉ dành cho chuyên gia!", "error")
         return redirect(url_for('home'))
-    
     return render_template('therapist_chat.html')
 
+@app.route('/api/therapist/suggest', methods=['POST'])
+def therapist_suggest():
+    if session.get('role') != 'therapist': return jsonify({"error": "Unauthorized"}), 403
+    data = request.json
+    suggestions = chatbot.get_therapist_suggestions(data.get('message'), data.get('context', []))
+    if suggestions:
+        return jsonify(suggestions)
+    return jsonify({"error": "Failed to generate"}), 500
+
+# --- API ROUTES CHO PET SYSTEM ---
+def check_auth():
+    if 'user_id' not in session: return jsonify({"error": "Unauthorized"}), 401
+    return None
+
+def get_all_game_data(db, user_id, pet=None):
+    if pet is None:
+        pet = pet_system.load_pet(db, user_id)
+    return {
+        "pet": pet.to_dict() if pet else None,
+        "quests": pet_system.get_daily_quests(db, user_id),
+        "gold": pet_system.get_user_gold(db, user_id),
+        "inventory": pet_system.get_user_inventory(db, user_id)
+    }
+
+@app.route('/api/game_data')
+def get_game_data_api():
+    if err := check_auth(): return err
+    return jsonify(get_all_game_data(database.get_db(), session['user_id']))
+
+@app.route('/api/pet/action')
+def get_pet_action():
+    if err := check_auth(): return err
+    db = database.get_db()
+    pet = pet_system.load_pet(db, session['user_id'])
+    if not pet: return jsonify({"error": "No pet found"}), 404
+    action_result = pet.choose_action()
+    pet_system.save_pet(db, pet)
+    return jsonify(action_result)
+
+@app.route('/api/complete_quest/<int:quest_id>', methods=['POST'])
+def complete_quest_api(quest_id):
+    if err := check_auth(): return err
+    db, user_id = database.get_db(), session['user_id']
+    quests = pet_system.get_daily_quests(db, user_id)
+    quest = next((q for q in quests if q['id'] == quest_id), None)
+    if quest and not quest["completed"]:
+        pet, gold = pet_system.load_pet(db, user_id), pet_system.get_user_gold(db, user_id)
+        pet_system.mark_quest_completed(db, user_id, quest_id)
+        pet.gain_experience(quest.get("reward_exp", 0))
+        pet_system.update_user_gold(db, user_id, gold + quest.get("reward_gold", 0))
+        pet_system.save_pet(db, pet)
+        return jsonify(get_all_game_data(db, user_id, pet))
+    return jsonify({"error": "Invalid quest"}), 400
+
+@app.route('/api/pet/feed', methods=['POST'])
+def feed_pet_api():
+    if err := check_auth(): return err
+    db, user_id = database.get_db(), session['user_id']
+    gold = pet_system.get_user_gold(db, user_id)
+    if gold >= 10:
+        pet = pet_system.load_pet(db, user_id)
+        pet.feed()
+        pet_system.update_user_gold(db, user_id, gold - 10)
+        pet_system.save_pet(db, pet)
+        return jsonify(get_all_game_data(db, user_id, pet))
+    return jsonify({"error": "Not enough gold!"}), 400
+
+@app.route('/api/pet/play', methods=['POST'])
+def play_pet_api():
+    if err := check_auth(): return err
+    db, user_id = database.get_db(), session['user_id']
+    pet = pet_system.load_pet(db, user_id)
+    if pet.play():
+        pet_system.save_pet(db, pet)
+        return jsonify(get_all_game_data(db, user_id, pet))
+    return jsonify({"error": "Pet is too tired to play!"}), 400
+
+@app.route('/api/shop/items')
+def get_shop_items_api():
+    return jsonify(pet_system.SHOP_ITEMS)
+
+@app.route('/api/shop/buy/<int:item_id>', methods=['POST'])
+def buy_item_api(item_id):
+    if err := check_auth(): return err
+    db, user_id = database.get_db(), session['user_id']
+    gold = pet_system.get_user_gold(db, user_id)
+    inventory = pet_system.get_user_inventory(db, user_id)
+    item = next((i for i in pet_system.SHOP_ITEMS if i['id'] == item_id), None)
+
+    if not item: return jsonify({"error": "Item not found"}), 404
+    if item['type'] != 'food' and any(i['id'] == item_id for i in inventory): return jsonify({"error": "Item already owned"}), 400
+    if gold < item['price']: return jsonify({"error": "Not enough gold"}), 400
+
+    pet_system.update_user_gold(db, user_id, gold - item['price'])
+    
+    if item['type'] != 'food': pet_system.add_item_to_inventory(db, user_id, item_id)
+    else:
+        pet = pet_system.load_pet(db, user_id)
+        pet.feed(item.get('value', 25)); pet_system.save_pet(db, pet)
+        
+    return jsonify({"message": "Item purchased!", "gold": pet_system.get_user_gold(db, user_id), "inventory": pet_system.get_user_inventory(db, user_id)})
+
+@app.route('/api/pet/chat', methods=['POST'])
+def pet_chat_api():
+    if err := check_auth(): return err
+    db = database.get_db()
+    pet = pet_system.load_pet(db, session['user_id'])
+    if not pet: return jsonify({"error": "Không tìm thấy pet."}), 404
+    
+    user_message = request.json.get("message")
+    bot_reply = chatbot.get_pet_chat_response(pet.base_name, user_message)
+    
+    return jsonify({"reply": bot_reply, "pet_face": pet.appearance.get("face", "^_^"), "pet_mood": pet.mood})
+
+@app.route('/api/start_quest/<int:quest_id>')
+def start_quest_api(quest_id):
+    if err := check_auth(): return err
+    quests = pet_system.get_daily_quests(database.get_db(), session['user_id'])
+    quest = next((q for q in quests if q['id'] == quest_id), None)
+    if quest and quest['type'] in ['quiz', 'puzzle', 'journaling', 'breathing']:
+        return jsonify({"id": quest['id'], "type": quest['type'], "title": quest['title'], "data": quest['data']})
+    return jsonify({"error": "Quest not found"}), 404
 
 # --- MAIN ---
 if __name__ == '__main__':
-    if not os.path.exists(DATABASE):
-        init_db() # Tạo DB lần đầu
-        print("Database initialized!")
+    if not os.path.exists(app.config['DATABASE']):
+        with app.app_context():
+            database.init_db()
     app.run(host='0.0.0.0', port=5000, debug=True)
