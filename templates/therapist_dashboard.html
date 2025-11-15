@@ -60,27 +60,21 @@
                 <!-- PHẦN CODE ĐỘNG - THAY THẾ DỮ LIỆU GIẢ BẰNG DỮ LIỆU THẬT -->
                 <!-- ========================================================== -->
 
-                <!-- Kiểm tra xem biến summaries có dữ liệu không -->
                 {% if summaries %}
-                    <!-- Bắt đầu vòng lặp để duyệt qua từng ca tư vấn -->
                     {% for summary in summaries %}
-                        <!-- Thêm class 'active' cho phần tử đầu tiên trong danh sách -->
                         <!-- TODO: Trong tương lai, href sẽ trỏ tới url_for('chat_detail', summary_id=summary.summary_id) -->
                         <a href="#" class="patient-item {% if loop.first %}active{% endif %}">
                             <h4>{{ summary.username }}</h4>
                             <p>
                                 <!-- Trích xuất dòng "Vấn đề chính" từ tóm tắt làm chủ đề -->
-                                <!-- Mẹo: Tách chuỗi tại "2." để lấy phần đầu tiên, sau đó dọn dẹp -->
-                                Chủ đề: {{ (summary.summary_content.split('2.')[0]).replace('1. Vấn đề chính:', '').strip() }}
+                                <strong>Chủ đề:</strong>
+                                {{ (summary.summary_content.split('2.')[0]).replace('1. Vấn đề chính:', '').strip() }}
                                 <br>
-                                <span style="font-weight: bold;">
-                                    Rủi ro: {{ summary.risk_level or 'Chưa xác định' }}
-                                </span>
+                                <small>Ngày: {{ summary.created_at.strftime('%d-%m-%Y %H:%M') }}</small>
                             </p>
                         </a>
                     {% endfor %}
                 {% else %}
-                    <!-- Hiển thị thông báo nếu chưa có ca tư vấn nào -->
                     <p style="padding: 20px; color: #888; text-align: center;">Chưa có ca tư vấn nào được ghi nhận.</p>
                 {% endif %}
 
