@@ -72,8 +72,14 @@ def login():
     if user and check_password_hash(user['password'], password):
         session['user_id'] = user['id']
         session['username'] = user['username']
-        session['role'] = user['role']
+        session['role'] = user['role'] # LƯU ROLE VÀO SESSION
         flash(f"Chào mừng {user['username']}!", "success")
+
+        # LOGIC PHÂN LUỒNG DỰA TRÊN VAI TRÒ
+        if user['role'] == 'therapist':
+            return redirect(url_for('therapist_dashboard'))
+        else:
+            return redirect(url_for('home'))
     else:
         flash("Sai email hoặc mật khẩu!", "error")
     return redirect(url_for('home'))
@@ -89,6 +95,10 @@ def logout():
 def dashboard():
     if 'user_id' not in session: return redirect(url_for('home'))
 
+    # Chuyển hướng therapist nếu họ vô tình vào dashboard của user
+    if session.get('role') == 'therapist':
+        return redirect(url_for('therapist_dashboard'))
+        
     db = database.get_db()
     user_data = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
     return render_template('dashboard.html', user = user_data)
@@ -162,6 +172,27 @@ def api_chat_complete():
     return jsonify({"summary": summary})
 
 # --- ROUTES CHO THERAPIST ---
+@app.route('/therapist/dashboard')
+def therapist_dashboard():
+    # 1. Bảo vệ route: Chỉ therapist mới được vào
+    if session.get('role') != 'therapist':
+        flash("Bạn không có quyền truy cập trang này!", "error")
+        return redirect(url_for('home'))
+
+    # 2. Truy vấn dữ liệu: Lấy tất cả các bản tóm tắt và join để lấy tên user
+    db = database.get_db()
+    summaries = db.execute(
+        """
+        SELECT s.id as summary_id, s.user_id, s.summary_content, u.username, s.created_at
+        FROM intake_summary s
+        JOIN users u ON s.user_id = u.id
+        ORDER BY s.created_at DESC
+        """
+    ).fetchall()
+    
+    # 3. Render template và gửi dữ liệu
+    return render_template('therapist_dashboard.html', summaries=summaries)
+
 @app.route('/therapist/workspace')
 def therapist_workspace():
     if session.get('role') != 'therapist':
