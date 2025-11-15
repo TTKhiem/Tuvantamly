@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Therapist Dashboard</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f0f2f5; margin: 0; height: 100vh; display: flex; flex-direction: column; }
+        .header { background: #fff; padding: 0 20px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; height: 60px; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); z-index: 10;}
+        .header h1 { font-size: 1.2em; margin: 0; }
+        .header a { text-decoration: none; color: #dc3545; font-weight: 500; }
+        .container { display: flex; width: 100%; flex-grow: 1; overflow: hidden; }
+        
+        /* CỘT TRÁI: DANH SÁCH BỆNH NHÂN */
+        .patient-list { flex: 0 0 320px; background: #fff; border-right: 1px solid #ddd; display: flex; flex-direction: column; }
+        .list-header { padding: 15px 20px; font-weight: bold; border-bottom: 1px solid #eee; font-size: 1.1em; }
+        .list-content { overflow-y: auto; flex-grow: 1; }
+        a.patient-item { color: inherit; text-decoration: none; display: block; }
+        .patient-item { padding: 15px 20px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.2s; }
+        .patient-item:hover { background: #f7f7f7; }
+        .patient-item.active { background: #e6f7ff; border-right: 3px solid #1890ff; padding-right: 17px; }
+        .patient-item h4 { margin: 0 0 5px 0; font-size: 1em; }
+        .patient-item p { margin: 0; font-size: 0.85em; color: #555; line-height: 1.4; }
+        
+        /* CỘT GIỮA: KHUNG CHAT */
+        .workspace { flex: 2; display: flex; flex-direction: column; background: #f9f9f9; }
+        .chat-header { padding: 20px; font-weight: bold; background: #fff; border-bottom: 1px solid #eee; }
+        .chat-window { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; }
+        .input-area { padding: 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; background: #fff; }
+        .message { padding: 10px 15px; border-radius: 18px; margin-bottom: 10px; max-width: 70%; word-wrap: break-word; line-height: 1.4; }
+        .student-msg, .bot-msg { align-self: flex-start; }
+        .student-msg { background: #e4e6eb; color: black; }
+        .bot-msg { background: #dcdcdc; color: #333; border: 1px dashed #aaa; }
+        .therapist-msg { background: #007bff; color: white; align-self: flex-end; }
+
+        /* CỘT PHẢI: TÓM TẮT & GỢI Ý */
+        .right-panel { flex: 1; min-width: 300px; background: #eef2f6; padding: 20px; overflow-y: auto; border-left: 1px solid #ccc; }
+        .ai-card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .ai-title { font-weight: bold; color: #005a9e; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
+        .ai-card ul { padding-left: 20px; margin: 0; font-size: 0.9em; line-height: 1.5; }
+        .suggestion-btn { display: block; width: 100%; text-align: left; padding: 10px; margin: 8px 0; background: #fff; border: 1px solid #007bff; color: #007bff; border-radius: 8px; cursor: pointer; font-size: 0.9em; transition: 0.2s; }
+        .suggestion-btn:hover { background: #007bff; color: white; }
+        input[type="text"] { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 20px; outline: none; font-size: 1em; }
+        button.send-btn { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Therapist Dashboard</h1>
+        <a href="{{ url_for('logout') }}">Đăng xuất</a>
+    </div>
+
+    <div class="container">
+        <!-- CỘT 1: DANH SÁCH CA TƯ VẤN (DỮ LIỆU THẬT) -->
+        <div class="patient-list">
+            <div class="list-header">Danh sách ca tư vấn</div>
+            <div class="list-content">
+                <!-- ========================================================== -->
+                <!-- PHẦN CODE ĐỘNG - THAY THẾ DỮ LIỆU GIẢ BẰNG DỮ LIỆU THẬT -->
+                <!-- ========================================================== -->
+
+                <!-- Kiểm tra xem biến summaries có dữ liệu không -->
+                {% if summaries %}
+                    <!-- Bắt đầu vòng lặp để duyệt qua từng ca tư vấn -->
+                    {% for summary in summaries %}
+                        <!-- Thêm class 'active' cho phần tử đầu tiên trong danh sách -->
+                        <!-- TODO: Trong tương lai, href sẽ trỏ tới url_for('chat_detail', summary_id=summary.summary_id) -->
+                        <a href="#" class="patient-item {% if loop.first %}active{% endif %}">
+                            <h4>{{ summary.username }}</h4>
+                            <p>
+                                <!-- Trích xuất dòng "Vấn đề chính" từ tóm tắt làm chủ đề -->
+                                <!-- Mẹo: Tách chuỗi tại "2." để lấy phần đầu tiên, sau đó dọn dẹp -->
+                                Chủ đề: {{ (summary.summary_content.split('2.')[0]).replace('1. Vấn đề chính:', '').strip() }}
+                                <br>
+                                <span style="font-weight: bold;">
+                                    Rủi ro: {{ summary.risk_level or 'Chưa xác định' }}
+                                </span>
+                            </p>
+                        </a>
+                    {% endfor %}
+                {% else %}
+                    <!-- Hiển thị thông báo nếu chưa có ca tư vấn nào -->
+                    <p style="padding: 20px; color: #888; text-align: center;">Chưa có ca tư vấn nào được ghi nhận.</p>
+                {% endif %}
+
+                <!-- ========================================================== -->
+                <!-- KẾT THÚC PHẦN CODE ĐỘNG -->
+                <!-- ========================================================== -->
+            </div>
+        </div>
+
+        <!-- CỘT 2: KHÔNG GIAN LÀM VIỆC (DỮ LIỆU GIẢ ĐỂ DEMO) -->
+        <div class="workspace">
+            <div class="chat-header">Đang tư vấn cho: Nguyễn Văn A</div>
+            <div class="chat-window" id="chat-window">
+                <div class="message student-msg">Em chào ạ, em đang cảm thấy rất tệ.</div>
+                <div class="message bot-msg">Chào bạn, tôi đây. Bạn có thể chia sẻ cụ thể hơn được không?</div>
+                <div class="message student-msg">Em không muốn sống nữa.</div>
+                <div class="message bot-msg">Tôi nhận thấy bạn đang ở trong một tình huống rất khó khăn... [số điện thoại khẩn cấp]</div>
+                <div class="message therapist-msg">Chào em, anh là chuyên gia tư vấn đây. Cảm ơn em đã tin tưởng chia sẻ. Em có thể nói rõ hơn về những gì đang khiến em cảm thấy như vậy không?</div>
+            </div>
+            <form class="input-area" onsubmit="event.preventDefault(); alert('Chức năng chat đang được phát triển!');">
+                <input type="text" id="msg-input" placeholder="Nhập tin nhắn..." autocomplete="off">
+                <button type="submit" class="send-btn">Gửi</button>
+            </form>
+        </div>
+
+        <!-- CỘT 3: TRỢ LÝ AI (DỮ LIỆU GIẢ ĐỂ DEMO) -->
+        <div class="right-panel">
+            <div class="ai-card">
+                <div class="ai-title">📊 Tóm Tắt Từ AI</div>
+                <ul>
+                    <li><strong>Vấn đề chính:</strong> Có ý định tự tử, căng thẳng thi cử.</li>
+                    <li><strong>Cảm xúc chủ đạo:</strong> Tuyệt vọng, buồn bã.</li>
+                    <li><strong>Điểm rủi ro:</strong> CAO.</li>
+                </ul>
+            </div>
+            <div class="ai-card">
+                <div class="ai-title">💡 Gợi ý phản hồi</div>
+                <button class="suggestion-btn" onclick="document.getElementById('msg-input').value = this.innerText.split('\n')[1]; document.getElementById('msg-input').focus();"><strong>Thấu cảm ❤️</strong><br>Anh hiểu rằng em đang trải qua một giai đoạn rất khó khăn.</button>
+                <button class="suggestion-btn" onclick="document.getElementById('msg-input').value = this.innerText.split('\n')[1]; document.getElementById('msg-input').focus();"><strong>Khơi gợi ❓</strong><br>Điều gì cụ thể trong kỳ thi khiến em cảm thấy áp lực nhất?</button>
+                 <button class="suggestion-btn" onclick="alert('Chức năng gọi API đang được phát triển!')"><strong>Tạo gợi ý mới...</strong></button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
