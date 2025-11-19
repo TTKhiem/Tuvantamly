@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     date_joined TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Bảng thú cưng
+-- Bảng thú cưng (ĐÃ CẬP NHẬT THÊM SKIN_ID)
 CREATE TABLE IF NOT EXISTS pets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS pets (
     happiness INTEGER DEFAULT 50,
     energy INTEGER DEFAULT 100,
     experience INTEGER DEFAULT 0,
+    skin_id INTEGER DEFAULT 0, 
     last_interaction TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
@@ -43,11 +44,11 @@ CREATE TABLE IF NOT EXISTS daily_quests (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- Bảng lịch sử chat (cho chatbot tư vấn)
+-- Bảng lịch sử chat
 CREATE TABLE IF NOT EXISTS chat_history (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
-    role TEXT NOT NULL, -- 'Sinh viên' hoặc 'Chatbot'
+    role TEXT NOT NULL,
     message TEXT NOT NULL,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
