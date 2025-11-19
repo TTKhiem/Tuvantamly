@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     date_joined TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Bảng thú cưng (ĐÃ CẬP NHẬT THÊM SKIN_ID)
+-- Bảng thú cưng (ĐÃ CẬP NHẬT ĐỦ 2 CỘT SKIN VÀ BACKGROUND)
 CREATE TABLE IF NOT EXISTS pets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS pets (
     happiness INTEGER DEFAULT 50,
     energy INTEGER DEFAULT 100,
     experience INTEGER DEFAULT 0,
-    skin_id INTEGER DEFAULT 0, 
+    skin_id INTEGER DEFAULT 0,         -- Cột Skin
+    background_id INTEGER DEFAULT 0,   -- Cột Background (Bị thiếu ở bản cũ)
     last_interaction TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
