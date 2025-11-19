@@ -28,8 +28,7 @@ PET_SKINS = {
 
 # --- CẤU HÌNH BACKGROUND (HÌNH NỀN) ---
 PET_BACKGROUNDS = {
-    0: "/static/images/backgrounds/default.png", 
-    # Các nền khác (Nhớ tên file phải khớp chính xác với tên bạn đã lưu)
+    0: "/static/images/pet_backgrounds/default.png", 
     201: "/static/images/pet_backgrounds/dong_co.png",
     202: "/static/images/pet_backgrounds/phong_khach.png",
     203: "/static/images/pet_backgrounds/bai_bien.png",
@@ -215,7 +214,7 @@ def equip_skin(db, user_id, item_id):
             pet.skin_id = item_id
         elif item['type'] == 'background':
             pet.background_id = item_id
-    elif item_id == -1: # Quy ước -1 là về background mặc định
+    elif item_id == 200: # Quy ước 200 là về background mặc định
         pet.background_id = 0
 
     pet._update_appearance()
@@ -240,7 +239,7 @@ def get_user_inventory(db, user_id):
     
     # Thêm item mặc định
     inventory.insert(0, {"id": 0, "name": "Pet Mặc định", "icon": "😊", "type": "skin", "description": "Skin gốc"})
-    inventory.insert(1, {"id": -1, "name": "Nền Mặc định", "icon": "🏠", "type": "background", "description": "Phòng gốc"})
+    inventory.insert(1, {"id": 200, "name": "Nền Mặc định", "icon": "🏠", "type": "background", "description": "Phòng gốc"})
     
     return inventory
 
