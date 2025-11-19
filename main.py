@@ -72,10 +72,9 @@ def login():
     if user and check_password_hash(user['password'], password):
         session['user_id'] = user['id']
         session['username'] = user['username']
-        session['role'] = user['role'] # LƯU ROLE VÀO SESSION
+        session['role'] = user['role'] 
         flash(f"Chào mừng {user['username']}!", "success")
 
-        # LOGIC PHÂN LUỒNG DỰA TRÊN VAI TRÒ
         if user['role'] == 'therapist':
             return redirect(url_for('therapist_dashboard'))
         else:
@@ -94,11 +93,7 @@ def logout():
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' not in session: return redirect(url_for('home'))
-
-    # Chuyển hướng therapist nếu họ vô tình vào dashboard của user
-    if session.get('role') == 'therapist':
-        return redirect(url_for('therapist_dashboard'))
-        
+    if session.get('role') == 'therapist': return redirect(url_for('therapist_dashboard'))
     db = database.get_db()
     user_data = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
     return render_template('dashboard.html', user = user_data)
@@ -174,12 +169,10 @@ def api_chat_complete():
 # --- ROUTES CHO THERAPIST ---
 @app.route('/therapist/dashboard')
 def therapist_dashboard():
-    # 1. Bảo vệ route: Chỉ therapist mới được vào
     if session.get('role') != 'therapist':
         flash("Bạn không có quyền truy cập trang này!", "error")
         return redirect(url_for('home'))
 
-    # 2. Truy vấn dữ liệu: Lấy tất cả các bản tóm tắt và join để lấy tên user
     db = database.get_db()
     summaries = db.execute(
         """
@@ -189,8 +182,6 @@ def therapist_dashboard():
         ORDER BY s.created_at DESC
         """
     ).fetchall()
-    
-    # 3. Render template và gửi dữ liệu
     return render_template('therapist_dashboard.html', summaries=summaries)
 
 @app.route('/therapist/workspace')
@@ -290,17 +281,42 @@ def buy_item_api(item_id):
     item = next((i for i in pet_system.SHOP_ITEMS if i['id'] == item_id), None)
 
     if not item: return jsonify({"error": "Item not found"}), 404
-    if item['type'] != 'food' and any(i['id'] == item_id for i in inventory): return jsonify({"error": "Item already owned"}), 400
+    
+    # Nếu là skin mà đã có rồi thì báo lỗi
+    if item['type'] == 'skin' and any(i['id'] == item_id for i in inventory): 
+        return jsonify({"error": "Bạn đã sở hữu skin này rồi!"}), 400
+    
     if gold < item['price']: return jsonify({"error": "Not enough gold"}), 400
 
     pet_system.update_user_gold(db, user_id, gold - item['price'])
     
-    if item['type'] != 'food': pet_system.add_item_to_inventory(db, user_id, item_id)
+    if item['type'] != 'food': 
+        pet_system.add_item_to_inventory(db, user_id, item_id)
     else:
+        # Thức ăn thì dùng luôn
         pet = pet_system.load_pet(db, user_id)
-        pet.feed(item.get('value', 25)); pet_system.save_pet(db, pet)
+        pet.feed(item.get('value', 25))
+        pet_system.save_pet(db, pet)
         
-    return jsonify({"message": "Item purchased!", "gold": pet_system.get_user_gold(db, user_id), "inventory": pet_system.get_user_inventory(db, user_id)})
+    return jsonify({"message": "Mua thành công!", "gold": pet_system.get_user_gold(db, user_id), "inventory": pet_system.get_user_inventory(db, user_id)})
+
+# --- ROUTE MỚI: TRANG BỊ SKIN ---
+@app.route('/api/pet/equip/<int:item_id>', methods=['POST'])
+def equip_item_api(item_id):
+    if err := check_auth(): return err
+    db = database.get_db()
+    user_id = session['user_id']
+    
+    # Kiểm tra xem user có item đó không (trừ item 0 là mặc định)
+    inventory = pet_system.get_user_inventory(db, user_id)
+    has_item = any(i['id'] == item_id for i in inventory)
+    
+    if item_id == 0 or has_item:
+        pet_system.equip_skin(db, user_id, item_id)
+        return jsonify(get_all_game_data(db, user_id))
+    
+    return jsonify({"error": "Bạn chưa sở hữu skin này!"}), 400
+
 
 @app.route('/api/pet/chat', methods=['POST'])
 def pet_chat_api():
