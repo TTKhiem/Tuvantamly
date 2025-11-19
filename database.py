@@ -38,3 +38,4 @@ def init_app(app):
     """Đăng ký các hàm quản lý database với application."""
     app.teardown_appcontext(close_db)
     app.cli.add_command(init_db_command)
+
