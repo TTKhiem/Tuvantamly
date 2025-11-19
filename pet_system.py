@@ -29,6 +29,7 @@ PET_SKINS = {
 # --- CẤU HÌNH BACKGROUND (HÌNH NỀN) ---
 PET_BACKGROUNDS = {
     0: "/static/images/backgrounds/default.png", 
+    # Các nền khác (Nhớ tên file phải khớp chính xác với tên bạn đã lưu)
     201: "/static/images/pet_backgrounds/dong_co.png",
     202: "/static/images/pet_backgrounds/phong_khach.png",
     203: "/static/images/pet_backgrounds/bai_bien.png",
@@ -207,7 +208,7 @@ def equip_skin(db, user_id, item_id):
     # Tìm item trong shop để biết loại (skin hay background)
     item = next((i for i in SHOP_ITEMS if i['id'] == item_id), None)
     
-    if item_id == 0: # Mặc định 
+    if item_id == 0: # Mặc định (thường dùng cho Skin)
         pet.skin_id = 0
     elif item:
         if item['type'] == 'skin':
@@ -221,6 +222,7 @@ def equip_skin(db, user_id, item_id):
     save_pet(db, pet)
     return True
 
+# ... (Các hàm get_user_gold, update_user_gold, get_user_inventory, add_item_to_inventory, get_daily_quests, mark_quest_completed giữ nguyên) ...
 def get_user_gold(db, user_id):
     row = db.execute('SELECT gold FROM users WHERE id = ?', (user_id,)).fetchone()
     return row['gold'] if row else 0
