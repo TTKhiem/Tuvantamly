@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Matchmaking</title>
+</head>
+<body>
+    {% if not is_in_queue %}
+    {% if not is_matched %}
+    <div>
+        <select data-role="student-normal" data-field="topic" id="matchmake-topic">
+            <option value="stress">Stress</option>
+            <option value="family">Family</option>
+            <option value="school">School</option>
+            <option value="work">Work</option>
+            <option value="loneliness">Loneliness</option>
+        </select>
+        <button data-role="student-normal" class="matchmake-button" id="matchmake-button-student-normal" type="button">matchmake: normal</button>
+    </div>
+    {% endif %}
+    <div>
+        <button data-role="student-urgent" class="matchmake-button" id="matchmake-button-student-urgent" type="button">matchmake: urgent</button>
+    </div>
+    {% else %}
+    <div>
+        <button id="cancel-button" type="button">cancel matchmaking</button>
+    </div>
+    {% endif %}
+    <script src="{{ url_for('static', filename='matchmaking_student_script.js') }}"></script>
+</body>
+</html>

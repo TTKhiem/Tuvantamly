@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Therapist Matchmaking</title>
+</head>
+<body>
+    {% if not is_in_queue %}
+    <div>
+        <button data-role="therapist" class="matchmake-button" id="matchmake-button-therapist" type="button">matchmake</button>
+    </div>
+    {% else %}
+    <div>
+        <button id="cancel-button" type="button">cancel matchmaking</button>
+    </div>
+    {% endif %}
+    <script src="{{ url_for('static', filename='matchmaking_student_script.js') }}"></script>
+</body>
+</html>

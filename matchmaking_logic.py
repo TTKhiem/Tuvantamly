@@ -1,4 +1,4 @@
-from matchmaking.matchmaking_repository import get_all_students_from_matchmaking_queue, get_all_therapists_from_matchmaking_queue, delete_student_and_therapist_from_matchmaking_queue, add_student_and_therapist_to_matchmaking_results, get_match_id_based_on_pair
+from matchmaking_repository import (get_all_students_from_matchmaking_queue, get_all_therapists_from_matchmaking_queue, delete_student_and_therapist_from_matchmaking_queue, add_student_and_therapist_to_matchmaking_results, get_match_id_based_on_pair)
 
 def check_student_urgency(student):
     return True if student["urgency"] == 1 else False

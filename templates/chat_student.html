@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat With Therapist</title>
+</head>
+<body data-user-id="{{ session['user_id'] }}">
+    <div id="chat-sidebar">
+        <h3>Your Chat Rooms</h3>
+        <ul>
+            {% for match in matches %}
+                {% set other_user_id = match.therapist_user_id if match.student_user_id == session.user_id else match.student_user_id %}
+                <li data-room-id="{{ match.match_id }}">
+                    Chat with user {{ other_user_id }} (Matched at {{ match.matched_at }})
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- Chat boxes -->
+    <div id="chat-boxes">
+        {% for match in matches %}
+        <div id="chat-box-{{ match.match_id }}" style="display:none;">
+            <div class="messages"></div>
+            <input type="text" class="message-input" placeholder="Type a message">
+            <button class="send-button">Send</button>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='chat_with_therapist.js') }}"></script>
+</body>
+</html>
