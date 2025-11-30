@@ -1,0 +1,162 @@
+{% extends 'chat_base.html' %} 
+{% block content %}
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <ul class="flashes">
+        {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+{% endwith %}
+
+<!-- Matchmaking Section -->
+<div class="matchmaking-box buttons">
+    <h3>Xin chào, {{ name }}!</h3>
+    <h4>Tìm kiếm tư vấn viên</h4>
+    <p>Hồ sơ của bạn có các tags: <strong>{{ user_tags|join(', ') if user_tags else 'Không có' }}</strong></p>
+    <p><small>(Bạn có thể cập nhật tags trong <a href="{{ url_for('dashboard') }}">Dashboard</a>)</small></p>
+    
+    <!-- This div will show match notifications -->
+    <div id="match-status"></div>
+
+    <button type="button" id="find-match-btn" class="create-btn" style="background-color: #007bff;">
+        Tìm trận
+    </button>
+    <button type="button" id="cancel-match-btn" style="display:none; background-color: #dc3545;">
+        Hủy tìm kiếm
+    </button>
+</div>
+
+
+<!-- Manual Room Join (Kept for testing) -->
+<form method="post" action="{{ url_for('chat_room_post') }}" class="buttons" style="margin-top: 20px;">
+  <h4>Tham gia hoặc Tạo phòng (Thủ công)</h4>
+  <div class="join">
+    <input type="text" placeholder="Nhập mã phòng" name="code" />
+    <button type="submit" name="join">Vào phòng</button>
+  </div>
+  <button type="submit" name="create" class="create-btn">Tạo phòng mới</button>
+  <br>
+  <a href="{{ url_for('home') }}" style="margin-top: 20px; display: inline-block;">Quay về trang chủ</a>
+</form>
+
+<!-- Socket.IO JavaScript -->
+<script type="text/javascript">
+    // --- FIX: Wait for the page to load before running JS ---
+    document.addEventListener('DOMContentLoaded', function() {
+        // NOTE: chat_base.html already includes the socket.io library
+        var socketio = io();
+        
+        const findBtn = document.getElementById('find-match-btn');
+        const cancelBtn = document.getElementById('cancel-match-btn');
+        const statusDiv = document.getElementById('match-status');
+
+        // --- Emit Events ---
+        if (findBtn) {
+            findBtn.addEventListener('click', () => {
+                console.log("Emitting 'find_match'...");
+                socketio.emit("find_match");
+                findBtn.style.display = 'none';
+                cancelBtn.style.display = 'block';
+                statusDiv.innerHTML = `<p style="color:blue;">Đang tìm kiếm...</p>`;
+            });
+        }
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                console.log("Emitting 'cancel_match'...");
+                socketio.emit("cancel_match");
+                findBtn.style.display = 'block';
+                cancelBtn.style.display = 'none';
+                statusDiv.innerHTML = `<p style="color:red;">Đã hủy tìm kiếm.</p>`;
+            });
+        }
+        
+        // --- Listen for Server Events ---
+        
+        // Server confirms we are searching
+        socketio.on("finding_match", (data) => {
+            console.log(data.message);
+            statusDiv.innerHTML = `<p style="color:blue;">${data.message}</p>`;
+        });
+
+        // Server says we cancelled
+        socketio.on("match_cancelled", (data) => {
+            console.log(data.message);
+            statusDiv.innerHTML = `<p style="color:red;">${data.message}</p>`;
+            findBtn.style.display = 'block';
+            cancelBtn.style.display = 'none';
+        });
+        
+        // Server reports an error
+        socketio.on("match_error", (data) => {
+        console.error(data.message);
+        
+        if (data.action === "redirect_to_active_room" && data.room_code) {
+            // Trường hợp: Sinh viên đã matched, server yêu cầu chuyển hướng
+            statusDiv.innerHTML = `
+                <p style="color:orange;">${data.message}</p>
+                <button id="join-active-match-btn" class="create-btn" style="background-color: #ffc107;">
+                    Tiếp tục vào phòng ${data.room_code}
+                </button>
+            `;
+            
+            // Chuyển hướng khi click
+            document.getElementById('join-active-match-btn').addEventListener('click', () => {
+                socketio.emit("join_private_room", { room_code: data.room_code });
+            });
+            
+            findBtn.style.display = 'none';
+            cancelBtn.style.display = 'none';
+            
+        } else {
+            // Trường hợp lỗi thông thường
+            statusDiv.innerHTML = `<p style="color:red;">Lỗi: ${data.message}</p>`;
+            findBtn.style.display = 'block';
+            cancelBtn.style.display = 'none';
+        }
+        });
+        
+        // --- THE IMPORTANT PART ---
+        // Server found a match!
+        socketio.on("match_found", (data) => {
+            console.log("Match found!", data);
+            
+            const roomCode = data.room_code;
+            const matchedUser = data.matched_with;
+            const commonTags = data.tags.join(', ');
+            
+            // Show the notification and the "Join" button
+            statusDiv.innerHTML = `
+                <div style="padding: 10px; border: 2px solid green; border-radius: 5px;">
+                    <p style="color:green; font-weight:bold;">Đã tìm thấy trận!</p>
+                    <p>Phù hợp với: <strong>${matchedUser}</strong></p>
+                    <p>Chủ đề chung: <strong>${commonTags}</strong></p>
+                    <button id="join-match-btn" class="create-btn">Vào phòng tư vấn</button>
+                </div>
+            `;
+            
+            // Make the new "Join" button work
+            document.getElementById('join-match-btn').addEventListener('click', () => {
+                console.log(`Emitting 'join_private_room' for ${roomCode}`);
+                statusDiv.innerHTML = `<p style="color:blue;">Đang vào phòng...</p>`;
+                socketio.emit("join_private_room", { room_code: roomCode });
+            });
+
+            // Hide the find/cancel buttons
+            findBtn.style.display = 'none';
+            cancelBtn.style.display = 'none';
+        });
+
+        // Server tells us to redirect
+        socketio.on("redirect_to_room", (data) => {
+            console.log(`Redirecting to ${data.url}`);
+            window.location.href = data.url;
+        });
+
+    }); // --- END of DOMContentLoaded ---
+</script>
+{% endblock %}

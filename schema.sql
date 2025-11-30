@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS users (
     phone TEXT,
     address TEXT,
     gold INTEGER DEFAULT 200,
-    date_joined TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    date_joined TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tags TEXT DEFAULT ''
 );
 
 -- Bảng thú cưng (ĐÃ CẬP NHẬT ĐỦ 2 CỘT SKIN VÀ BACKGROUND)
@@ -62,4 +63,41 @@ CREATE TABLE IF NOT EXISTS intake_summary (
     summary_content TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+
+CREATE TABLE IF NOT EXISTS chat_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    room_code TEXT NOT NULL,
+    username TEXT NOT NULL,
+    message_text TEXT,
+    timestamp TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS matchmaking_queue_students (
+    user_id INTEGER NOT NULL,
+    session_id TEXT NOT NULL,
+    urgency INTEGER NOT NULL CHECK (urgency IN (0, 1)),
+    topic TEXT,
+    timestamp TEXT DEFAULT (datetime('now', 'localtime'))
+); 
+CREATE TABLE IF NOT EXISTS matchmaking_queue_therapists (
+    user_id INTEGER NOT NULL,
+    session_id TEXT NOT NULL,
+    expertise TEXT,
+    timestamp TEXT DEFAULT (datetime('now', 'localtime'))
+);
+
+-- test xong set student id unique
+CREATE TABLE IF NOT EXISTS matchmaking_results (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_user_id INTEGER NOT NULL,   -- 1 student → only 1 therapist
+    therapist_user_id INTEGER NOT NULL,        -- therapist can repeat (many students)
+    student_session_id TEXT NOT NULL,
+    therapist_session_id TEXT NOT NULL,
+    matched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    roomcode TEXT NOT NULL
+
+    -- FOREIGN KEY (student_user_id) REFERENCES users(user_id),
+    -- FOREIGN KEY (therapist_user_id) REFERENCES users(user_id)
 );

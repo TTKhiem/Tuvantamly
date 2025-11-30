@@ -3,38 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Therapist Dashboard</title>
+    <title>Therapist Messenger</title>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
+        crossorigin="anonymous"
+    ></script>
     <style>
+        /* CSS 3 CỘT (Đã được chỉnh sửa và tối ưu hóa) */
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f0f2f5; margin: 0; height: 100vh; display: flex; flex-direction: column; }
         .header { background: #fff; padding: 0 20px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; height: 60px; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); z-index: 10;}
         .header h1 { font-size: 1.2em; margin: 0; }
         .header a { text-decoration: none; color: #dc3545; font-weight: 500; }
         .container { display: flex; width: 100%; flex-grow: 1; overflow: hidden; }
         
-        /* CỘT TRÁI: DANH SÁCH BỆNH NHÂN */
+        /* CỘT 1: DANH SÁCH CHAT */
         .patient-list { flex: 0 0 320px; background: #fff; border-right: 1px solid #ddd; display: flex; flex-direction: column; }
-        .list-header { padding: 15px 20px; font-weight: bold; border-bottom: 1px solid #eee; font-size: 1.1em; }
+        .list-header { padding: 15px 20px; font-weight: bold; border-bottom: 1px solid #eee; font-size: 1.1em; background: #f7f7f7; }
         .list-content { overflow-y: auto; flex-grow: 1; }
-        a.patient-item { color: inherit; text-decoration: none; display: block; }
-        .patient-item { padding: 15px 20px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.2s; }
-        .patient-item:hover { background: #f7f7f7; }
-        .patient-item.active { background: #e6f7ff; border-right: 3px solid #1890ff; padding-right: 17px; }
-        .patient-item h4 { margin: 0 0 5px 0; font-size: 1em; }
-        .patient-item p { margin: 0; font-size: 0.85em; color: #555; line-height: 1.4; }
+        .chat-room-item { padding: 15px 20px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.2s; }
+        .chat-room-item:hover { background: #f7f7f7; }
+        .chat-room-item.active { background: #e6f7ff; border-left: 3px solid #1890ff; padding-left: 17px; }
+        .chat-room-item h4 { margin: 0 0 5px 0; font-size: 1em; }
+        .chat-room-item p { margin: 0; font-size: 0.85em; color: #555; line-height: 1.4; }
         
-        /* CỘT GIỮA: KHUNG CHAT */
+        /* CỘT 2: KHUNG CHAT */
         .workspace { flex: 2; display: flex; flex-direction: column; background: #f9f9f9; }
-        .chat-header { padding: 20px; font-weight: bold; background: #fff; border-bottom: 1px solid #eee; }
-        .chat-window { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; }
-        .input-area { padding: 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; background: #fff; }
+        .chat-header { padding: 20px; font-weight: bold; background: #fff; border-bottom: 1px solid #eee; flex-shrink: 0;}
+        .messages-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; }
+        .input-area { padding: 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; background: #fff; flex-shrink: 0;}
+        
         .message { padding: 10px 15px; border-radius: 18px; margin-bottom: 10px; max-width: 70%; word-wrap: break-word; line-height: 1.4; }
-        .student-msg, .bot-msg { align-self: flex-start; }
-        .student-msg { background: #e4e6eb; color: black; }
-        .bot-msg { background: #dcdcdc; color: #333; border: 1px dashed #aaa; }
-        .therapist-msg { background: #007bff; color: white; align-self: flex-end; }
+        .message.other { background: #e4e6eb; color: black; align-self: flex-start; }
+        .message.own { background: #007bff; color: white; align-self: flex-end; }
+        .timestamp { display: block; font-size: 0.7em; margin-top: 2px; opacity: 0.7; color: inherit; }
 
-        /* CỘT PHẢI: TÓM TẮT & GỢI Ý */
-        .right-panel { flex: 1; min-width: 300px; background: #eef2f6; padding: 20px; overflow-y: auto; border-left: 1px solid #ccc; }
+
+        /* CỘT 3: AI PANEL */
+        .right-panel { flex: 1; min-width: 300px; background: #eef2f6; padding: 20px; overflow-y: auto; border-left: 1px solid #ccc; flex-shrink: 0;}
         .ai-card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .ai-title { font-weight: bold; color: #005a9e; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
         .ai-card ul { padding-left: 20px; margin: 0; font-size: 0.9em; line-height: 1.5; }
@@ -42,82 +47,259 @@
         .suggestion-btn:hover { background: #007bff; color: white; }
         input[type="text"] { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 20px; outline: none; font-size: 1em; }
         button.send-btn { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 20px; cursor: pointer; }
+        
+        .header-actions { display: flex; gap: 15px; align-items: center; }
+        .chat-link { padding: 8px 15px; background-color: #007bff; color: white !important; border-radius: 5px; font-size: 0.9em; transition: background-color 0.2s; }
+        .chat-link:hover { background-color: #0056b3; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>Therapist Dashboard</h1>
-        <a href="{{ url_for('logout') }}">Đăng xuất</a>
+        <h1>Therapist Messenger</h1>
+        <div class="header-actions">
+            <a href="{{ url_for('chat_home') }}" class="chat-link">
+                Tìm sinh viên mới
+            </a>
+            <a href="{{ url_for('logout') }}">Đăng xuất</a>
+        </div>
     </div>
 
     <div class="container">
-        <!-- CỘT 1: DANH SÁCH CA TƯ VẤN (DỮ LIỆU THẬT) -->
         <div class="patient-list">
             <div class="list-header">Danh sách ca tư vấn</div>
             <div class="list-content">
-                <!-- ========================================================== -->
-                <!-- PHẦN CODE ĐỘNG - THAY THẾ DỮ LIỆU GIẢ BẰNG DỮ LIỆU THẬT -->
-                <!-- ========================================================== -->
-
-                {% if summaries %}
-                    {% for summary in summaries %}
-                        <!-- TODO: Trong tương lai, href sẽ trỏ tới url_for('chat_detail', summary_id=summary.summary_id) -->
-                        <a href="#" class="patient-item {% if loop.first %}active{% endif %}">
-                            <h4>{{ summary.username }}</h4>
-                            <p>
-                                <!-- Trích xuất dòng "Vấn đề chính" từ tóm tắt làm chủ đề -->
-                                <strong>Chủ đề:</strong>
-                                {{ (summary.summary_content.split('2.')[0]).replace('1. Vấn đề chính:', '').strip() }}
-                                <br>
-                                <small>Ngày: {{ summary.created_at.strftime('%d-%m-%Y %H:%M') }}</small>
+                {% set chat_rooms = active_chat_rooms_json | from_json %}
+                {% if chat_rooms %}
+                    {% for room_data in chat_rooms %}
+                        <div 
+                           class="chat-room-item {% if loop.first %}active{% endif %}" 
+                           data-room-code="{{ room_data.room_code }}" 
+                           data-student-name="{{ room_data.student_name }}"
+                           data-summary="{{ room_data.ai_summary | tojson | safe }}">
+                            
+                            <h4>{{ room_data.student_name }}</h4>
+                            <p style="font-size:0.8em; color:#007bff;">Phòng: {{ room_data.room_code }}</p>
+                            <p style="font-size:0.7em;">
+                                {% if room_data.last_message %}
+                                    <small><strong>{{ room_data.last_message.name }}:</strong> {{ room_data.last_message.message[:30] }}{% if room_data.last_message.message|length > 30 %}...{% endif %}</small>
+                                {% else %}
+                                    <small>Mới: {{ room_data.matched_at }}</small>
+                                {% endif %}
                             </p>
-                        </a>
+                        </div>
                     {% endfor %}
                 {% else %}
                     <p style="padding: 20px; color: #888; text-align: center;">Chưa có ca tư vấn nào được ghi nhận.</p>
                 {% endif %}
-
-                <!-- ========================================================== -->
-                <!-- KẾT THÚC PHẦN CODE ĐỘNG -->
-                <!-- ========================================================== -->
             </div>
         </div>
 
-        <!-- CỘT 2: KHÔNG GIAN LÀM VIỆC (DỮ LIỆU GIẢ ĐỂ DEMO) -->
         <div class="workspace">
-            <div class="chat-header">Đang tư vấn cho: Nguyễn Văn A</div>
-            <div class="chat-window" id="chat-window">
-                <div class="message student-msg">Em chào ạ, em đang cảm thấy rất tệ.</div>
-                <div class="message bot-msg">Chào bạn, tôi đây. Bạn có thể chia sẻ cụ thể hơn được không?</div>
-                <div class="message student-msg">Em không muốn sống nữa.</div>
-                <div class="message bot-msg">Tôi nhận thấy bạn đang ở trong một tình huống rất khó khăn... [số điện thoại khẩn cấp]</div>
-                <div class="message therapist-msg">Chào em, anh là chuyên gia tư vấn đây. Cảm ơn em đã tin tưởng chia sẻ. Em có thể nói rõ hơn về những gì đang khiến em cảm thấy như vậy không?</div>
+            <div class="chat-header">
+                <h2 id="active-room-title">
+                    {% if chat_rooms %}
+                        Đang tư vấn cho: {{ chat_rooms[0].student_name }}
+                    {% else %}
+                        Chọn một cuộc tư vấn để bắt đầu
+                    {% endif %}
+                </h2>
             </div>
-            <form class="input-area" onsubmit="event.preventDefault(); alert('Chức năng chat đang được phát triển!');">
+            <div class="messages-container" id="messages-container">
+                </div>
+            <form class="input-area" id="chat-form">
                 <input type="text" id="msg-input" placeholder="Nhập tin nhắn..." autocomplete="off">
                 <button type="submit" class="send-btn">Gửi</button>
             </form>
         </div>
 
-        <!-- CỘT 3: TRỢ LÝ AI (DỮ LIỆU GIẢ ĐỂ DEMO) -->
         <div class="right-panel">
             <div class="ai-card">
                 <div class="ai-title">📊 Tóm Tắt Từ AI</div>
-                <ul>
-                    <li><strong>Vấn đề chính:</strong> Có ý định tự tử, căng thẳng thi cử.</li>
-                    <li><strong>Cảm xúc chủ đạo:</strong> Tuyệt vọng, buồn bã.</li>
-                    <li><strong>Điểm rủi ro:</strong> CAO.</li>
-                </ul>
+                <ul id="ai-summary-list">
+                    </ul>
             </div>
             <div class="ai-card">
                 <div class="ai-title">💡 Gợi ý phản hồi</div>
-                <button class="suggestion-btn" onclick="document.getElementById('msg-input').value = this.innerText.split('\n')[1]; document.getElementById('msg-input').focus();"><strong>Thấu cảm ❤️</strong><br>Anh hiểu rằng em đang trải qua một giai đoạn rất khó khăn.</button>
-                <button class="suggestion-btn" onclick="document.getElementById('msg-input').value = this.innerText.split('\n')[1]; document.getElementById('msg-input').focus();"><strong>Khơi gợi ❓</strong><br>Điều gì cụ thể trong kỳ thi khiến em cảm thấy áp lực nhất?</button>
-                 <button class="suggestion-btn" onclick="alert('Chức năng gọi API đang được phát triển!')"><strong>Tạo gợi ý mới...</strong></button>
+                <div id="ai-suggestions-area">
+                    <button class="suggestion-btn" onclick="alert('Chức năng gọi API đang được phát triển!')"><strong>Tạo gợi ý mới...</strong></button>
+                </div>
             </div>
         </div>
     </div>
 
+<script type="text/javascript">
+    // Lấy dữ liệu từ Flask (Đây là nguồn dữ liệu chuẩn)
+    const ALL_ROOM_DATA = JSON.parse('{{ active_chat_rooms_json | safe }}');
+    const INITIAL_MESSAGES = JSON.parse('{{ initial_messages_json | safe }}');
+    const INITIAL_SUMMARY = JSON.parse('{{ initial_summary_json | safe }}');
+
+    var socketio = io();
+    const myUsername = "{{ name }}"; 
+    
+    // Biến lưu phòng đang hoạt động
+    let activeRoomCode = "{{ session['room'] if session['room'] else '' }}";
+    
+    const messagesContainer = document.getElementById("messages-container");
+    const messageInput = document.getElementById("msg-input");
+    const chatForm = document.getElementById("chat-form");
+    const roomItems = document.querySelectorAll('.chat-room-item');
+
+    // Cache để lưu lịch sử tin nhắn của các phòng đã xem
+    const historyCache = new Map();
+
+
+    // --- RENDERING FUNCTIONS ---
+
+    const createMessage = (name, msg, timestamp, isOwn) => {
+        const messageType = isOwn ? 'own' : 'other';
+        const displayTimestamp = timestamp ? timestamp : new Date().toLocaleTimeString();
+
+        const content = `
+            <div class="message ${messageType}">
+                ${!isOwn ? `<span class="sender" style="font-weight:bold; font-size:0.8em;">${name}</span>` : ''}
+                <span>${msg}</span>
+                <span class="timestamp">${displayTimestamp}</span>
+            </div>
+        `;
+        messagesContainer.innerHTML += content;
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    };
+    
+    const renderAiPanel = (summaryData) => {
+        const summaryList = document.getElementById('ai-summary-list');
+        const suggestionArea = document.getElementById('ai-suggestions-area');
+        
+        summaryList.innerHTML = '';
+        if (summaryData && summaryData.length > 0) {
+            summaryData.forEach(item => {
+                summaryList.innerHTML += `<li>${item.point}</li>`;
+            });
+        } else {
+            summaryList.innerHTML = '<li>Chưa có bản tóm tắt AI nào được ghi nhận.</li>';
+        }
+        
+        suggestionArea.innerHTML = `
+            <button class="suggestion-btn" onclick="document.getElementById('msg-input').value = 'Anh hiểu rằng em đang trải qua một giai đoạn rất khó khăn.'; document.getElementById('msg-input').focus();"><strong>Thấu cảm ❤️</strong><br>Anh hiểu rằng em đang trải qua một giai đoạn rất khó khăn.</button>
+            <button class="suggestion-btn" onclick="document.getElementById('msg-input').value = 'Điều gì cụ thể trong vấn đề này khiến em cảm thấy áp lực nhất?'; document.getElementById('msg-input').focus();"><strong>Khơi gợi ❓</strong><br>Điều gì cụ thể trong vấn đề này khiến em cảm thấy áp lực nhất?</button>
+            <button class="suggestion-btn" onclick="alert('Chức năng gọi API đang được phát triển!')"><strong>Tạo gợi ý mới...</strong></button>
+        `;
+    };
+
+    const loadRoomHistory = (roomCode) => {
+        messagesContainer.innerHTML = ''; 
+        if (historyCache.has(roomCode)) {
+            const messages = historyCache.get(roomCode);
+            messages.forEach(msg => {
+                const isOwn = (msg.name === myUsername);
+                createMessage(msg.name, msg.message, msg.timestamp, isOwn);
+            });
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        } else {
+            messagesContainer.innerHTML = '<p style="text-align:center; color:#888;">Đang tải lịch sử...</p>';
+            // Yêu cầu server gửi lại lịch sử
+            socketio.emit('join_room_request', { room_code: roomCode, action: 'load_history_only' });
+        }
+    };
+
+
+    // --- EVENT HANDLERS ---
+
+    const sendMessage = (event) => {
+        event.preventDefault(); 
+        const message = messageInput.value.trim();
+        if (message === "" || !activeRoomCode) return;
+        
+        // Gửi kèm room_code để server biết tin nhắn thuộc phòng nào
+        socketio.emit("message", { data: message, room_code: activeRoomCode });
+        
+        messageInput.value = "";
+        messageInput.focus();
+    };
+    chatForm.addEventListener("submit", sendMessage);
+    
+    // --- XỬ LÝ CLICK CHUYỂN PHÒNG (FIX QUAN TRỌNG) ---
+    roomItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const newRoomCode = item.getAttribute('data-room-code');
+            const studentName = item.getAttribute('data-student-name');
+            
+            // >> FIX: Lấy dữ liệu summary từ biến toàn cục ALL_ROOM_DATA thay vì DOM attribute
+            // Điều này tránh hoàn toàn lỗi cú pháp HTML/JSON
+            const roomData = ALL_ROOM_DATA.find(r => r.room_code === newRoomCode);
+            const summaryData = roomData ? roomData.ai_summary : [];
+            
+            if (newRoomCode === activeRoomCode) return; // Nếu đang ở phòng này rồi thì thôi
+
+            console.log(`Switching to room: ${newRoomCode}`);
+
+            // 1. Cập nhật giao diện (Active class)
+            document.querySelector('.chat-room-item.active')?.classList.remove('active');
+            item.classList.add('active');
+
+            // 2. Cập nhật biến trạng thái
+            activeRoomCode = newRoomCode;
+            document.getElementById("active-room-title").innerHTML = 
+                `Đang tư vấn cho: ${studentName}`;
+            
+            // 3. Gửi yêu cầu chuyển phòng lên Server
+            socketio.emit('join_room_request', { room_code: activeRoomCode, action: 'switch_room' });
+
+            // 4. Tải hiển thị lịch sử & AI Panel
+            loadRoomHistory(activeRoomCode);
+            renderAiPanel(summaryData);
+        });
+    });
+    
+    // --- Socket.IO Handlers ---
+
+    socketio.on("message", (data) => {
+        // Chỉ hiển thị tin nhắn nếu nó thuộc phòng đang mở
+        if (data.room_code === activeRoomCode) {
+            const isOwn = (data.name === myUsername);
+            createMessage(data.name, data.message, data.timestamp, isOwn);
+            
+            // Cập nhật cache để khi quay lại vẫn thấy tin nhắn mới
+            if (historyCache.has(activeRoomCode)) {
+                historyCache.get(activeRoomCode).push(data);
+            } else {
+                historyCache.set(activeRoomCode, [data]);
+            }
+        }
+    });
+
+    socketio.on('room_history', (data) => {
+        // Chỉ cập nhật nếu dữ liệu trả về đúng là của phòng đang mở
+        if (data.room_code === activeRoomCode) {
+            historyCache.set(data.room_code, data.messages);
+            // Render lại tin nhắn từ dữ liệu mới nhận
+            messagesContainer.innerHTML = '';
+            data.messages.forEach(msg => {
+                const isOwn = (msg.name === myUsername);
+                createMessage(msg.name, msg.message, msg.timestamp, isOwn);
+            });
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        } else {
+            // Nếu nhận được lịch sử của phòng khác (chạy ngầm), cứ lưu vào cache
+            historyCache.set(data.room_code, data.messages);
+        }
+    });
+
+    // --- Khởi tạo ban đầu ---
+    document.addEventListener('DOMContentLoaded', () => {
+        if (activeRoomCode) {
+            // Lưu dữ liệu ban đầu vào cache
+            historyCache.set(activeRoomCode, INITIAL_MESSAGES);
+            
+            loadRoomHistory(activeRoomCode);
+            renderAiPanel(INITIAL_SUMMARY);
+        } else {
+            document.getElementById("active-room-title").innerHTML = "Chọn một cuộc tư vấn để bắt đầu.";
+            messageInput.disabled = true;
+            document.querySelector('.send-btn').disabled = true;
+        }
+    });
+
+</script>
 </body>
 </html>

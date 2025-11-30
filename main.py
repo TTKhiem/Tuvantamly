@@ -1,32 +1,32 @@
+from globals import app, database, chatbot, socketio, rooms, connected_users
 import os
 import sqlite3
-from flask import Flask, request, jsonify, session, render_template, redirect, url_for, flash
-from dotenv import load_dotenv
+import json
+from flask import request, jsonify, session, render_template, redirect, url_for, flash
 from werkzeug.security import generate_password_hash, check_password_hash
-
+from flask_socketio import SocketIO
+import socket_handlers
 # Import các module đã tách
-import database
-import chatbot
 import pet_system
+import random
+from datetime import datetime
+from socket_helperfuncs import generate_unique_code1, get_user_data, notify_users_of_new_match,get_user_data_by_id
+from socket_handlers import load_room_data_from_sqlite
+from matchmaking_repository import get_all_matched_roomcodes_for_therapist
 
-# --- KHỞI TẠO ỨNG DỤNG ---
-load_dotenv()
-app = Flask(__name__)
-app.config['DATABASE'] = database.DATABASE
-app.secret_key = os.getenv("APP_SECRET")
 
-# Lấy các API key từ file .env
-chatbot_api_key = os.getenv("GOOGLE_CHATBOT_API_KEY")
-petbot_api_key = os.getenv("GOOGLE_PETBOT_API_KEY")
-
-# Khởi tạo các Gemini client với các key tương ứng
-chatbot.init_gemini_clients(chatbot_api_key, petbot_api_key)
-
-# Đăng ký các hàm database với app
-database.init_app(app)
+#TESTING FUNCTION
+def get_ai_summary_for_student(student_user_id):
+    # Đây là placeholder, bạn có thể thay thế bằng logic truy vấn DB hoặc gọi AI sau.
+    return [
+        {"point": "Tình trạng chung: Lo lắng về thi cử."},
+        {"point": "Cảm xúc: Buồn bã, tuyệt vọng."},
+        {"point": "Điểm rủi ro: Cần được theo dõi sát sao."},
+    ]
 
 
 # --- ROUTES HIỂN THỊ TRANG (PAGE RENDERING) ---
+
 @app.route('/')
 def home():
     user_data, pet_data, quests_data = None, None, None
@@ -76,7 +76,7 @@ def login():
         flash(f"Chào mừng {user['username']}!", "success")
 
         if user['role'] == 'therapist':
-            return redirect(url_for('therapist_dashboard'))
+            return redirect(url_for('therapist_dashboard_redirect'))
         else:
             return redirect(url_for('home'))
     else:
@@ -93,7 +93,7 @@ def logout():
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' not in session: return redirect(url_for('home'))
-    if session.get('role') == 'therapist': return redirect(url_for('therapist_dashboard'))
+    if session.get('role') == 'therapist': return redirect(url_for('therapist_dashboard_redirect'))
     db = database.get_db()
     user_data = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
     return render_template('dashboard.html', user = user_data)
@@ -167,22 +167,62 @@ def api_chat_complete():
     return jsonify({"summary": summary})
 
 # --- ROUTES CHO THERAPIST ---
-@app.route('/therapist/dashboard')
-def therapist_dashboard():
-    if session.get('role') != 'therapist':
+
+
+@app.route('/therapist/messenger')
+def therapist_messenger():
+    if session.get('role') != 'therapist' or 'user_id' not in session:
         flash("Bạn không có quyền truy cập trang này!", "error")
         return redirect(url_for('home'))
 
-    db = database.get_db()
-    summaries = db.execute(
-        """
-        SELECT s.id as summary_id, s.user_id, s.summary_content, u.username, s.created_at
-        FROM intake_summary s
-        JOIN users u ON s.user_id = u.id
-        ORDER BY s.created_at DESC
-        """
-    ).fetchall()
-    return render_template('therapist_dashboard.html', summaries=summaries)
+    user_id = session['user_id']
+    therapist_matches = get_all_matched_roomcodes_for_therapist(user_id)
+    active_chat_rooms = [] 
+
+    for match in therapist_matches:
+        room_code = match["roomcode"]
+        student_user_id = match["student_user_id"]
+        
+        # 1. Khôi phục phòng vào bộ nhớ nếu cần (Quan trọng)
+        load_room_data_from_sqlite(room_code) 
+            
+        # 2. Thu thập dữ liệu
+        if room_code in rooms:
+            student_data = get_user_data_by_id(student_user_id)
+            messages = rooms[room_code]["messages"]
+            last_message = messages[-1] if messages else None
+            
+            active_chat_rooms.append({
+                "room_code": room_code,
+                "student_name": student_data["username"] if student_data else f"Sinh viên {student_user_id}",
+                "matched_at": match["matched_at"],
+                "last_message": last_message,
+                "ai_summary": get_ai_summary_for_student(student_user_id),
+                "messages": messages, # Truyền lịch sử tin nhắn để JS load nhanh
+            })
+    
+    # Thiết lập phòng mặc định và truyền dữ liệu ban đầu
+    initial_messages = []
+    initial_summary = []
+    if active_chat_rooms:
+        session["room"] = active_chat_rooms[0]["room_code"]
+        initial_messages = active_chat_rooms[0]["messages"]
+        initial_summary = active_chat_rooms[0]["ai_summary"]
+    else:
+        session["room"] = None
+        
+    # Chú ý: Bạn cần dùng | tojson | safe để truyền Array/List sang JS
+    return render_template('therapist_dashboard.html', 
+                           active_chat_rooms_json=json.dumps(active_chat_rooms), # <--- SỬA DÒNG NÀY
+                           initial_messages_json=json.dumps(initial_messages),
+                           initial_summary_json=json.dumps(initial_summary),
+                           name=session['username'],
+                           user_role='therapist')
+
+
+@app.route('/therapist/dashboard')
+def therapist_dashboard_redirect():
+    return redirect(url_for('therapist_messenger'))
 
 @app.route('/therapist/workspace')
 def therapist_workspace():
@@ -190,6 +230,8 @@ def therapist_workspace():
         flash("Chỉ dành cho chuyên gia!", "error")
         return redirect(url_for('home'))
     return render_template('therapist_chat.html')
+
+
 
 @app.route('/api/therapist/suggest', methods=['POST'])
 def therapist_suggest():
@@ -199,6 +241,7 @@ def therapist_suggest():
     if suggestions:
         return jsonify(suggestions)
     return jsonify({"error": "Failed to generate"}), 500
+
 
 # --- API ROUTES CHO PET SYSTEM ---
 def check_auth():
@@ -339,9 +382,141 @@ def start_quest_api(quest_id):
         return jsonify({"id": quest['id'], "type": quest['type'], "title": quest['title'], "data": quest['data']})
     return jsonify({"error": "Quest not found"}), 404
 
+
+# === CÁC ROUTE CHO CHAT (Existing) ===
+
+@app.route('/chat_home')
+def chat_home():
+# ... existing code ...
+    if 'username' not in session:
+        flash("Bạn cần đăng nhập để sử dụng chat!", "error")
+        return redirect(url_for('home'))
+    
+    # Get user's tags to display on the page
+    user_data = get_user_data(session.get('username'))
+    user_tags = user_data.get('tags_list', [])
+
+    return render_template('chat_home.html', name=session.get('username'), user_tags=user_tags)
+
+@app.route('/chat_room', methods=["POST"])
+def chat_room_post():
+    name = session.get("username")
+    if not name:
+        return redirect(url_for('chat_home'))
+
+    code = request.form.get("code")
+    join = request.form.get("join", False)
+    create = request.form.get("create", False)
+
+    room = code
+    
+    # 1. Manual Room Creation
+    if create != False:
+        room = generate_unique_code1(4)
+        rooms[room] = {"members": 0, "messages": []}
+    
+    # 2. Manual Room Joining
+    elif join != False:
+        if not code:
+            flash("Vui lòng nhập mã phòng.", "error")
+            return render_template("chat_home.html", name=name)
+        
+        # Room exists in active memory (rooms)
+        if code in rooms:
+            # Do nothing, just proceed to join. Messages are already in 'rooms'.
+            pass 
+        # Room does NOT exist in active memory (rooms), so check database
+        else:
+            loaded_messages = []
+            with sqlite3.connect('app.db') as conn:
+                cur = conn.cursor()
+                cur.execute("SELECT username, message_text, timestamp FROM chat_logs WHERE room_code = ? ORDER BY timestamp ASC", (code,))
+                existing_messages = cur.fetchall()
+            
+            if not existing_messages:
+                # Room does not exist in memory OR in the database
+                flash("Phòng không tồn tại.", "error")
+                # Need to get user_tags for chat_home.html rendering
+                user_data = get_user_data(name)
+                user_tags = user_data.get('tags_list', [])
+                return render_template("chat_home.html", name=name, user_tags=user_tags) 
+            
+            # Load messages from database
+            for msg in existing_messages:
+                try:
+                    # Attempt to parse the timestamp (assuming it was saved as a string)
+                    ts_obj = datetime.strptime(msg[2], '%Y-%m-%d %H:%M:%S.%f')
+                    formatted_ts = ts_obj.strftime('%Y-%m-%d %H:%M')
+                except ValueError:
+                    formatted_ts = msg[2] # Fallback if format is different or missing
+                loaded_messages.append({"name": msg[0], "message": msg[1], "timestamp": formatted_ts})
+            
+            # Add the room and its loaded messages to the active rooms dictionary
+            rooms[code] = {"members": 0, "messages": loaded_messages}
+            room = code # Ensure 'room' variable is set correctly
+
+    # 3. Handle errors if no action was taken (e.g., neither join nor create)
+    else:
+        # Should not happen with the current form structure, but good for completeness
+        flash("Hành động không hợp lệ.", "error")
+        return redirect(url_for('chat_home'))
+
+    session["room"] = room
+    session.modified = True
+    return redirect(url_for("chat_room_view", room_code=room))
+
+
+# @app.route('/chat_room/<string:room_code>')
+# def chat_room_view(room_code):
+#     # room = session.get("room") <-- This was the bug. Session is empty.
+#     name = session.get("username")
+
+#     # If user isn't logged in, boot them.
+#     if not name:
+#         flash("Bạn cần đăng nhập để tham gia chat.", "error")
+#         return redirect(url_for("home"))
+        
+#     # If room doesn't exist (e.g., from a bad link or old match), boot them.
+#     if room_code not in rooms:
+#         flash("Phòng chat này không tồn tại hoặc đã kết thúc.", "error")
+#         return redirect(url_for("chat_home"))
+        
+#     # --- THIS IS THE FIX ---
+#     # The user is logged in AND the room exists.
+#     # Set the room in their session NOW, based on the URL.
+#     session["room"] = room_code
+#     session.modified = True # <-- ADD THIS LINE
+#     # Now, render the page.
+#     return render_template("chat_room.html", code=room_code, messages=rooms[room_code]["messages"], name=name)
+
+
+@app.route('/chat_room/<string:room_code>')
+def chat_room_view(room_code):
+    name = session.get("username")
+
+    if not name:
+        flash("Bạn cần đăng nhập để tham gia chat.", "error")
+        return redirect(url_for("home"))
+        
+    # --- LOGIC KHÔI PHỤC PHÒNG (QUAN TRỌNG) ---
+    if room_code not in rooms:
+        # Nếu phòng không tồn tại trong bộ nhớ, thử tải lại từ DB
+        restored_messages = load_room_data_from_sqlite(room_code) # load_room_data_from_sqlite sẽ tự động khôi phục vào global rooms
+        
+        if not restored_messages:
+            flash("Phòng chat này không tồn tại hoặc đã kết thúc.", "error")
+            return redirect(url_for("chat_home"))
+    # --- END LOGIC KHÔI PHỤC PHÒNG ---
+
+    # Phòng đã sẵn sàng (trong bộ nhớ hoặc đã được khôi phục)
+    session["room"] = room_code
+    session.modified = True 
+    return render_template("chat_room.html", code=room_code, messages=rooms[room_code]["messages"], name=name)
+
 # --- MAIN ---
 if __name__ == '__main__':
     if not os.path.exists(app.config['DATABASE']):
         with app.app_context():
             database.init_db()
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True, allow_unsafe_werkzeug=True)
+    # app.run(host='0.0.0.0', port=5000, debug=True)

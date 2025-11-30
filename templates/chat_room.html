@@ -1,0 +1,104 @@
+ {% extends 'chat_base.html' %} 
+{% block content %}
+<div class="message-box chat-page">
+  
+  <div class="chat-header">
+    <h2>Mã phòng: {{code}}</h2>
+    <a href="{{ url_for('home') }}" class="leave-btn">Rời phòng</a>
+  </div>
+  
+  
+  <div class="messages" id="messages"></div>
+  <div class="inputs">
+    <input
+      type="text"
+      placeholder="Tin nhắn..."
+      name="message"
+      id="message"
+    />
+    <button type="button" name="send" id="send-btn" >
+      Gửi
+    </button>
+  </div>
+</div>
+
+<!-- All JavaScript goes in ONE tag -->
+<script type="text/javascript">
+  var socketio = io();
+  const myUsername = "{{ name }}"; 
+  const messages = document.getElementById("messages");
+  const messageInput = document.getElementById("message");
+
+  /**
+   * Creates and appends a message to the chat box.
+   * @param {string} name - The sender's name
+   * @param {string} msg - The message content
+   * @param {string} timestamp - The server-provided timestamp
+   * @param {boolean} [shouldScroll=true] - Whether to scroll to the bottom
+   */
+  const createMessage = (name, msg, timestamp, shouldScroll = true) => {
+    const messageType = (name === myUsername) ? 'own' : 'other';
+    
+    // Use the timestamp from the server.
+    const displayTimestamp = timestamp ? timestamp : new Date().toLocaleString();
+
+    const content = `
+    <div class="message ${messageType}">
+        ${messageType === 'other' ? `<strong>${name}</strong>` : ''}
+        <span>${msg}</span>
+        <span class="timestamp">
+            ${displayTimestamp}
+        </span>
+    </div>
+    `;
+    messages.innerHTML += content;
+    if (shouldScroll) {
+        messages.scrollTop = messages.scrollHeight;
+    }
+  };
+
+  /**
+   * Sends the message from the input box to the server.
+   */
+  const sendMessage = () => {
+    const message = messageInput.value;
+    if (message == "") return;
+    
+    socketio.emit("message", { data: message });
+    
+    messageInput.value = "";
+    messageInput.focus();
+  };
+
+  // --- Event Listeners ---
+
+  document.getElementById("send-btn").addEventListener("click", sendMessage);
+
+  messageInput.addEventListener("keypress", function(event) {
+      if (event.key === "Enter") {
+          event.preventDefault(); 
+          sendMessage();
+      }
+  });
+
+  // --- Socket.IO Handlers ---
+
+  // This handles all NEW incoming messages (including our own)
+  socketio.on("message", (data) => {
+    createMessage(data.name, data.message, data.timestamp, true);
+  });
+
+</script>
+
+<!-- --- LOAD HISTORY MESSAGES (THE FIX) --- -->
+{% for msg in messages %}
+  <script type="text/javascript">
+    createMessage("{{msg.name|e}}", "{{msg.message|e}}", "{{msg.timestamp|e}}", false);
+  </script>
+{% endfor %}
+
+<script type="text/javascript">
+  messages.scrollTop = messages.scrollHeight; // Scroll to bottom once after loading history
+</script>
+{% endblock %}
+

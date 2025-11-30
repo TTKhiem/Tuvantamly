@@ -1,0 +1,211 @@
+﻿Hệ Thống Chat & Matchmaking: Luồng Hoạt Động Kỹ Thuật
+
+Tài liệu này mô tả chi tiết cách vận hành của ứng dụng, từ các Route Flask, sự kiện SocketIO đến logic ghép đôi (matchmaking) và tương tác thời gian thực giữa Sinh viên (Student) và Chuyên gia (Therapist).
+
+1. Tổng Quan Kiến Trúc
+
+Backend: Flask (Python).
+
+Realtime: Flask-SocketIO (WebSocket).
+
+Database: SQLite (Lưu trữ user, hàng đợi matchmaking, kết quả match, và lịch sử chat).
+
+Frontend: HTML/CSS/JS (Jinja2 Templates).
+
+Cơ chế:
+
+Sinh viên: Sử dụng giao diện chat 1-1 đơn giản (chat_room.html).
+
+Chuyên gia: Sử dụng giao diện Dashboard đa nhiệm dạng Messenger (therapist_dashboard.html).
+
+2. Luồng Hoạt Động Của Sinh Viên (Student Workflow)
+
+Giai Đoạn 1: Tìm Kiếm & Ghép Đôi (Matchmaking)
+
+Truy cập trang Tìm kiếm:
+
+User Action: Sinh viên truy cập /chat_home.
+
+Flask Route: chat_home() trong main.py.
+
+Hành động: Render chat_home.html, hiển thị nút "Tìm trận".
+
+Yêu cầu Tìm trận:
+
+User Action: Bấm nút "Tìm trận".
+
+Socket Event: Client emit find_match.
+
+Handler: find_match() trong socket_handlers.py.
+
+Logic:
+
+Kiểm tra xem sinh viên đã có phòng cũ chưa (get_current_match_roomcode). Nếu có, trả về lỗi và yêu cầu quay lại phòng cũ.
+
+Nếu không, lấy Tags/Urgency của sinh viên.
+
+Thêm sinh viên vào hàng đợi DB (matchmaking_repository.add_student_to_matchmaking_queue).
+
+Gọi matchmaking_logic.run_matchmaking().
+
+Thuật toán Ghép đôi (run_matchmaking trong matchmaking_logic.py):
+
+Lấy danh sách Sinh viên và Therapist đang chờ từ DB.
+
+So khớp dựa trên độ khẩn cấp (Urgency) hoặc chủ đề (Topic).
+
+Nếu khớp:
+
+Tạo room_code ngẫu nhiên (6 ký tự).
+
+Lưu cặp đôi vào bảng matchmaking_results.
+
+Xóa cả hai khỏi hàng đợi (Queue).
+
+Gọi notify_users_of_new_match.
+
+Thông báo Kết quả:
+
+Helper: notify_users_of_new_match (trong socket_helperfuncs.py).
+
+Hành động: Tạo phòng trong bộ nhớ (rooms[code] = ...) và Emit sự kiện match_found tới cả 2 client (thông qua session_id).
+
+Client (JS): chat_home.html nhận match_found, hiển thị nút "Vào phòng tư vấn".
+
+Giai Đoạn 2: Tham Gia & Chat (Interaction)
+
+Vào Phòng:
+
+User Action: Bấm "Vào phòng tư vấn".
+
+Socket Event: Client emit join_private_room (kèm room_code).
+
+Handler: join_private_room trong socket_handlers.py.
+
+Logic: Kiểm tra phòng, nếu thiếu thì khôi phục từ DB (load_room_data_from_sqlite). Sau đó emit redirect_to_room.
+
+Redirect: Trình duyệt chuyển hướng tới /chat_room/<room_code>.
+
+Giao diện Chat:
+
+Flask Route: chat_room_view(room_code) trong main.py.
+
+Logic: Lưu room_code vào session['room']. Render chat_room.html.
+
+Socket Connect: Client tự động kết nối SocketIO. Handler connect() sẽ đưa user vào room (join_room).
+
+Gửi/Nhận Tin nhắn:
+
+Gửi: Client emit message.
+
+Handler: message() trong socket_handlers.py.
+
+Logic: Lấy room từ session. Lưu tin nhắn vào DB (chat_logs) và bộ nhớ (rooms). Emit lại tin nhắn cho tất cả người trong phòng.
+
+3. Luồng Hoạt Động Của Chuyên Gia (Therapist Workflow)
+
+Giai Đoạn 1: Tìm Kiếm & Ghép Đôi
+
+Tương tự Sinh viên: Therapist cũng truy cập /chat_home để bấm nút "Tìm trận".
+
+Khác biệt: Khi find_match chạy, họ được thêm vào hàng đợi matchmaking_queue_therapists.
+
+Kết quả: Khi có match, họ nhận thông báo match_found. Tuy nhiên, Therapist thường sẽ quay về Dashboard để chat thay vì vào giao diện đơn lẻ.
+
+Giai Đoạn 2: Giao Diện Messenger (Dashboard)
+
+Truy cập Dashboard:
+
+Route: /therapist/messenger (main.py).
+
+Logic Quan trọng:
+
+Gọi get_all_matched_roomcodes_for_therapist để lấy tất cả sinh viên đã từng ghép đôi.
+
+Duyệt qua từng phòng: Gọi load_room_data_from_sqlite(room_code) để khôi phục lịch sử chat từ DB vào bộ nhớ RAM (rooms). Đây là bước then chốt để Messenger hoạt động.
+
+Lấy tóm tắt AI (get_ai_summary_for_student).
+
+Render therapist_dashboard.html với đầy đủ dữ liệu danh sách phòng và tin nhắn.
+
+Tương tác Đa phòng (Multi-room Interaction):
+
+Hiển thị: Danh sách sinh viên bên trái, khung chat ở giữa, AI Panel bên phải.
+
+Chuyển phòng (Switch Room):
+
+User Action: Click vào tên sinh viên trong danh sách.
+
+Client JS: Cập nhật biến activeRoomCode. Emit join_room_request lên server.
+
+Socket Handler: handle_join_room_request (socket_handlers.py). Server thực hiện leave_room(old) và join_room(new). Gửi lại lịch sử chat (room_history) cho Client.
+
+Gửi Tin nhắn từ Messenger:
+
+User Action: Nhập tin nhắn và Enter.
+
+Socket Event: message (kèm room_code của phòng đang mở).
+
+Handler: message() trong socket_handlers.py.
+
+Logic Đặc biệt: Handler này ưu tiên lấy room_code từ dữ liệu gửi lên (vì Therapist chat nhiều phòng) thay vì lấy từ session (như Student).
+
+4. Tóm Tắt Sự Kiện SocketIO Chính
+
+Event Name
+
+File Xử Lý (socket_handlers.py)
+
+Mô tả
+
+find_match
+
+find_match()
+
+Đưa user vào hàng đợi DB, kích hoạt thuật toán matchmaking.
+
+cancel_match
+
+cancel_match()
+
+Xóa user khỏi hàng đợi DB.
+
+match_found
+
+Client JS (chat_home.html)
+
+Server gửi sự kiện này khi tìm thấy cặp. Client hiện nút "Join".
+
+join_private_room
+
+join_private_room()
+
+Kiểm tra/Khôi phục phòng và gửi lệnh chuyển hướng URL.
+
+join_room_request
+
+handle_join_room_request()
+
+(Therapist Only) Chuyển đổi giữa các phòng chat trong giao diện Messenger.
+
+message
+
+message()
+
+Xử lý tin nhắn chat (Lưu DB -> Broadcast). Hỗ trợ cả 2 chế độ (Single/Multi room).
+
+5. Xử Lý Khi Server Khởi Động Lại (Persistency)
+
+Hệ thống được thiết kế để không bị mất dữ liệu khi restart:
+
+Dữ liệu Bền vững: Mọi tin nhắn, hàng đợi, kết quả match đều lưu trong SQLite (app.db).
+
+Cơ chế Khôi phục (Recovery):
+
+Khi User truy cập lại URL phòng chat (/chat_room/XYZ) hoặc Therapist vào Dashboard.
+
+Hàm load_room_data_from_sqlite sẽ tự động chạy.
+
+Nó lấy tin nhắn từ bảng chat_logs và tái tạo lại đối tượng phòng trong biến toàn cục rooms.
+
+Người dùng có thể tiếp tục chat như chưa từng có sự gián đoạn.
