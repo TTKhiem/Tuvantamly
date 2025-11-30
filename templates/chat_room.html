@@ -4,7 +4,15 @@
   
   <div class="chat-header">
     <h2>Mã phòng: {{code}}</h2>
-    <a href="{{ url_for('home') }}" class="leave-btn">Rời phòng</a>
+    <div style="display: flex; gap: 10px;">
+        {% if user_role == 'therapist' %}
+            <a href="{{ url_for('therapist_dashboard_redirect') }}" class="leave-btn" style="background-color: #007bff; border: none;">
+                ⬅️ Về Dashboard
+            </a>
+        {% endif %}
+
+        <a href="{{ url_for('home') }}" class="leave-btn">Rời phòng</a>
+    </div>
   </div>
   
   

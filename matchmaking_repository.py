@@ -112,13 +112,18 @@ def get_current_match_roomcode(user_id):
     with setup_cursor() as cursor:
         cursor.execute(
             "SELECT roomcode FROM matchmaking_results WHERE student_user_id = ? ORDER BY matched_at DESC LIMIT 1", 
-            (user_id,)
+            (user_id
+             ,)
         )
         row = cursor.fetchone()
     if row and row['roomcode']:
         return row['roomcode']
     return None
-
+def delete_match_by_roomcode(room_code):
+    """Xóa bản ghi match dựa trên room_code"""
+    with setup_cursor() as cursor:
+        cursor.execute("DELETE FROM matchmaking_results WHERE roomcode = ?", (room_code,))
+        
 def get_all_matched_roomcodes_for_therapist(user_id):
     """Lấy tất cả các roomcode mà therapist này đã được ghép đôi."""
     with setup_cursor() as cursor:
@@ -133,3 +138,4 @@ def get_all_matched_roomcodes_for_therapist(user_id):
         )
         # Trả về danh sách các bản ghi (bao gồm roomcode, student_user_id, matched_at)
         return cursor.fetchall()
+    

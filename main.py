@@ -12,7 +12,7 @@ import random
 from datetime import datetime
 from socket_helperfuncs import generate_unique_code1, get_user_data, notify_users_of_new_match,get_user_data_by_id
 from socket_handlers import load_room_data_from_sqlite
-from matchmaking_repository import get_all_matched_roomcodes_for_therapist
+from matchmaking_repository import get_all_matched_roomcodes_for_therapist,delete_match_by_roomcode,get_current_match_roomcode
 
 
 #TESTING FUNCTION
@@ -94,9 +94,43 @@ def logout():
 def dashboard():
     if 'user_id' not in session: return redirect(url_for('home'))
     if session.get('role') == 'therapist': return redirect(url_for('therapist_dashboard_redirect'))
+    
     db = database.get_db()
     user_data = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
-    return render_template('dashboard.html', user = user_data)
+    
+    # >> KIỂM TRA XEM CÓ ĐANG MATCH KHÔNG ĐỂ HIỆN NÚT
+    current_match_code = get_current_match_roomcode(session['user_id'])
+    
+    return render_template('dashboard.html', user=user_data, current_match_code=current_match_code)
+
+# 2. ROUTE MỚI: KẾT THÚC TRÒ CHUYỆN (Dùng chung cho cả 2)
+@app.route('/end_chat', methods=['POST'])
+def end_chat():
+    if 'user_id' not in session:
+        return redirect(url_for('home'))
+
+    room_code = request.form.get('room_code')
+    role = session.get('role')
+
+    if room_code:
+        # Xóa khỏi DB matchmaking_results
+        delete_match_by_roomcode(room_code)
+        
+        # Nếu muốn xóa luôn lịch sử chat, bạn có thể gọi thêm lệnh xóa chat_logs ở đây.
+        # Nhưng thường thì nên giữ chat_logs lại để làm bằng chứng/lịch sử.
+        
+        # Cập nhật thông báo
+        flash("Đã kết thúc cuộc trò chuyện thành công.", "success")
+        
+        # Xóa session phòng hiện tại để tránh join lại
+        if session.get('room') == room_code:
+            session['room'] = None
+
+    # Chuyển hướng về trang tương ứng
+    if role == 'therapist':
+        return redirect(url_for('therapist_dashboard_redirect'))
+    else:
+        return redirect(url_for('dashboard'))
     
 @app.route('/pet_page')
 def pet_page():
@@ -511,7 +545,7 @@ def chat_room_view(room_code):
     # Phòng đã sẵn sàng (trong bộ nhớ hoặc đã được khôi phục)
     session["room"] = room_code
     session.modified = True 
-    return render_template("chat_room.html", code=room_code, messages=rooms[room_code]["messages"], name=name)
+    return render_template("chat_room.html", code=room_code, messages=rooms[room_code]["messages"], name=name,user_role=session.get('role'))
 
 # --- MAIN ---
 if __name__ == '__main__':

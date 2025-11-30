@@ -96,15 +96,22 @@
         </div>
 
         <div class="workspace">
-            <div class="chat-header">
-                <h2 id="active-room-title">
-                    {% if chat_rooms %}
-                        Đang tư vấn cho: {{ chat_rooms[0].student_name }}
-                    {% else %}
-                        Chọn một cuộc tư vấn để bắt đầu
-                    {% endif %}
-                </h2>
-            </div>
+    <div class="chat-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 id="active-room-title" style="margin: 0;">
+            {% if chat_rooms %}
+                Đang tư vấn cho: {{ chat_rooms[0].student_name }}
+            {% else %}
+                Chọn một cuộc tư vấn để bắt đầu
+            {% endif %}
+        </h2>
+
+        <form id="end-chat-form" action="{{ url_for('end_chat') }}" method="POST" style="display: none;" onsubmit="return confirm('Bạn có chắc muốn kết thúc ca tư vấn này? Hành động này không thể hoàn tác.');">
+            <input type="hidden" name="room_code" id="input-end-room-code">
+            <button type="submit" style="background-color: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                Kết thúc ca 🚫
+            </button>
+        </form>
+    </div>
             <div class="messages-container" id="messages-container">
                 </div>
             <form class="input-area" id="chat-form">
@@ -144,10 +151,20 @@
     const messageInput = document.getElementById("msg-input");
     const chatForm = document.getElementById("chat-form");
     const roomItems = document.querySelectorAll('.chat-room-item');
-
+    const endChatForm = document.getElementById("end-chat-form");
+    const inputEndRoomCode = document.getElementById("input-end-room-code");
     // Cache để lưu lịch sử tin nhắn của các phòng đã xem
     const historyCache = new Map();
 
+
+    const updateEndChatButton = (roomCode) => {
+        if (roomCode) {
+            endChatForm.style.display = 'block';
+            inputEndRoomCode.value = roomCode;
+        } else {
+            endChatForm.style.display = 'none';
+        }
+    };
 
     // --- RENDERING FUNCTIONS ---
 
@@ -236,12 +253,12 @@
             // 1. Cập nhật giao diện (Active class)
             document.querySelector('.chat-room-item.active')?.classList.remove('active');
             item.classList.add('active');
-
+            
             // 2. Cập nhật biến trạng thái
             activeRoomCode = newRoomCode;
             document.getElementById("active-room-title").innerHTML = 
                 `Đang tư vấn cho: ${studentName}`;
-            
+            updateEndChatButton(activeRoomCode);
             // 3. Gửi yêu cầu chuyển phòng lên Server
             socketio.emit('join_room_request', { room_code: activeRoomCode, action: 'switch_room' });
 
@@ -293,10 +310,12 @@
             
             loadRoomHistory(activeRoomCode);
             renderAiPanel(INITIAL_SUMMARY);
+            updateEndChatButton(activeRoomCode);
         } else {
             document.getElementById("active-room-title").innerHTML = "Chọn một cuộc tư vấn để bắt đầu.";
             messageInput.disabled = true;
             document.querySelector('.send-btn').disabled = true;
+            updateEndChatButton(null);
         }
     });
 

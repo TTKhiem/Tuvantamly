@@ -67,6 +67,14 @@
         <a href="{{ url_for('chat_interface') }}" style="background-color: #007bff; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block;">
             Chat với AI ngay 💬
         </a>
+        {% if current_match_code %}
+            <form action="{{ url_for('end_chat') }}" method="POST" onsubmit="return confirm('Bạn có chắc muốn kết thúc tư vấn với chuyên gia hiện tại?');" style="display:inline;">
+                <input type="hidden" name="room_code" value="{{ current_match_code }}">
+                <button type="submit" style="background-color: #dc3545; color: white; padding: 15px 30px; border: none; border-radius: 25px; font-weight: bold; cursor: pointer; font-size: 16px;">
+                    Hủy liên kết chuyên gia ❌
+                </button>
+            </form>
+        {% endif %}
     </div>
     <form action="{{ url_for('logout') }}" method="get">
         <form action="{{ url_for('logout') }}" method="get">
