@@ -187,48 +187,7 @@ def message(data):
 
 # ... (All other @socketio.on functions: find_match, cancel_match, join_private_room) ...
 
-# socket._handlers.py (UPDATED find_match function)
 
-# @socketio.on("find_match")
-# def find_match(): 
-#     name = session.get("username")
-#     sid = request.sid
-    
-#     if not name:
-#         return
-
-#     user_data = get_user_data(name)
-#     if not user_data:
-#         emit("match_error", {"message": "Không tìm thấy hồ sơ người dùng."})
-#         return
-
-#     user_id = user_data["id"]
-#     user_role = user_data["role"]
-    
-#     # ----------------------------------------------------
-#     # >> BƯỚC MỚI: KIỂM TRA PHÒNG CHAT ĐÃ LƯU TRONG DB
-#     # ----------------------------------------------------
-#     if user_role == 'user' or user_role == 'therapist': 
-        
-#         active_room_code = get_current_match_roomcode(user_id)
-        
-#         if active_room_code:
-#             # Thông báo cho client để chuyển hướng đến phòng chat đã lưu
-#             emit("match_error", {
-#                 "message": f"Ban dang co 1 cuoc tro chuyen da luu: **{active_room_code}**. Vui long tiep tuc.",
-#                 "action": "redirect_to_active_room",
-#                 "room_code": active_room_code
-#             })
-#             print(f"User {name} already has an active/saved match: {active_room_code}. Blocking new search.")
-#             return # Dừng ngay việc tìm kiếm mới
-#     # ----------------------------------------------------
-    
-#     # ... (Phần logic tìm kiếm mới hiện tại tiếp tục ở đây nếu không có match cũ) ...
-#     # ... (Add User to DB Queue, Run Matchmaking) ...
-
-#     # 3. Notify user and Run Matchmaking
-#     emit("finding_match", {"message": "dang tim kiem nguoi phu hop..."})
-#     matchmaking_logic.run_matchmaking()
 
 
 @socketio.on("find_match")

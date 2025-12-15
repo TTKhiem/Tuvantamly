@@ -138,4 +138,33 @@ def get_all_matched_roomcodes_for_therapist(user_id):
         )
         # Trả về danh sách các bản ghi (bao gồm roomcode, student_user_id, matched_at)
         return cursor.fetchall()
-    
+def get_all_users():
+    """Lấy tất cả người dùng cho Admin Dashboard."""
+    with setup_cursor() as cursor:
+        # Loại bỏ trường password vì lý do bảo mật
+        cursor.execute("SELECT id, username, email, role, gold, tags, date_joined FROM users ORDER BY id ASC")
+        rows=cursor.fetchall()
+        return [dict(row) for row in rows]
+        
+def get_all_matchmaking_results():
+    """Lấy tất cả matchmaking results cho Admin Dashboard."""
+    with setup_cursor() as cursor:
+        cursor.execute("SELECT * FROM matchmaking_results ORDER BY matched_at DESC")
+        return cursor.fetchall()
+
+def admin_create_match_result(pair: dict):
+    """
+    Tạo bản ghi match thủ công từ Admin.
+    Sử dụng hàm này để tránh trùng lặp logic với add_student_and_therapist_to_matchmaking_results.
+    """
+    with setup_cursor() as cursor:
+        cursor.execute(
+            "INSERT INTO matchmaking_results (student_user_id, therapist_user_id, student_session_id, therapist_session_id, roomcode) VALUES (?, ?, ?, ?, ?)", 
+            (
+                pair["student_user_id"], 
+                pair["therapist_user_id"], 
+                pair["student_session_id"], 
+                pair["therapist_session_id"],
+                pair["roomcode"] 
+            )
+        )

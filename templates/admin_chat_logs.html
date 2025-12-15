@@ -1,0 +1,72 @@
+﻿{% extends "admin_dashboard.html" %}
+
+{% block content %}
+<div class="table-container">
+    <h2 class="mb-4">Chat Logs (Lịch sử Phòng Chat)</h2>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">Danh sách Phòng</div>
+                <ul class="list-group list-group-flush" id="room-list">
+                    {% for room in chat_rooms %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center" 
+                        onclick="loadChatLogs('{{ room.room_code }}')">
+                        <div style="cursor: pointer;">
+                            <strong>{{ room.room_code }}</strong> <br>
+                            <small class="text-muted">SV: {{ room.student_name }} - TVV: {{ room.therapist_name }}</small>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header" id="chat-header">Chọn một phòng để xem lịch sử</div>
+                <div class="card-body" style="height: 600px; overflow-y: scroll;" id="chat-logs-container">
+                    <p class="text-center text-muted">Tin nhắn sẽ được hiển thị ở đây.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function loadChatLogs(roomCode) {
+        document.getElementById('chat-header').innerText = `Lịch sử Chat: ${roomCode}`;
+        const container = document.getElementById('chat-logs-container');
+        container.innerHTML = '<p class="text-center">Đang tải...</p>';
+        
+        // Cập nhật active class
+        document.querySelectorAll('#room-list li').forEach(el => el.classList.remove('list-group-item-info'));
+        document.querySelector(`li[onclick="loadChatLogs('${roomCode}')"]`).classList.add('list-group-item-info');
+
+        fetch(`/api/admin/chat_logs/${roomCode}`)
+        .then(response => response.json())
+        .then(messages => {
+            container.innerHTML = '';
+            if (messages.length === 0) {
+                container.innerHTML = '<p class="text-center text-muted">Phòng này chưa có tin nhắn nào.</p>';
+                return;
+            }
+
+            messages.forEach(msg => {
+                const isStudent = msg.username === document.querySelector(`li[onclick="loadChatLogs('${roomCode}')"] small`).innerText.split(' - ')[0].replace('SV: ', '');
+                const className = isStudent ? 'text-start' : 'text-end';
+                const bgColor = isStudent ? '#e2f0fb' : '#dcf8c6';
+                
+                const messageHtml = `
+                    <div class="${className} mb-2">
+                        <div style="display: inline-block; padding: 8px 12px; border-radius: 15px; max-width: 80%; background-color: ${bgColor};">
+                            <strong>${msg.username}:</strong> ${msg.message_text}
+                            <span class="d-block text-muted" style="font-size: 0.75em;">${msg.timestamp.substring(0, 16)}</span>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += messageHtml;
+            });
+            container.scrollTop = container.scrollHeight; // Cuộn xuống cuối
+        });
+    }
+</script>
+{% endblock %}

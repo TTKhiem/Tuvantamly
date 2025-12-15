@@ -15,7 +15,7 @@
 <!-- Matchmaking Section -->
 <div class="matchmaking-box buttons">
     <h3>Xin chào, {{ name }}!</h3>
-    <h4>Tìm kiếm tư vấn viên</h4>
+    <h4>Tìm kiếm tư vấn viên/Sinh viên</h4>
     <p>Hồ sơ của bạn có các tags: <strong>{{ user_tags|join(', ') if user_tags else 'Không có' }}</strong></p>
     <p><small>(Bạn có thể cập nhật tags trong <a href="{{ url_for('dashboard') }}">Dashboard</a>)</small></p>
     
@@ -23,7 +23,7 @@
     <div id="match-status"></div>
 
     <button type="button" id="find-match-btn" class="create-btn" style="background-color: #007bff;">
-        Tìm trận
+        Tìm kiếm tư vấn viên/Sinh viên
     </button>
     <button type="button" id="cancel-match-btn" style="display:none; background-color: #dc3545;">
         Hủy tìm kiếm
@@ -132,7 +132,7 @@
             // Show the notification and the "Join" button
             statusDiv.innerHTML = `
                 <div style="padding: 10px; border: 2px solid green; border-radius: 5px;">
-                    <p style="color:green; font-weight:bold;">Đã tìm thấy trận!</p>
+                    <p style="color:green; font-weight:bold;">Đã tìm thấy người phù hợp!</p>
                     <p>Phù hợp với: <strong>${matchedUser}</strong></p>
                     <p>Chủ đề chung: <strong>${commonTags}</strong></p>
                     <button id="join-match-btn" class="create-btn">Vào phòng tư vấn</button>

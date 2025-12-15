@@ -19,5 +19,8 @@ APP_SECRET=your_app_secret // Dòng này cứ copy y chang là được
 
 
 
-   
+**NOTES** UPDATED features in 15/12/2025
+
+admin panel
+chuc nang: them xoa sua users, tao phong ghep cap student va therapist . Can them idea de add vao ae thay co gi hop ly thi add vao nhe
 

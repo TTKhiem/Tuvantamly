@@ -12,7 +12,7 @@ import random
 from datetime import datetime
 from socket_helperfuncs import generate_unique_code1, get_user_data, notify_users_of_new_match,get_user_data_by_id
 from socket_handlers import load_room_data_from_sqlite
-from matchmaking_repository import get_all_matched_roomcodes_for_therapist,delete_match_by_roomcode,get_current_match_roomcode
+from matchmaking_repository import get_all_matched_roomcodes_for_therapist,delete_match_by_roomcode,get_current_match_roomcode,get_all_users,get_all_matchmaking_results,admin_create_match_result
 
 
 #TESTING FUNCTION
@@ -75,7 +75,10 @@ def login():
         session['role'] = user['role'] 
         flash(f"Chào mừng {user['username']}!", "success")
 
-        if user['role'] == 'therapist':
+
+        if user['role'] == 'admin':
+            return redirect(url_for('admin_dashboard')) 
+        elif user['role'] == 'therapist':
             return redirect(url_for('therapist_dashboard_redirect'))
         else:
             return redirect(url_for('home'))
@@ -94,6 +97,7 @@ def logout():
 def dashboard():
     if 'user_id' not in session: return redirect(url_for('home'))
     if session.get('role') == 'therapist': return redirect(url_for('therapist_dashboard_redirect'))
+    if session.get('role') == 'admin': return redirect(url_for('admin_dashboard')) # <--- THAY ĐỔI
     
     db = database.get_db()
     user_data = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
@@ -546,6 +550,308 @@ def chat_room_view(room_code):
     session["room"] = room_code
     session.modified = True 
     return render_template("chat_room.html", code=room_code, messages=rooms[room_code]["messages"], name=name,user_role=session.get('role'))
+
+
+
+# --------------------------------------------------------------------------
+# --- CÁC ROUTE VÀ API MỚI CHO ADMIN DASHBOARD ---
+# --------------------------------------------------------------------------
+
+def admin_required(f):
+    """Decorator để kiểm tra vai trò admin."""
+    def decorated_function(*args, **kwargs):
+        if session.get('role') != 'admin' or 'user_id' not in session:
+            flash("Bạn không có quyền truy cập trang này!", "error")
+            return redirect(url_for('home'))
+        return f(*args, **kwargs)
+    decorated_function.__name__ = f.__name__ # Đảm bảo tên hàm đúng
+    return decorated_function
+
+@app.route('/admin')
+@admin_required
+def admin_dashboard():
+    return render_template('admin_dashboard.html', active_page='dashboard')
+
+# --- TRANG PHỤ 1: QUẢN LÝ USER ---
+
+@app.route('/admin/users')
+@admin_required
+def admin_users():
+    users = get_all_users()
+    return render_template('admin_users.html', users=users, active_page='users')
+
+@app.route('/api/admin/update_user', methods=['POST'])
+@admin_required
+def api_admin_update_user():
+    data = request.json
+    user_id = data.get('id')
+    password = data.get('password') # Đây là mật khẩu mới hoặc chuỗi rỗng
+    role = data.get('role')
+    tags = data.get('tags')
+    gold = data.get('gold')
+    
+    db = database.get_db()
+    
+    try:
+        # 1. Cập nhật role, tags, gold
+        update_query = "UPDATE users SET role = ?, tags = ?, gold = ? WHERE id = ?"
+        db.execute(update_query, (role, tags, gold, user_id))
+        
+        # 2. Cập nhật password (CHỈ KHI CÓ MẬT KHẨU MỚI ĐƯỢC NHẬP)
+        if password and len(password.strip()) > 0: # Kiểm tra chuỗi có nội dung
+            hashed_pw = generate_password_hash(password)
+            db.execute("UPDATE users SET password = ? WHERE id = ?", (hashed_pw, user_id))
+            
+        db.commit()
+        return jsonify({"success": True, "message": f"User {user_id} updated."})
+    except Exception as e:
+        db.rollback()
+        return jsonify({"success": False, "message": f"Database Error: {e}"}), 500
+
+
+# API LẤY MẬT KHẨU (CHỈ DÀNH CHO ADMIN)
+@app.route('/api/admin/get_user_password/<int:user_id>')
+@admin_required
+def api_admin_get_user_password(user_id):
+    """Lấy mật khẩu đã hash của người dùng."""
+    db = database.get_db()
+    user = db.execute("SELECT password FROM users WHERE id = ?", (user_id,)).fetchone()
+    if user:
+        # Trả về mật khẩu đã hash hiện tại
+        return jsonify({"success": True, "password_hash": user['password']})
+    return jsonify({"success": False, "message": "User not found"}), 404
+
+
+@app.route('/api/admin/add_user', methods=['POST'])
+@admin_required
+def api_admin_add_user():
+    data = request.json
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
+    role = data.get('role') # Bây giờ là trường bắt buộc
+    
+    # Các trường tùy chọn
+    address = data.get('address')
+    phone = data.get('phone')
+    date_of_birth = data.get('date_of_birth')
+    tags = data.get('tags', '')
+    gold = data.get('gold', 200) 
+    
+    db = database.get_db()
+
+    # --- CẬP NHẬT KIỂM TRA BẮT BUỘC: Thêm ROLE ---
+    if not username or not email or not password or not role:
+        return jsonify({"success": False, "message": "Missing required fields: Username, Email, Password, and Role."}), 400
+    # --------------------------
+
+    try:
+        # 1. Hash mật khẩu
+        hashed_pw = generate_password_hash(password)
+
+        # 2. Thêm người dùng vào bảng users
+        cursor = db.execute(
+            "INSERT INTO users (username, email, password, role, tags, gold, address, phone, date_of_birth) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (username, email, hashed_pw, role, tags, gold, address, phone, date_of_birth)
+        )
+        user_id = cursor.lastrowid
+        
+        # 3. Tạo pet mặc định cho người dùng mới
+        db.execute("INSERT INTO pets (user_id, name) VALUES (?, ?)", (user_id, "Bạn Đồng Hành"))
+        
+        db.commit()
+        return jsonify({"success": True, "message": f"User {username} added with ID {user_id}."})
+    except sqlite3.IntegrityError:
+        db.rollback()
+        return jsonify({"success": False, "message": "Email or Username already exists!"}), 409
+    except Exception as e:
+        db.rollback()
+        return jsonify({"success": False, "message": f"Database Error: {e}"}), 500
+    
+
+@app.route('/api/admin/delete_user/<int:user_id>', methods=['DELETE'])
+@admin_required
+def api_admin_delete_user(user_id):
+    db = database.get_db()
+
+    # KHÔNG CHO PHÉP ADMIN XÓA TÀI KHOẢN CỦA CHÍNH MÌNH (Self-Deletion Prevention)
+    if int(user_id) == session.get('user_id'):
+        return jsonify({"success": False, "message": "You cannot delete your own active account."}), 403
+
+    try:
+        # Bắt đầu Transaction
+        db.execute("BEGIN TRANSACTION")
+        
+        # --- BƯỚC MỚI: LẤY USERNAME TRƯỚC KHI XÓA KHỎI BẢNG USERS ---
+        user_to_delete = db.execute("SELECT username FROM users WHERE id = ?", (user_id,)).fetchone()
+        if not user_to_delete:
+            db.rollback()
+            return jsonify({"success": False, "message": f"User ID {user_id} not found."}), 404
+            
+        username_to_delete = user_to_delete['username']
+        # ---------------------------------------------------------------------
+
+        # 1. Xóa các bản ghi có khóa ngoại (Foreign Key) trực tiếp đến user_id
+        db.execute("DELETE FROM pets WHERE user_id = ?", (user_id,))
+        db.execute("DELETE FROM user_inventory WHERE user_id = ?", (user_id,))
+        db.execute("DELETE FROM daily_quests WHERE user_id = ?", (user_id,))
+        db.execute("DELETE FROM chat_history WHERE user_id = ?", (user_id,))
+        db.execute("DELETE FROM intake_summary WHERE user_id = ?", (user_id,))
+        db.execute("DELETE FROM matchmaking_queue_students WHERE user_id = ?", (user_id,))
+        db.execute("DELETE FROM matchmaking_queue_therapists WHERE user_id = ?", (user_id,))
+        
+        # 2. Xóa khỏi matchmaking_results (User có thể là student HOẶC therapist)
+        db.execute("DELETE FROM matchmaking_results WHERE student_user_id = ? OR therapist_user_id = ?", (user_id, user_id))
+
+        # ---   XÓA CHAT_LOGS DỰA TRÊN USERNAME ---
+        db.execute("DELETE FROM chat_logs WHERE username = ?", (username_to_delete,))
+        # -----------------------------------------------------
+
+        # 3. Cuối cùng, xóa user khỏi bảng users
+        result = db.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        
+        if result.rowcount == 0:
+            db.rollback()
+            return jsonify({"success": False, "message": f"User ID {user_id} not found."}), 404
+
+        # Kết thúc Transaction
+        db.commit()
+        return jsonify({"success": True, "message": f"User ID {user_id} and all related data successfully deleted."})
+        
+    except Exception as e:
+        db.rollback()
+        print(f"Lỗi khi xóa user {user_id}: {e}")
+        return jsonify({"success": False, "message": f"Database Error during deletion: {e}"}), 500
+    
+
+# --- TRANG PHỤ 2: QUẢN LÝ MATCHMAKING ---
+@app.route('/admin/matches')
+@admin_required
+def admin_matches():
+    matches = get_all_matchmaking_results()
+    users = get_all_users() # Dùng để hiển thị danh sách người dùng cho việc tạo match thủ công
+    return render_template('admin_matches.html', matches=matches, users=users, active_page='matches')
+
+@app.route('/api/admin/add_match', methods=['POST'])
+@admin_required
+def api_admin_add_match():
+    data = request.json
+    student_id = data.get('student_id')
+    therapist_id = data.get('therapist_id')
+
+    if not student_id or not therapist_id:
+        return jsonify({"success": False, "message": "Missing IDs"}), 400
+        
+    # 1. Lấy SID (Giả định là admin tạo match thủ công, SID không quan trọng lắm, nhưng cần có giá trị)
+    # *FIX*: Cần lấy dữ liệu session của student/therapist đang online để lấy SID thật.
+    # Tuy nhiên, để đơn giản, ta sẽ dùng SID của Admin và thông báo cho 2 người kia sau khi họ kết nối.
+    # Hoặc, ta có thể dùng một giá trị mặc định, vì khi họ kết nối, SID thật sẽ được gán.
+
+    # Lấy thông tin người dùng từ DB (cần cho notify và phòng ngừa lỗi)
+    student_data = get_user_data_by_id(student_id)
+    therapist_data = get_user_data_by_id(therapist_id)
+    
+    if not student_data or not therapist_data:
+         return jsonify({"success": False, "message": "Student or Therapist not found"}), 404
+
+    # Lấy SID thực tế nếu họ đang online, nếu không dùng SID của Admin hoặc placeholder
+    student_sid = connected_users.get(student_data["username"], "ADMIN_PLACEHOLDER")
+    therapist_sid = connected_users.get(therapist_data["username"], "ADMIN_PLACEHOLDER")
+
+    # 2. Tạo Room Code
+    room_code = generate_unique_code1(6)
+    
+    # 3. Lưu vào DB
+    pair = {
+        "student_user_id": student_id,
+        "therapist_user_id": therapist_id,
+        "student_session_id": student_sid,
+        "therapist_session_id": therapist_sid,
+        "roomcode": room_code
+    }
+    admin_create_match_result(pair) # Hàm mới trong repo
+    
+    # 4. Tạo phòng trong bộ nhớ (để chat được ngay)
+    rooms[room_code] = {"members": 0, "messages": []}
+    
+    # 5. Thông báo (Nếu họ đang online)
+    if student_sid in connected_users.values() or therapist_sid in connected_users.values():
+        notify_users_of_new_match(student_id, therapist_id, student_sid, therapist_sid, room_code)
+        
+    return jsonify({"success": True, "message": f"Match created: {room_code}"})
+
+@app.route('/api/admin/delete_match/<room_code>', methods=['DELETE'])
+@admin_required
+def api_admin_delete_match(room_code):
+    delete_match_by_roomcode(room_code)
+    # Xóa khỏi bộ nhớ nếu còn
+    if room_code in rooms:
+        del rooms[room_code]
+    return jsonify({"success": True, "message": f"Match {room_code} deleted."})
+
+# --- TRANG PHỤ 3: CHAT LOGS ---
+@app.route('/admin/chat_logs')
+@admin_required
+def admin_chat_logs():
+    db = database.get_db()
+    # Lấy danh sách các room_code duy nhất từ chat_logs
+    room_codes = db.execute("SELECT DISTINCT room_code FROM chat_logs ORDER BY room_code ASC").fetchall()
+    
+    # Lấy thông tin match (student/therapist) cho mỗi room_code
+    chat_rooms = []
+    for row in room_codes:
+        room_code = row['room_code']
+        # Lấy thông tin match từ matchmaking_results
+        match_info = db.execute(
+            """
+            SELECT student_user_id, therapist_user_id, matched_at 
+            FROM matchmaking_results 
+            WHERE roomcode = ? 
+            LIMIT 1
+            """, 
+            (room_code,)
+        ).fetchone()
+
+        student_name = "N/A"
+        therapist_name = "N/A"
+        
+        if match_info:
+            student = get_user_data_by_id(match_info['student_user_id'])
+            therapist = get_user_data_by_id(match_info['therapist_user_id'])
+            student_name = student['username'] if student else "ID " + str(match_info['student_user_id'])
+            therapist_name = therapist['username'] if therapist else "ID " + str(match_info['therapist_user_id'])
+
+        chat_rooms.append({
+            "room_code": room_code,
+            "student_name": student_name,
+            "therapist_name": therapist_name,
+            "matched_at": match_info['matched_at'] if match_info else "N/A"
+        })
+        
+    return render_template('admin_chat_logs.html', chat_rooms=chat_rooms, active_page='chat_logs')
+
+@app.route('/api/admin/chat_logs/<room_code>')
+@admin_required
+def api_admin_get_chat_logs(room_code):
+    db = database.get_db()
+    # Lấy tất cả tin nhắn của room_code
+    messages = db.execute(
+        "SELECT username, message_text, timestamp FROM chat_logs WHERE room_code = ? ORDER BY timestamp ASC",
+        (room_code,)
+    ).fetchall()
+    
+    # Định dạng lại tin nhắn cho đẹp
+    chat_logs = []
+    for msg in messages:
+        chat_logs.append({
+            "username": msg['username'],
+            "message_text": msg['message_text'],
+            "timestamp": msg['timestamp']
+        })
+        
+    return jsonify(chat_logs)
+
+
 
 # --- MAIN ---
 if __name__ == '__main__':
