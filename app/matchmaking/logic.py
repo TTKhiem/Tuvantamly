@@ -1,4 +1,10 @@
-from matchmaking_repository import get_all_students_from_matchmaking_queue, get_all_therapists_from_matchmaking_queue, delete_student_and_therapist_from_matchmaking_queue, add_student_and_therapist_to_matchmaking_results, get_match_id_based_on_pair
+from app.matchmaking.repository import (
+    get_all_students_from_matchmaking_queue,
+    get_all_therapists_from_matchmaking_queue,
+    delete_student_and_therapist_from_matchmaking_queue,
+    add_student_and_therapist_to_matchmaking_results,
+    get_match_id_based_on_pair,
+)
 
 def check_student_urgency(student):
     return True if student["urgency"] == 1 else False
@@ -16,7 +22,7 @@ def write_matchmaking_result(student, therapist):
 
 
 # def run_matchmaking():
-#     from socket_helperfuncs import notify_users_of_new_match
+#     from app.sockets.utils import notify_users_of_new_match
 #     results = []
 #     students = get_all_students_from_matchmaking_queue()
 #     therapists = get_all_therapists_from_matchmaking_queue()
@@ -58,7 +64,7 @@ def write_matchmaking_result(student, therapist):
 
 
 def run_matchmaking():
-    from socket_helperfuncs import notify_users_of_new_match, generate_unique_code1 # Cần import generate_unique_code1
+    from app.sockets.utils import notify_users_of_new_match, generate_unique_code1  # Cần import generate_unique_code1
     results = []
     students = get_all_students_from_matchmaking_queue()
     therapists = get_all_therapists_from_matchmaking_queue()

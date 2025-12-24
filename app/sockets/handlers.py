@@ -2,14 +2,13 @@ from flask import session, request, url_for
 from flask_socketio import join_room, leave_room, send, emit
 import sqlite3
 from datetime import datetime
-from globals import socketio
-from globals import rooms, connected_users
-from socket_helperfuncs import generate_unique_code1, get_user_data
-import matchmaking_logic
-import matchmaking_repository
 import json
-from socket_helperfuncs import get_user_data
-from matchmaking_repository import get_current_match_roomcode
+
+from app.globals import socketio, rooms, connected_users
+from app.sockets.utils import generate_unique_code1, get_user_data
+from app.matchmaking import logic as matchmaking_logic
+from app.matchmaking import repository as matchmaking_repository
+from app.matchmaking.repository import get_current_match_roomcode
 
 # --- HÀM HỖ TRỢ MỚI: TẢI DỮ LIỆU PHÒNG TỪ SQLITE ---
 def load_room_data_from_sqlite(room_code):

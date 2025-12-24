@@ -1,18 +1,29 @@
-from globals import app, database, chatbot, socketio, rooms, connected_users
-import os
-import sqlite3
-import json
+from app.globals import app, rooms, connected_users, socketio
+from app import database, chatbot
 from flask import request, jsonify, session, render_template, redirect, url_for, flash
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_socketio import SocketIO
-import socket_handlers
-# Import các module đã tách
-import pet_system
+import sqlite3
+import json
 import random
 from datetime import datetime
-from socket_helperfuncs import generate_unique_code1, get_user_data, notify_users_of_new_match,get_user_data_by_id
-from socket_handlers import load_room_data_from_sqlite
-from matchmaking_repository import get_all_matched_roomcodes_for_therapist,delete_match_by_roomcode,get_current_match_roomcode,get_all_users,get_all_matchmaking_results,admin_create_match_result
+
+from app.pet import system as pet_system
+from app.sockets import handlers as socket_handlers
+from app.sockets.utils import (
+    generate_unique_code1,
+    get_user_data,
+    notify_users_of_new_match,
+    get_user_data_by_id,
+)
+from app.sockets.handlers import load_room_data_from_sqlite
+from app.matchmaking.repository import (
+    get_all_matched_roomcodes_for_therapist,
+    delete_match_by_roomcode,
+    get_current_match_roomcode,
+    get_all_users,
+    get_all_matchmaking_results,
+    admin_create_match_result,
+)
 
 
 #TESTING FUNCTION

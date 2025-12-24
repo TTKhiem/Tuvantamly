@@ -1,10 +1,11 @@
 import random
 from string import ascii_uppercase
-from globals import rooms, connected_users
-from flask import session, request
-from globals import socketio
 import sqlite3
 from datetime import datetime
+
+from flask import session, request
+
+from app.globals import rooms, connected_users, socketio
 
 
 def generate_unique_code1(length):
