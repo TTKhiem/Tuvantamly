@@ -1,101 +1,481 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f6f9;
-            margin: 0;
-            padding: 0;
-        }
-        .dashboard {
-            max-width: 700px;
-            margin: 60px auto;
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-        }
-        .header {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
-            font-weight: bold;
-            text-align: center;
-            font-size: 22px;
-        }
-        .info {
-            margin-top: 20px;
-            line-height: 1.8;
-            font-size: 16px;
-        }
-        .label {
-            font-weight: bold;
-        }
-        .logout-btn {
-            background-color: #444;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        .logout-btn:hover {
-            background-color: #000;
-        }
-    </style>
-</head>
-<body>
+<!-- START OF FILE dashboard.html -->
 
-<div class="dashboard">
-    <div class="header">Dashboard</div>
-    <div class="info">
-        <p><span class="label">Tên Tài Khoản:</span> {{ user.username }}</p>
-        <p><span class="label">Email:</span> {{ user.email }}</p>
-        <p><span class="label">Vai trò:</span> {{ user.role }}</p>
-        <p><span class="label">User ID:</span> {{ user.id }}</p>
-        <p><span class="label">Ngày, tháng, năm sinh:</span> {{ user.date_of_birth if user.date_of_birth else "Chưa cập nhật" }}</p>
-        <p><span class="label">Số điện thoại:</span> {{ user.phone if user.phone else "Chưa cập nhật" }}</p>
-        <p><span class ="label">Địa chỉ:</span> {{ user.address if user.address else "Chưa cập nhật" }}</p>
-        <p><span class="label">Ngày tham gia:</span> {{ user.date_joined if user.date_joined else "Chưa có" }}</p>
-        <p><span class="label">Ngày tham gia:</span> {{ user.date_joined if user.date_joined else "Chưa có" }}</p>
-        <a href="{{ url_for('chat_interface') }}" style="background-color: #007bff; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block;">
-            Chat với AI ngay 💬
-        </a>
-        {% if current_match_code %}
-            <form action="{{ url_for('end_chat') }}" method="POST" onsubmit="return confirm('Bạn có chắc muốn kết thúc tư vấn với chuyên gia hiện tại?');" style="display:inline;">
-                <input type="hidden" name="room_code" value="{{ current_match_code }}">
-                <button type="submit" style="background-color: #dc3545; color: white; padding: 15px 30px; border: none; border-radius: 25px; font-weight: bold; cursor: pointer; font-size: 16px;">
-                    Hủy liên kết chuyên gia ❌
-                </button>
-            </form>
-        {% endif %}
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Không gian của tôi{% endblock %}
+
+{% block head %}
+<style>
+    /* --- DASHBOARD STYLING --- */
+    body {
+        background-color: #FEFAE0; /* Nền kem đồng bộ */
+        background-image: 
+            radial-gradient(#A3B18A 0.5px, transparent 0.5px), 
+            radial-gradient(#A3B18A 0.5px, #FEFAE0 0.5px);
+        background-size: 30px 30px;
+        background-position: 0 0, 15px 15px;
+    }
+    
+    .dashboard-wrapper { padding: 50px 0 80px; }
+
+    /* 1. PROFILE CARD (Cột trái) */
+    .profile-card {
+        background: white;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 15px 35px rgba(52, 78, 65, 0.08);
+        border: 1px solid rgba(255,255,255,0.5);
+        position: sticky;
+        top: 100px; /* Dính khi cuộn */
+    }
+
+    .profile-header-bg {
+        height: 120px;
+        background: linear-gradient(135deg, #344E41 0%, #588157 100%);
+        position: relative;
+    }
+
+    .profile-avatar-container {
+        position: relative;
+        margin-top: -60px;
+        text-align: center;
+    }
+
+    .profile-avatar {
+        width: 120px; height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 5px solid white;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        background: white;
+    }
+
+    .profile-body { padding: 15px 30px 30px; text-align: center; }
+
+    .user-badge {
+        background: #F0FDF4;
+        color: #588157;
+        font-size: 0.8rem;
+        font-weight: 700;
+        padding: 5px 12px;
+        border-radius: 20px;
+        border: 1px solid #DCFCE7;
+        display: inline-block;
+        margin-top: 10px;
+    }
+
+    .stats-row {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 1px solid #f0f0f0;
+    }
+
+    .stat-item h5 { margin: 0; font-weight: 800; color: #344E41; }
+    .stat-item small { color: #999; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* 2. MAIN CONTENT (Cột phải) */
+    
+    /* Title Section */
+    .dashboard-title {
+        font-family: 'Nunito', sans-serif;
+        font-weight: 800;
+        color: #344E41;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* Widget Card General */
+    .widget-card {
+        background: white;
+        border-radius: 24px;
+        padding: 25px;
+        border: 1px solid rgba(0,0,0,0.03);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.03);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .widget-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(52, 78, 65, 0.1);
+    }
+
+    /* Match Status Widget (Active) */
+    .match-card-active {
+        background: linear-gradient(135deg, #344E41 0%, #3A5A40 100%);
+        color: white;
+        border: none;
+    }
+    
+    .pulse-dot {
+        width: 10px; height: 10px; background: #4ADE80; border-radius: 50%;
+        display: inline-block; margin-right: 8px;
+        box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
+        animation: pulse-green 2s infinite;
+    }
+
+    @keyframes pulse-green {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+    }
+
+    /* Pet Widget */
+    .pet-preview-box {
+        background: #FEFAE0;
+        border-radius: 16px;
+        height: 140px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 20px 0;
+        border: 2px dashed #CCD5AE;
+    }
+    .pet-emoji-anim { font-size: 4rem; animation: bounce 3s infinite; }
+    
+    /* Animation cho quả trứng */
+    @keyframes egg-wobble {
+        0% { transform: rotate(0deg); }
+        25% { transform: rotate(-5deg); }
+        75% { transform: rotate(5deg); }
+        100% { transform: rotate(0deg); }
+    }
+    .egg-anim {
+        font-size: 5rem;
+        animation: egg-wobble 2s infinite ease-in-out;
+        cursor: pointer;
+        transition: transform 0.3s;
+    }
+    .egg-anim:hover { transform: scale(1.1); }
+
+    .progress-custom {
+        height: 8px; border-radius: 10px; background-color: #eee; margin-top: 5px;
+    }
+    .progress-bar-custom { border-radius: 10px; }
+
+    /* Quest List */
+    .quest-item {
+        padding: 12px 0;
+        border-bottom: 1px solid #f5f5f5;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .quest-item:last-child { border-bottom: none; }
+    .quest-check-done { color: #588157; font-size: 1.1rem; }
+    .quest-check-pending { color: #ddd; font-size: 1.1rem; }
+
+    /* Popup Modal Styles */
+    .wrapper-update {
+        position: fixed; top: 50%; left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        width: 420px; background: white;
+        border-radius: 24px; padding: 30px;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+        z-index: 2000; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .wrapper-update.active-popup { transform: translate(-50%, -50%) scale(1); }
+    .overlay-update {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1999;
+        display: none; backdrop-filter: blur(5px);
+    }
+    .overlay-update.active-popup { display: block; }
+
+    /* Button Close Popup */
+    .btn-close-popup {
+        position: absolute; top: 15px; right: 15px;
+        background: #f0f0f0; border: none; width: 32px; height: 32px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;
+    }
+    .btn-close-popup:hover { background: #e0e0e0; }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <div class="container">
+        <div class="row g-4">
+            
+            <!-- --- CỘT TRÁI: PROFILE CARD --- -->
+            <div class="col-lg-4">
+                <div class="profile-card">
+                    <div class="profile-header-bg"></div>
+                    
+                    <div class="profile-avatar-container">
+                        <img src="https://ui-avatars.com/api/?name={{ user.username }}&background=E9EDC9&color=344E41&bold=true&size=256" alt="User Avatar" class="profile-avatar">
+                    </div>
+
+                    <div class="profile-body">
+                        <h3 class="fw-bold mb-0 text-dark">{{ user.username }}</h3>
+                        <p class="text-muted small mb-2">{{ user.email }}</p>
+                        
+                        <div class="user-badge">
+                            <i class="fas fa-seedling me-1"></i> {{ user.role | capitalize }}
+                        </div>
+
+                        {% if user.tags %}
+                        <div class="mt-2">
+                            <span class="badge bg-white text-secondary border rounded-pill fw-normal">{{ user.tags }}</span>
+                        </div>
+                        {% endif %}
+
+                        <!-- Stats Grid -->
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <h5>{{ user.gold or 0 }}</h5>
+                                <small>Vàng 🪙</small>
+                            </div>
+                            <div class="stat-item">
+                                <h5>{{ user.level or 1 }}</h5>
+                                <small>Cấp độ ⭐</small>
+                            </div>
+                            <div class="stat-item">
+                                <h5>{{ user.date_joined.strftime('%Y-%m-%d') if user.date_joined else '2024' }}</h5>
+                                <small>Tham gia 📅</small>
+                            </div>
+                        </div>
+
+                        <!-- Edit Button -->
+                        <button id="btnOpenUpdate" class="btn btn-outline-custom w-100 mt-4 rounded-pill">
+                            <i class="fas fa-pen me-2"></i> Cập nhật thông tin
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- --- CỘT PHẢI: WIDGETS & CONTENT --- -->
+            <div class="col-lg-8">
+                
+                <h4 class="dashboard-title">
+                    <span style="font-size: 1.5rem;">👋</span> Xin chào, {{ user.username }}!
+                </h4>
+
+                <!-- 1. MATCH STATUS (Trạng thái kết nối) -->
+                <div class="mb-4">
+                    {% if current_match_code %}
+                        <!-- TRẠNG THÁI: ĐANG CÓ PHÒNG CHAT -->
+                        <div class="widget-card match-card-active d-flex align-items-center justify-content-between p-4">
+                            <div>
+                                <h5 class="fw-bold mb-1">
+                                    <span class="pulse-dot"></span> Cuộc trò chuyện đang diễn ra
+                                </h5>
+                                <p class="mb-0 opacity-75 small">Phòng số: <strong>{{ current_match_code }}</strong></p>
+                            </div>
+                            <a href="{{ url_for('chat_room_view', room_code=current_match_code) }}" class="btn btn-light text-success fw-bold rounded-pill px-4 shadow">
+                                Tiếp tục <i class="fas fa-arrow-right ms-2"></i>
+                            </a>
+                        </div>
+                    {% else %}
+                        <!-- TRẠNG THÁI: CHƯA CÓ PHÒNG -->
+                        <div class="widget-card d-flex align-items-center justify-content-between p-4" style="background: #F0FDF4; border: 1px solid #DCFCE7;">
+                            <div>
+                                <h5 class="fw-bold mb-1 text-dark"><i class="fas fa-user-md text-success me-2"></i>Bạn cần chia sẻ?</h5>
+                                <p class="mb-0 text-muted small">Các chuyên gia và AI luôn sẵn sàng lắng nghe bạn.</p>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a href="{{ url_for('chat_interface') }}" class="btn btn-outline-custom btn-sm rounded-pill bg-white">Chat AI</a>
+                                <a href="{{ url_for('chat_home') }}" class="btn btn-primary-custom btn-sm rounded-pill">Tìm chuyên gia</a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="row g-4">
+                    <!-- 2. PET WIDGET (ĐÃ CẬP NHẬT LOGIC TRỨNG CHO USER MỚI) -->
+                    <div class="col-md-6">
+                        <div class="widget-card h-100 d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-paw text-warning me-2"></i>Pet của tôi</h5>
+                                {% if pet %}
+                                    <span class="badge bg-warning text-dark rounded-pill">{{ pet.mood }}</span>
+                                {% endif %}
+                            </div>
+
+                            {% if pet %}
+                                <!-- TRƯỜNG HỢP 1: ĐÃ CÓ PET -->
+                                <div class="pet-preview-box">
+                                    <div class="pet-emoji-anim">
+                                        {{ pet.appearance.face if pet.appearance else '🐶' }}
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-auto">
+                                    <h5 class="fw-bold text-center mb-2">{{ pet.name }}</h5>
+                                    
+                                    <div class="d-flex justify-content-between small text-muted mb-1">
+                                        <span>Năng lượng</span>
+                                        <span>{{ pet.energy }}%</span>
+                                    </div>
+                                    <div class="progress progress-custom">
+                                        <div class="progress-bar progress-bar-custom bg-warning" style="width: {{ pet.energy }}%"></div>
+                                    </div>
+
+                                    <a href="{{ url_for('pet_page') }}" class="btn btn-primary-custom w-100 mt-3 btn-sm rounded-pill">
+                                        Chăm sóc ngay
+                                    </a>
+                                </div>
+                            {% else %}
+                                <!-- TRƯỜNG HỢP 2: CHƯA CÓ PET (HIỆN TRỨNG) -->
+                                <div class="flex-grow-1 d-flex flex-column align-items-center justify-content-center text-center py-3">
+                                    <div class="egg-anim mb-3" title="Chạm vào trứng để ấp!">🥚</div>
+                                    <h5 class="fw-bold text-dark">Bạn chưa có bạn đồng hành</h5>
+                                    <p class="text-muted small mb-3">Nhận nuôi một quả trứng để bắt đầu hành trình.</p>
+                                    
+                                    <!-- Nút gọi API Adopt -->
+                                    <button id="btnAdoptPet" class="btn btn-primary-custom rounded-pill px-4">
+                                        <i class="fas fa-magic me-2"></i>Nhận nuôi ngay
+                                    </button>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- 3. DAILY QUESTS -->
+                    <div class="col-md-6">
+                        <div class="widget-card h-100 d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-tasks text-info me-2"></i>Nhiệm vụ</h5>
+                                <small class="text-muted">Hôm nay</small>
+                            </div>
+
+                            <div class="d-flex flex-column gap-2 flex-grow-1">
+                                {% if quests %}
+                                    {% for quest in quests %}
+                                    <div class="quest-item">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-circle {{ 'bg-success' if quest.completed else 'bg-light' }}" style="width: 8px; height: 8px;"></div>
+                                            <span class="small {{ 'text-muted text-decoration-line-through' if quest.completed else 'fw-bold text-dark' }}">
+                                                {{ quest.title }}
+                                            </span>
+                                        </div>
+                                        {% if quest.completed %}
+                                            <i class="fas fa-check-circle quest-check-done"></i>
+                                        {% else %}
+                                            <i class="far fa-circle quest-check-pending"></i>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                    
+                                    <div class="mt-auto text-center pt-3">
+                                        <a href="{{ url_for('pet_page') }}" class="text-decoration-none small fw-bold text-primary">
+                                            Thực hiện nhiệm vụ <i class="fas fa-arrow-right ms-1"></i>
+                                        </a>
+                                    </div>
+                                {% else %}
+                                    <div class="text-center py-5 text-muted small flex-grow-1 d-flex flex-column justify-content-center">
+                                        <div>
+                                            <i class="fas fa-mug-hot fs-3 mb-2 opacity-50"></i><br>
+                                            Chưa có nhiệm vụ mới.
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. FOOTER QUOTE -->
+                <div class="mt-4 p-4 rounded-4 text-center" style="background: rgba(255,255,255,0.6); border: 1px dashed #A3B18A;">
+                    <p class="mb-0 fst-italic text-muted">
+                        "Hạnh phúc không phải là đích đến, mà là hành trình chúng ta đang đi." 🌿
+                    </p>
+                </div>
+
+            </div>
+        </div>
     </div>
-    <form action="{{ url_for('logout') }}" method="get">
-        <form action="{{ url_for('logout') }}" method="get">
-            <button type="submit" class="logout-btn">Logout</button>
-        </form>
-    </div>
-    <h3 style="margin-top: 40px;">Cập nhật thông tin cá nhân</h3>
-<form action="{{ url_for('update_profile') }}" method="POST">
-    <label for="date_of_birth">Ngày sinh:</label><br>
-    <input type="text" id="date_of_birth" name="date_of_birth" value="{{ user.date_of_birth }}"><br><br>
-
-    <label for="phone">Số điện thoại:</label><br>
-    <input type="text" id="phone" name="phone" value="{{ user.phone }}"><br><br>
-
-    <label for="address">Địa chỉ:</label><br>
-    <input type="text" id="address" name="address" value="{{ user.address }}"><br><br>
-
-    <button type="submit" class="logout-btn">Lưu thay đổi</button>
-</form>
-
 </div>
 
-</body>
-</html>
+<!-- --- POPUP UPDATE PROFILE (MODAL) --- -->
+<div class="overlay-update" id="overlayUpdate"></div>
+<div class="wrapper-update" id="popupUpdate">
+    <button class="btn-close-popup" id="btnCloseUpdate"><i class="fas fa-times"></i></button>
+    
+    <div class="text-center mb-4">
+        <h4 class="fw-bold text-dark">Cập nhật thông tin</h4>
+        <p class="text-muted small">Hãy cập nhật để chúng tôi hiểu bạn hơn.</p>
+    </div>
+
+    <form action="{{ url_for('update_profile') }}" method="POST">
+        <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">Ngày sinh</label>
+            <input type="date" name="date_of_birth" class="form-control form-control-custom" value="{{ user.date_of_birth }}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">Số điện thoại</label>
+            <input type="text" name="phone" class="form-control form-control-custom" value="{{ user.phone }}" placeholder="09xxxxxxx">
+        </div>
+        <div class="mb-4">
+            <label class="form-label small fw-bold text-muted">Địa chỉ</label>
+            <input type="text" name="address" class="form-control form-control-custom" value="{{ user.address }}" placeholder="Thành phố, Quận...">
+        </div>
+        <button type="submit" class="btn btn-primary-custom w-100">Lưu thay đổi</button>
+    </form>
+</div>
+
+<!-- SCRIPT CHO POPUP & ADOPT PET -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Popup Update Logic
+    const btnOpen = document.getElementById('btnOpenUpdate');
+    const btnClose = document.getElementById('btnCloseUpdate');
+    const popup = document.getElementById('popupUpdate');
+    const overlay = document.getElementById('overlayUpdate');
+
+    if (btnOpen) {
+        btnOpen.addEventListener('click', () => {
+            popup.classList.add('active-popup');
+            overlay.classList.add('active-popup');
+        });
+    }
+
+    const closePopup = () => {
+        popup.classList.remove('active-popup');
+        overlay.classList.remove('active-popup');
+    };
+
+    if (btnClose) btnClose.addEventListener('click', closePopup);
+    if (overlay) overlay.addEventListener('click', closePopup);
+
+    // 2. Logic Nhận Nuôi Pet (Gọi API)
+    const btnAdopt = document.getElementById('btnAdoptPet');
+    if (btnAdopt) {
+        btnAdopt.addEventListener('click', async () => {
+            // Hiệu ứng loading nút
+            const originalContent = btnAdopt.innerHTML;
+            btnAdopt.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang ấp...';
+            btnAdopt.disabled = true;
+
+            try {
+                const response = await fetch('/api/pet/adopt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    // Nếu thành công, reload trang để hiện Pet
+                    location.reload(); 
+                } else {
+                    alert(data.message || 'Có lỗi xảy ra!');
+                    btnAdopt.innerHTML = originalContent;
+                    btnAdopt.disabled = false;
+                }
+            } catch (error) {
+                console.error('Lỗi nhận nuôi:', error);
+                alert('Không thể kết nối đến server.');
+                btnAdopt.innerHTML = originalContent;
+                btnAdopt.disabled = false;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
