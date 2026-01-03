@@ -54,7 +54,6 @@ def register():
         cursor = db.execute("INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
                    (username, email, hashed_pw))
         user_id = cursor.lastrowid
-        db.execute("INSERT INTO pets (user_id, name) VALUES (?, ?)", (user_id, "Bạn Đồng Hành"))
         db.commit()
         flash("Đăng ký thành công! Hãy đăng nhập.", "success")
         return redirect(url_for('home'))
@@ -99,15 +98,29 @@ def logout():
 def dashboard():
     if 'user_id' not in session: return redirect(url_for('home'))
     if session.get('role') == 'therapist': return redirect(url_for('therapist_dashboard_redirect'))
-    if session.get('role') == 'admin': return redirect(url_for('admin_dashboard')) # <--- THAY ĐỔI
+    if session.get('role') == 'admin': return redirect(url_for('admin_dashboard'))
     
     db = database.get_db()
     user_data = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
     
-    # >> KIỂM TRA XEM CÓ ĐANG MATCH KHÔNG ĐỂ HIỆN NÚT
+    # --- [THÊM MỚI] LẤY DỮ LIỆU PET VÀ QUEST ---
+    pet_data = None
+    pet_obj = pet_system.load_pet(db, session['user_id'])
+    if pet_obj: 
+        pet_data = pet_obj.to_dict()
+        
+    quests_data = pet_system.get_daily_quests(db, session['user_id'])
+    # -------------------------------------------
+    
+    # KIỂM TRA XEM CÓ ĐANG MATCH KHÔNG
     current_match_code = get_current_match_roomcode(session['user_id'])
     
-    return render_template('dashboard.html', user=user_data, current_match_code=current_match_code)
+    # Gửi thêm biến pet và quests sang template
+    return render_template('dashboard.html', 
+                           user=user_data, 
+                           current_match_code=current_match_code,
+                           pet=pet_data,      # <--- QUAN TRỌNG
+                           quests=quests_data) # <--- QUAN TRỌNG
 
 # 2. ROUTE MỚI: KẾT THÚC TRÒ CHUYỆN (Dùng chung cho cả 2)
 @app.route('/end_chat', methods=['POST'])
@@ -422,6 +435,27 @@ def start_quest_api(quest_id):
         return jsonify({"id": quest['id'], "type": quest['type'], "title": quest['title'], "data": quest['data']})
     return jsonify({"error": "Quest not found"}), 404
 
+# --- ROUTE MỚI: NHẬN NUÔI PET (ẤP TRỨNG) ---
+@app.route('/api/pet/adopt', methods=['POST'])
+def adopt_pet_api():
+    if 'user_id' not in session: return jsonify({"error": "Unauthorized"}), 401
+    
+    db = database.get_db()
+    user_id = session['user_id']
+    
+    # Kiểm tra xem đã có pet chưa
+    existing_pet = db.execute("SELECT 1 FROM pets WHERE user_id = ?", (user_id,)).fetchone()
+    if existing_pet:
+        return jsonify({"success": False, "message": "Bạn đã có thú cưng rồi!"})
+
+    try:
+        # Tạo pet mới
+        db.execute("INSERT INTO pets (user_id, name, skin_id, background_id) VALUES (?, ?, 0, 0)", 
+                   (user_id, "Bạn Đồng Hành"))
+        db.commit()
+        return jsonify({"success": True, "message": "Nhận nuôi thành công!"})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
 
 # === CÁC ROUTE CHO CHAT (Existing) ===
 
@@ -862,3 +896,4 @@ if __name__ == '__main__':
             database.init_db()
     socketio.run(app, host='0.0.0.0', port=5000, debug=True, allow_unsafe_werkzeug=True)
     # app.run(host='0.0.0.0', port=5000, debug=True)
+
