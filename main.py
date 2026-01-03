@@ -153,9 +153,22 @@ def end_chat():
     
 @app.route('/pet_page')
 def pet_page():
-    if 'user_id' not in session: return redirect(url_for('home'))
-    return render_template('pet.html', username=session.get('username'))
+    if 'user_id' not in session: 
+        return redirect(url_for('home'))
+    
+    # --- THÊM ĐOẠN KIỂM TRA NÀY ---
+    db = database.get_db()
+    
+    # Kiểm tra xem user đã có pet trong DB chưa
+    has_pet = db.execute("SELECT 1 FROM pets WHERE user_id = ?", (session['user_id'],)).fetchone()
+    
+    if not has_pet:
+        # Nếu chưa có pet, đá về Dashboard để nhận nuôi
+        flash("Bạn chưa có thú cưng! Hãy nhận nuôi tại Dashboard trước nhé.", "info")
+        return redirect(url_for('dashboard'))
+    # ------------------------------
 
+    return render_template('pet.html', username=session.get('username'))
 @app.route('/user_profile')
 def user_profile():
     if 'user_id' not in session: return redirect(url_for('home'))
@@ -187,14 +200,17 @@ def api_chat():
     
     user_msg = request.json.get('message')
     if 'chat_history' not in session: session['chat_history'] = []
-    session['chat_history'].append({"role": "Sinh viên", "message": user_msg})
     
+    # 1. Phân tích ngầm (để lưu DB hoặc cảnh báo)
     analysis = chatbot.analyze_user_input(user_msg)
-    risk = analysis.get('risk_level', 'low')
-    intent = analysis.get('intent', 'unknown')
     
-    bot_msg = chatbot.ADVICE_DATABASE.get("EMERGENCY") if risk == 'high' else chatbot.ADVICE_DATABASE.get(intent, chatbot.ADVICE_DATABASE["unknown"])
-        
+    # 2. Sinh câu trả lời "có hồn" dựa trên lịch sử
+    # Truyền cả lịch sử chat vào để AI nhớ ngữ cảnh
+    # (Lưu ý: history ở đây là CÁC TIN NHẮN CŨ, không bao gồm tin nhắn hiện tại user vừa gửi, vì tin đó được truyền qua tham số user_message rồi)
+    bot_msg = chatbot.generate_soulmate_response(user_msg, session['chat_history'])
+    
+    # 3. SAU KHI CÓ CÂU TRẢ LỜI, MỚI LƯU CẢ 2 VÀO HISTORY
+    session['chat_history'].append({"role": "Sinh viên", "message": user_msg})
     session['chat_history'].append({"role": "Chatbot", "message": bot_msg})
     session.modified = True
     
@@ -205,19 +221,37 @@ def api_chat_complete():
     if 'user_id' not in session: return jsonify({"error": "Unauthorized"}), 401
     
     history = session.get('chat_history', [])
-    summary = chatbot.summarize_conversation(history)
-    db = database.get_db()
     user_id = session['user_id']
+    db = database.get_db()
 
+    # 1. Tóm tắt cuộc hội thoại (Logic cũ)
+    summary = chatbot.summarize_conversation(history)
+    
+    # 2. [MỚI] Trích xuất Tags từ AI
+    detected_tags = chatbot.extract_tags_from_conversation(history)
+    print(f"--- AI DETECTED TAGS FOR USER {user_id}: {detected_tags} ---")
+
+    # 3. Lưu lịch sử chat vào bảng chat_history (Logic cũ)
     for msg in history:
         db.execute("INSERT INTO chat_history (user_id, role, message) VALUES (?, ?, ?)",
                    (user_id, msg['role'], msg['message']))
     
+    # 4. Lưu tóm tắt vào bảng intake_summary (Logic cũ)
     db.execute("INSERT INTO intake_summary (user_id, summary_content) VALUES (?, ?)", (user_id, summary))
+    
+    # 5. [MỚI] Cập nhật Tags vào bảng Users
+    # Chỉ cập nhật nếu user chưa có tags hoặc muốn ghi đè tags mới nhất
+    db.execute("UPDATE users SET tags = ? WHERE id = ?", (detected_tags, user_id))
+    
     db.commit()
     
+    # Xóa lịch sử trong session
     session.pop('chat_history', None)
-    return jsonify({"summary": summary})
+    
+    # Cập nhật session tags luôn để không cần login lại mới thấy
+    session['tags'] = detected_tags
+
+    return jsonify({"summary": summary, "tags": detected_tags}) 
 
 # --- ROUTES CHO THERAPIST ---
 
@@ -896,4 +930,6 @@ if __name__ == '__main__':
             database.init_db()
     socketio.run(app, host='0.0.0.0', port=5000, debug=True, allow_unsafe_werkzeug=True)
     # app.run(host='0.0.0.0', port=5000, debug=True)
+
+
 
