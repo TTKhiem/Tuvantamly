@@ -1,3 +1,5 @@
+# --- START OF FILE pet_system.py ---
+
 import random
 from datetime import date
 
@@ -178,20 +180,15 @@ SHOP_ITEMS = [
 ]
 
 # --- CÁC HÀM TRUY XUẤT DỮ LIỆU ---
+
+# [THAY ĐỔI QUAN TRỌNG]: Không tự động tạo pet nữa nếu không tìm thấy
 def load_pet(db, user_id):
     row = db.execute('SELECT * FROM pets WHERE user_id = ?', (user_id,)).fetchone()
     if row:
         return Pet.from_db_row(row)
     else:
-        try:
-            # Tạo pet mặc định với background_id = 0
-            db.execute("INSERT INTO pets (user_id, name, skin_id, background_id) VALUES (?, ?, 0, 0)", (user_id, "Bạn Đồng Hành"))
-            db.commit()
-            row = db.execute('SELECT * FROM pets WHERE user_id = ?', (user_id,)).fetchone()
-            return Pet.from_db_row(row)
-        except Exception as e:
-            print(f"Lỗi tạo pet: {e}")
-            return None
+        # Trả về None để bên ngoài biết là chưa có Pet
+        return None
 
 def save_pet(db, pet):
     # Lưu cả skin_id và background_id
