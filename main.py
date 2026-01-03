@@ -80,6 +80,8 @@ def login():
             return redirect(url_for('admin_dashboard')) 
         elif user['role'] == 'therapist':
             return redirect(url_for('therapist_dashboard_redirect'))
+        elif user['tags'] == '':
+            return redirect(url_for('chat_interface'))
         else:
             return redirect(url_for('home'))
     else:
