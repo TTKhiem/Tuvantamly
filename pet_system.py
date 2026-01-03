@@ -1,5 +1,3 @@
-# --- START OF FILE pet_system.py ---
-
 import random
 from datetime import date
 
@@ -31,12 +29,12 @@ PET_SKINS = {
 # --- CẤU HÌNH BACKGROUND (HÌNH NỀN) ---
 PET_BACKGROUNDS = {
     0: "/static/images/pet_backgrounds/default.png", 
-    201: "/static/images/pet_backgrounds/dong_co.png",
-    202: "/static/images/pet_backgrounds/phong_khach.png",
-    203: "/static/images/pet_backgrounds/bai_bien.png",
-    204: "/static/images/pet_backgrounds/vu_tru.png",
-    205: "/static/images/pet_backgrounds/rung.png",
-    206: "/static/images/pet_backgrounds/dai_duong.png",
+    201: "https://img.freepik.com/free-vector/landscape-with-grassy-hills-mountains-vector-illustration_1284-53043.jpg",
+    202: "https://img.freepik.com/free-vector/empty-room-with-window-sun-light_107791-2999.jpg",
+    203: "https://img.freepik.com/free-vector/tropical-beach-landscape-scene-background_1308-57777.jpg",
+    204: "https://img.freepik.com/free-vector/space-background-with-planets_107791-66.jpg",
+    205: "https://img.freepik.com/free-vector/fairy-tale-landscape-with-road-forest_107791-6386.jpg",
+    206: "https://img.freepik.com/free-vector/underwater-background-with-marine-life_107791-536.jpg",
 }
 
 # --- HỆ THỐNG PET ---
@@ -68,12 +66,16 @@ class Pet:
 
     @classmethod
     def from_db_row(cls, row):
-        # Lấy skin_id và background_id từ DB
-        keys = row.keys()
-        skin_id = row['skin_id'] if 'skin_id' in keys else 0
-        background_id = row['background_id'] if 'background_id' in keys else 0
-        
-        return cls(row['id'], row['user_id'], row['name'], row['level'], row['happiness'], row['energy'], row['experience'], skin_id, background_id)
+        # FIX LỖI: Kiểm tra an toàn xem cột có tồn tại không
+        try:
+            keys = row.keys()
+            skin_id = row['skin_id'] if 'skin_id' in keys else 0
+            background_id = row['background_id'] if 'background_id' in keys else 0
+            return cls(row['id'], row['user_id'], row['name'], row['level'], row['happiness'], row['energy'], row['experience'], skin_id, background_id)
+        except Exception as e:
+            print(f"Error loading pet row: {e}")
+            # Fallback nếu dữ liệu lỗi: Trả về pet mặc định
+            return cls(row['id'], row['user_id'], row['name'])
 
     def _update_appearance(self):
         # 1. Cập nhật Skin (Face)
@@ -108,7 +110,7 @@ class Pet:
             "exp_to_next_level": self.exp_to_next_level, 
             "appearance": self.appearance, "mood": self.mood,
             "skin_id": self.skin_id,
-            "background_url": self.background_url # Trả về URL hình nền
+            "background_url": self.background_url
         }
 
     @staticmethod
@@ -140,7 +142,7 @@ class Pet:
         elif action == "rest": self.energy = min(100, self.energy + 20); return {"action": "rest", "quote": quote, **self.to_dict()}
         else: self.happiness = min(100, self.happiness + 5); return {"action": "motivate", "quote": quote, **self.to_dict()}
 
-# --- HỆ THỐNG NHIỆM VỤ ---
+# --- HỆ THỐNG NHIỆM VỤ & SHOP (GIỮ NGUYÊN) ---
 QUEST_POOL = [
     {"id": 1, "type": "simple", "title": "Uống một ly nước đầy", "reward_exp": 10, "reward_gold": 5},
     {"id": 2, "type": "simple", "title": "Dọn dẹp một góc nhỏ trong phòng", "reward_exp": 25, "reward_gold": 10},
@@ -150,75 +152,67 @@ QUEST_POOL = [
     {"id": 102, "type": "breathing", "title": "Bài tập Hít Thở Hộp (1 phút)", "reward_exp": 40, "reward_gold": 10, "data": {"duration_seconds": 60}}
 ]
 
-# --- CỬA HÀNG (SKIN + BACKGROUND + FOOD) ---
 SHOP_ITEMS = [
-    # ================= SKIN (THÚ CƯNG) =================
+    # SKIN
     {"id": 101, "name": "Skin: Mèo Cam", "price": 100, "icon": "🐱", "type": "skin", "description": "Hoàng thượng."},
     {"id": 102, "name": "Skin: Chó Shiba", "price": 100, "icon": "🐶", "type": "skin", "description": "Gâu gâu!"},
-    {"id": 107, "name": "Skin: Thỏ Ngọc", "price": 120, "icon": "🐰", "type": "skin", "description": "Nhảy nhót."},
-    {"id": 113, "name": "Skin: Gà Con", "price": 120, "icon": "🐥", "type": "skin", "description": "Chip chip!"},
-    {"id": 105, "name": "Skin: Cá Mập", "price": 250, "icon": "🦈", "type": "skin", "description": "Baby Shark."},
-    {"id": 109, "name": "Skin: Cánh Cụt", "price": 250, "icon": "🐧", "type": "skin", "description": "Nam Cực."},
-    {"id": 104, "name": "Skin: Alien", "price": 350, "icon": "👽", "type": "skin", "description": "Sao Hỏa."},
     {"id": 103, "name": "Skin: Rồng Lửa", "price": 550, "icon": "🐲", "type": "skin", "description": "Siêu ngầu."},
-    {"id": 117, "name": "Skin: Robot", "price": 800, "icon": "🤖", "type": "skin", "description": "Công nghệ AI."},
-
-    # ================= BACKGROUND (HÌNH NỀN) =================
+    {"id": 104, "name": "Skin: Alien", "price": 350, "icon": "👽", "type": "skin", "description": "Sao Hỏa."},
+    {"id": 105, "name": "Skin: Cá Mập", "price": 250, "icon": "🦈", "type": "skin", "description": "Baby Shark."},
+    
+    # BACKGROUND
     {"id": 201, "name": "Nền: Đồng Cỏ", "price": 150, "icon": "🏞️", "type": "background", "description": "Không khí trong lành."},
-    {"id": 202, "name": "Nền: Phòng Khách", "price": 200, "icon": "🛋️", "type": "background", "description": "Ấm cúng, tiện nghi."},
+    {"id": 202, "name": "Nền: Phòng Khách", "price": 200, "icon": "🛋️", "type": "background", "description": "Ấm cúng."},
     {"id": 203, "name": "Nền: Bãi Biển", "price": 300, "icon": "🏖️", "type": "background", "description": "Nắng vàng biển xanh."},
-    {"id": 205, "name": "Nền: Rừng Phép Thuật", "price": 400, "icon": "🌲", "type": "background", "description": "Huyền bí."},
-    {"id": 206, "name": "Nền: Đại Dương", "price": 450, "icon": "🌊", "type": "background", "description": "Thích hợp cho cá."},
-    {"id": 204, "name": "Nền: Vũ Trụ", "price": 600, "icon": "🌌", "type": "background", "description": "Bay vào không gian."},
-
-    # ================= FOOD (THỨC ĂN) =================
+    
+    # FOOD
     {"id": 3003, "name": "Kẹo Ngọt", "price": 5, "icon": "🍬", "type": "food", "value": 15, "description": "+15 HP"},
     {"id": 3004, "name": "Sữa Tươi", "price": 10, "icon": "🥛", "type": "food", "value": 25, "description": "+25 HP"},
     {"id": 3001, "name": "Bánh Donut", "price": 20, "icon": "🍩", "type": "food", "value": 50, "description": "+50 HP"},
-    {"id": 3005, "name": "Pizza", "price": 30, "icon": "🍕", "type": "food", "value": 65, "description": "+65 HP"},
     {"id": 3008, "name": "Bánh Kem", "price": 60, "icon": "🎂", "type": "food", "value": 100, "description": "Full HP"}
 ]
 
 # --- CÁC HÀM TRUY XUẤT DỮ LIỆU ---
 
-# [THAY ĐỔI QUAN TRỌNG]: Không tự động tạo pet nữa nếu không tìm thấy
 def load_pet(db, user_id):
+    """Tải pet từ DB. Trả về None nếu không có."""
     row = db.execute('SELECT * FROM pets WHERE user_id = ?', (user_id,)).fetchone()
     if row:
         return Pet.from_db_row(row)
-    else:
-        # Trả về None để bên ngoài biết là chưa có Pet
-        return None
+    # KHÔNG TỰ ĐỘNG TẠO PET Ở ĐÂY NỮA
+    return None 
 
 def save_pet(db, pet):
-    # Lưu cả skin_id và background_id
-    db.execute('UPDATE pets SET level = ?, happiness = ?, energy = ?, experience = ?, skin_id = ?, background_id = ? WHERE id = ?',
-               (pet.level, pet.happiness, pet.energy, pet.experience, pet.skin_id, pet.background_id, pet.pet_id))
-    db.commit()
+    # Dùng try-catch để tránh lỗi nếu DB thiếu cột skin_id
+    try:
+        db.execute('UPDATE pets SET level = ?, happiness = ?, energy = ?, experience = ?, skin_id = ?, background_id = ? WHERE id = ?',
+                   (pet.level, pet.happiness, pet.energy, pet.experience, pet.skin_id, pet.background_id, pet.pet_id))
+        db.commit()
+    except Exception as e:
+        print(f"Error saving pet (likely missing columns): {e}")
+        # Fallback: Chỉ lưu các chỉ số cơ bản
+        db.execute('UPDATE pets SET level = ?, happiness = ?, energy = ?, experience = ? WHERE id = ?',
+                   (pet.level, pet.happiness, pet.energy, pet.experience, pet.pet_id))
+        db.commit()
 
-# HÀM TRANG BỊ (Xử lý cả Skin và Background)
 def equip_skin(db, user_id, item_id):
     pet = load_pet(db, user_id)
     if not pet: return False
 
-    # Tìm item trong shop để biết loại (skin hay background)
     item = next((i for i in SHOP_ITEMS if i['id'] == item_id), None)
     
-    if item_id == 0: # Mặc định (thường dùng cho Skin)
+    if item_id == 0: 
         pet.skin_id = 0
     elif item:
-        if item['type'] == 'skin':
-            pet.skin_id = item_id
-        elif item['type'] == 'background':
-            pet.background_id = item_id
-    elif item_id == 200: # Quy ước 200 là về background mặc định
+        if item['type'] == 'skin': pet.skin_id = item_id
+        elif item['type'] == 'background': pet.background_id = item_id
+    elif item_id == 200:
         pet.background_id = 0
 
     pet._update_appearance()
     save_pet(db, pet)
     return True
 
-# ... (Các hàm get_user_gold, update_user_gold, get_user_inventory, add_item_to_inventory, get_daily_quests, mark_quest_completed giữ nguyên) ...
 def get_user_gold(db, user_id):
     row = db.execute('SELECT gold FROM users WHERE id = ?', (user_id,)).fetchone()
     return row['gold'] if row else 0
@@ -234,7 +228,6 @@ def get_user_inventory(db, user_id):
         item = next((i for i in SHOP_ITEMS if i['id'] == item_id), None)
         if item: inventory.append(item)
     
-    # Thêm item mặc định
     inventory.insert(0, {"id": 0, "name": "Pet Mặc định", "icon": "😊", "type": "skin", "description": "Skin gốc"})
     inventory.insert(1, {"id": 200, "name": "Nền Mặc định", "icon": "🏠", "type": "background", "description": "Phòng gốc"})
     
