@@ -1,3 +1,5 @@
+/* --- START OF FILE main_style.css --- */
+
 /* --- 1. IMPORT FONTS & VARIABLES --- */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Nunito:wght@600;700;800&display=swap');
 
@@ -37,7 +39,7 @@ a { text-decoration: none; transition: var(--transition); }
 /* --- 3. NAVBAR (NÂNG CẤP: DARK GREEN THEME) --- */
 .navbar-custom {
     padding: 15px 0;
-    /* Nền Xanh Rêu Đậm (Kéo full menu như yêu cầu) */
+    /* Nền Xanh Rêu Đậm */
     background-color: var(--primary-dark);
     /* Đổ bóng nhẹ xuống dưới */
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
@@ -57,7 +59,7 @@ a { text-decoration: none; transition: var(--transition); }
     letter-spacing: -0.5px;
 }
 
-/* Link Menu: Màu trắng mờ, hover vào sẽ sáng rực */
+/* Link Menu: Màu trắng mờ */
 .nav-link {
     color: rgba(254, 250, 224, 0.8) !important; /* Màu kem mờ */
     font-weight: 600;
@@ -88,13 +90,28 @@ a { text-decoration: none; transition: var(--transition); }
     width: 100%;
 }
 
-/* Avatar User trên Navbar (Có viền sáng để nổi trên nền xanh) */
+/* --- [FIXED] SỬA LỖI AVATAR BỊ MÉO VÀ VỆT TRẮNG --- */
+
+/* 1. Tắt gạch chân trắng riêng cho nút Avatar (để không bị cắt ngang hình) */
+.nav-link.nav-link-avatar::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* 2. Cố định tỷ lệ Avatar để không bị méo */
 .user-avatar-nav {
-    width: 40px; height: 40px;
+    width: 40px; 
+    height: 40px;
+    min-width: 40px; /* Bắt buộc chiều rộng tối thiểu */
+    min-height: 40px; /* Bắt buộc chiều cao tối thiểu */
+    aspect-ratio: 1/1; /* Giữ tỷ lệ vuông 1:1 */
+    flex-shrink: 0;    /* Không cho co lại khi màn hình nhỏ */
+    
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid var(--bg-body);
     padding: 2px;
+    background-color: var(--primary-light);
 }
 
 /* Dropdown Menu (Con của Navbar) */
@@ -111,8 +128,7 @@ a { text-decoration: none; transition: var(--transition); }
 
 /* --- 4. BUTTONS --- */
 
-/* Nút Bắt đầu ngay (Nằm TRONG Navbar) 
-   Sẽ có màu KEM chữ XANH để nổi bật trên nền xanh */
+/* Nút Bắt đầu ngay (Nằm TRONG Navbar) */
 .navbar-custom .btn-primary-custom {
     background-color: var(--bg-body); /* Màu kem */
     color: var(--primary-dark);       /* Chữ xanh đậm */
@@ -129,8 +145,7 @@ a { text-decoration: none; transition: var(--transition); }
     color: var(--primary);
 }
 
-/* Nút Bắt đầu ngay (Nằm NGOÀI Navbar - Ví dụ trong Modal/Body)
-   Giữ nguyên màu xanh để nổi trên nền kem của web */
+/* Nút Bắt đầu ngay (Nằm NGOÀI Navbar) */
 .btn-primary-custom {
     background-color: var(--primary);
     color: white;
@@ -198,16 +213,16 @@ a { text-decoration: none; transition: var(--transition); }
     outline: none;
 }
 
-/* --- 6. MODAL (LOGIN/REGISTER - FIXED) --- */
+/* --- 6. MODAL (LOGIN/REGISTER) --- */
 
 .modal-content-custom {
     border-radius: 24px;
     border: none;
     overflow: hidden;
-    background-color: var(--bg-body); /* Nền màu kem */
+    background-color: var(--bg-body);
 }
 
-/* Header Modal: Giữ nguyên màu xanh rêu đậm */
+/* Header Modal */
 .auth-header {
     background: var(--primary-dark); 
     color: var(--bg-body);
@@ -217,37 +232,34 @@ a { text-decoration: none; transition: var(--transition); }
     background-size: 20px 20px;
 }
 
-/* --- SỬA LỖI TAB (QUAN TRỌNG) --- */
-
-/* Tab bình thường (Chưa chọn): Chữ màu xanh đậm, Nền trong suốt */
+/* Tab bình thường (Chưa chọn) */
 .nav-pills .nav-link {
-    color: var(--primary-dark) !important; /* Màu chữ đậm để nhìn rõ */
+    color: var(--primary-dark) !important;
     font-weight: 700;
     border-radius: 50px;
     padding: 10px 20px;
-    background-color: rgba(0,0,0,0.05); /* Nền xám cực nhẹ để phân biệt nút */
+    background-color: rgba(0,0,0,0.05);
     border: 1px solid transparent;
     transition: all 0.3s;
 }
 
-/* Tab đang chọn (Active): Nền xanh đậm, Chữ trắng */
+/* Tab đang chọn (Active) */
 .nav-pills .nav-link.active {
     background-color: var(--primary-dark) !important;
     color: #FFFFFF !important;
     box-shadow: 0 4px 15px rgba(52, 78, 65, 0.3);
 }
 
-/* --- SỬA LỖI Ô NHẬP LIỆU (INPUT) --- */
-
+/* Ô nhập liệu Modal */
 .form-label {
-    color: var(--primary-dark); /* Màu nhãn (Email, Mật khẩu...) xanh đậm */
+    color: var(--primary-dark);
     font-weight: 700;
     font-size: 0.9rem;
 }
 
 .form-control-custom {
-    background-color: #FFFFFF !important; /* Nền trắng tinh */
-    border: 1px solid #A3B18A; /* Viền xanh nhạt */
+    background-color: #FFFFFF !important;
+    border: 1px solid #A3B18A;
     border-radius: 12px;
     padding: 12px 15px;
     transition: var(--transition);
@@ -257,12 +269,11 @@ a { text-decoration: none; transition: var(--transition); }
 
 .form-control-custom:focus {
     background-color: #FFFFFF;
-    border-color: var(--primary-dark); /* Focus thì viền đậm lên */
-    box-shadow: 0 0 0 4px rgba(88, 129, 87, 0.2); /* Hiệu ứng tỏa sáng nhẹ */
+    border-color: var(--primary-dark);
+    box-shadow: 0 0 0 4px rgba(88, 129, 87, 0.2);
     outline: none;
 }
 
-/* Màu chữ gợi ý (Placeholder) */
 .form-control-custom::placeholder {
     color: #999;
     font-weight: 400;
@@ -270,7 +281,7 @@ a { text-decoration: none; transition: var(--transition); }
 
 /* --- 7. FOOTER --- */
 footer {
-    background-color: var(--primary-dark); /* Footer xanh đậm đồng bộ Header */
+    background-color: var(--primary-dark);
     color: var(--accent);
     padding: 60px 0 20px;
     margin-top: 80px;
