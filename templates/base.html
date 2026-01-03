@@ -1,3 +1,5 @@
+<!-- START OF FILE base.html -->
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -47,7 +49,7 @@
 
                         <!-- Dropdown User -->
                         <li class="nav-item dropdown ms-lg-3">
-                            <a class="nav-link dropdown-toggle p-0" href="#" role="button" data-bs-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle p-0 nav-link-avatar" href="#" role="button" data-bs-toggle="dropdown">
                                 <div class="d-flex align-items-center gap-2">
                                     <img src="https://ui-avatars.com/api/?name={{ session.get('username') }}&background=588157&color=fff" class="user-avatar-nav" alt="User">
                                     <span class="d-lg-none">{{ session.get('username') }}</span>
@@ -73,12 +75,13 @@
         </div>
     </nav>
 
-    <!-- FLASH MESSAGES (Thông báo) -->
-    <div class="container position-fixed top-0 end-0 p-3" style="z-index: 9999; margin-top: 70px;">
+    <!-- FLASH MESSAGES (Thông báo - Đã chuyển xuống góc phải dưới cùng) -->
+    <!-- Đổi class: top-0 -> bottom-0, container -> toast-container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999;">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="toast show align-items-center border-0 mb-2 shadow" role="alert" style="background: white; border-left: 5px solid {{ '#588157' if category == 'success' else '#d62828' }};">
+                    <div class="toast show align-items-center border-0 mb-2 shadow" role="alert" aria-live="assertive" aria-atomic="true" style="background: white; border-left: 5px solid {{ '#588157' if category == 'success' else '#d62828' }};">
                         <div class="d-flex">
                             <div class="toast-body">
                                 <strong class="{{ 'text-success' if category == 'success' else 'text-danger' }}">
@@ -88,7 +91,7 @@
                                 <br>
                                 <span class="text-muted small">{{ message }}</span>
                             </div>
-                            <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+                            <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
                         </div>
                     </div>
                 {% endfor %}
@@ -208,7 +211,6 @@
     <script>
         AOS.init({ duration: 800, once: true });
 
-        // Logic mở modal nếu url có parameter (giống code cũ của bạn)
         {% if form_type == 'register' %}
             var myModal = new bootstrap.Modal(document.getElementById('authModal'));
             myModal.show();
