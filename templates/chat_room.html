@@ -1,112 +1,349 @@
- {% extends 'chat_base.html' %} 
-{% block content %}
-<div class="message-box chat-page">
-  
-  <div class="chat-header">
-    <h2>Mã phòng: {{code}}</h2>
-    <div style="display: flex; gap: 10px;">
-        {% if user_role == 'therapist' %}
-            <a href="{{ url_for('therapist_dashboard_redirect') }}" class="leave-btn" style="background-color: #007bff; border: none;">
-                ⬅️ Về Dashboard
-            </a>
-        {% endif %}
+{% extends 'base.html' %} 
 
-        <a href="{{ url_for('home') }}" class="leave-btn">Rời phòng</a>
-    </div>
-  </div>
-  
-  
-  <div class="messages" id="messages"></div>
-  <div class="inputs">
-    <input
-      type="text"
-      placeholder="Tin nhắn..."
-      name="message"
-      id="message"
-    />
-    <button type="button" name="send" id="send-btn" >
-      Gửi
-    </button>
-  </div>
-</div>
+{% block title %}Healing Space - {{ code }}{% endblock %}
 
-<!-- All JavaScript goes in ONE tag -->
-<script type="text/javascript">
-  var socketio = io();
-  const myUsername = "{{ name }}"; 
-  const messages = document.getElementById("messages");
-  const messageInput = document.getElementById("message");
+{% block head %}
+<!-- Animation & Font -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,500&display=swap" rel="stylesheet">
 
-  /**
-   * Creates and appends a message to the chat box.
-   * @param {string} name - The sender's name
-   * @param {string} msg - The message content
-   * @param {string} timestamp - The server-provided timestamp
-   * @param {boolean} [shouldScroll=true] - Whether to scroll to the bottom
-   */
-  const createMessage = (name, msg, timestamp, shouldScroll = true) => {
-    const messageType = (name === myUsername) ? 'own' : 'other';
-    
-    // Use the timestamp from the server.
-    const displayTimestamp = timestamp ? timestamp : new Date().toLocaleString();
-
-    const content = `
-    <div class="message ${messageType}">
-        ${messageType === 'other' ? `<strong>${name}</strong>` : ''}
-        <span>${msg}</span>
-        <span class="timestamp">
-            ${displayTimestamp}
-        </span>
-    </div>
-    `;
-    messages.innerHTML += content;
-    if (shouldScroll) {
-        messages.scrollTop = messages.scrollHeight;
+<style>
+    /* --- 1. GLOBAL ATMOSPHERE --- */
+    body { 
+        height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+        background: #FDFCF8;
+        font-family: 'Plus Jakarta Sans', sans-serif;
     }
-  };
-
-  /**
-   * Sends the message from the input box to the server.
-   */
-  const sendMessage = () => {
-    const message = messageInput.value;
-    if (message == "") return;
     
-    socketio.emit("message", { data: message });
+    /* Ẩn Layout cũ để chat room chiếm toàn màn hình */
+    .navbar-custom, footer { display: none !important; } 
     
-    messageInput.value = "";
-    messageInput.focus();
-  };
+    main { 
+        flex: 1; padding: 0; position: relative;
+        /* Nền giấy noise nhẹ + Gradient ấm áp */
+        background: 
+            url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E"),
+            linear-gradient(180deg, #F0FDF4 0%, #FFFBEB 100%);
+    }
 
-  // --- Event Listeners ---
+    /* Background Blobs (Hiệu ứng thở) */
+    .blob {
+        position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.5; z-index: 0;
+        animation: floatBlob 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .blob-1 { width: 400px; height: 400px; background: #Dcfce7; top: -100px; left: -100px; }
+    .blob-2 { width: 500px; height: 500px; background: #Fef3c7; bottom: -150px; right: -150px; animation-delay: -5s; }
+    @keyframes floatBlob { from { transform: translate(0,0) scale(1); } to { transform: translate(50px, 30px) scale(1.1); } }
 
-  document.getElementById("send-btn").addEventListener("click", sendMessage);
+    /* --- 2. PREMIUM HEADER --- */
+    .glass-header {
+        position: absolute; top: 0; left: 0; right: 0; height: 80px;
+        padding: 0 30px;
+        display: flex; align-items: center; justify-content: space-between;
+        z-index: 100;
+        /* Glassmorphism cực nhẹ */
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255,255,255,0.3);
+    }
 
-  messageInput.addEventListener("keypress", function(event) {
-      if (event.key === "Enter") {
-          event.preventDefault(); 
-          sendMessage();
-      }
-  });
+    .header-left { display: flex; align-items: center; gap: 15px; }
 
-  // --- Socket.IO Handlers ---
+    .back-btn {
+        width: 40px; height: 40px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        color: #344E41; background: rgba(255,255,255,0.6);
+        transition: 0.2s; border: 1px solid rgba(0,0,0,0.05);
+        text-decoration: none;
+    }
+    .back-btn:hover { background: white; transform: scale(1.05); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
 
-  // This handles all NEW incoming messages (including our own)
-  socketio.on("message", (data) => {
-    createMessage(data.name, data.message, data.timestamp, true);
-  });
+    .avatar-group { position: relative; }
+    .avatar-img { 
+        width: 45px; height: 45px; object-fit: cover; border-radius: 50%; 
+        border: 3px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    /* Dấu chấm xanh (Online Dot) tích hợp vào Avatar */
+    .online-badge {
+        position: absolute; bottom: 2px; right: 2px;
+        width: 12px; height: 12px; background: #22C55E;
+        border: 2px solid white; border-radius: 50%;
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+    }
 
-</script>
+    .room-meta h5 { 
+        margin: 0; font-family: 'Playfair Display', serif; font-size: 1.2rem; color: #1e293b; 
+    }
+    .room-meta span { font-size: 0.75rem; color: #64748b; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }
 
-<!-- --- LOAD HISTORY MESSAGES (THE FIX) --- -->
-{% for msg in messages %}
-  <script type="text/javascript">
-    createMessage("{{msg.name|e}}", "{{msg.message|e}}", "{{msg.timestamp|e}}", false);
-  </script>
-{% endfor %}
+    /* --- 3. CHAT AREA --- */
+    .chat-scroll-area {
+        position: absolute; top: 80px; bottom: 100px; left: 0; right: 0;
+        overflow-y: auto; padding: 20px 15%;
+        display: flex; flex-direction: column; gap: 24px;
+        z-index: 10; scroll-behavior: smooth;
+    }
+    @media(max-width: 768px) { .chat-scroll-area { padding: 20px 15px; } }
 
-<script type="text/javascript">
-  messages.scrollTop = messages.scrollHeight; // Scroll to bottom once after loading history
-</script>
+    /* Scrollbar ẩn nhưng vẫn scroll được */
+    .chat-scroll-area::-webkit-scrollbar { width: 5px; }
+    .chat-scroll-area::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+
+    /* Message Bubbles */
+    .msg-row { display: flex; flex-direction: column; max-width: 70%; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .msg-content {
+        padding: 14px 24px; font-size: 1rem; line-height: 1.6;
+        position: relative; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        word-wrap: break-word;
+    }
+
+    /* ME (Phải - Gradient Mịn) */
+    .msg-me { align-self: flex-end; align-items: flex-end; }
+    .msg-me .msg-content {
+        /* Gradient xanh rêu sang trọng */
+        background: linear-gradient(135deg, #405d4d 0%, #588157 100%);
+        color: white;
+        border-radius: 24px 24px 4px 24px;
+    }
+    .msg-me .msg-time { text-align: right; color: #64748b; margin-top: 6px; font-size: 0.7rem; margin-right: 4px; }
+
+    /* PARTNER (Trái - Trắng Sứ) */
+    .msg-partner { align-self: flex-start; align-items: flex-start; }
+    .msg-partner .msg-content {
+        background: #FFFFFF;
+        color: #334155;
+        border: 1px solid rgba(255,255,255,0.8);
+        border-radius: 24px 24px 24px 4px;
+    }
+    .msg-partner .sender-name {
+        font-size: 0.8rem; font-weight: 700; color: #588157; 
+        margin-bottom: 4px; margin-left: 12px;
+    }
+    .msg-partner .msg-time { margin-left: 4px; color: #94a3b8; font-size: 0.7rem; margin-top: 6px; }
+
+    /* System Notice */
+    .sys-badge {
+        align-self: center; background: rgba(255,255,255,0.5); 
+        border: 1px solid rgba(0,0,0,0.05);
+        padding: 6px 16px; border-radius: 30px;
+        font-size: 0.75rem; color: #94a3b8; margin: 10px 0;
+        backdrop-filter: blur(4px);
+    }
+
+    /* --- 4. FLOATING INPUT BAR --- */
+    .input-dock {
+        position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+        width: 90%; max-width: 850px;
+        z-index: 200;
+    }
+    
+    .glass-input-wrapper {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px);
+        padding: 8px 10px;
+        border-radius: 20px;
+        box-shadow: 0 15px 40px rgba(52, 78, 65, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        display: flex; align-items: center; gap: 10px;
+        transition: all 0.3s ease;
+    }
+    .glass-input-wrapper:focus-within {
+        background: white; transform: translateY(-5px);
+        box-shadow: 0 20px 50px rgba(52, 78, 65, 0.12);
+    }
+
+    .main-input {
+        flex: 1; border: none; background: transparent;
+        padding: 12px; font-size: 1rem; color: #1e293b;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .main-input:focus { outline: none; }
+    .main-input::placeholder { color: #cbd5e1; font-weight: 500; }
+
+    .action-btn {
+        width: 44px; height: 44px; border-radius: 14px; border: none;
+        display: flex; align-items: center; justify-content: center;
+        background: transparent; color: #94a3b8; cursor: pointer; transition: 0.2s;
+    }
+    .action-btn:hover { background: #f1f5f9; color: #334155; }
+
+    .send-btn {
+        background: #344E41; color: white; border-radius: 14px;
+        width: 48px; height: 48px; box-shadow: 0 5px 15px rgba(52, 78, 65, 0.2);
+    }
+    .send-btn:hover { background: #588157; transform: scale(1.05); }
+
+    /* --- 5. BUTTON END CHAT (REDUX) --- */
+    .btn-end-session {
+        padding: 8px 16px; background: #FEF2F2; color: #DC2626;
+        border: 1px solid #FECACA; border-radius: 30px;
+        font-size: 0.85rem; font-weight: 600; text-decoration: none;
+        transition: 0.2s; display: flex; align-items: center; gap: 6px;
+        cursor: pointer;
+    }
+    .btn-end-session:hover { background: #DC2626; color: white; border-color: #DC2626; }
+</style>
 {% endblock %}
 
+{% block content %}
+<!-- Blobs Background -->
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<!-- HEADER -->
+<div class="glass-header">
+    <div class="header-left">
+        <a href="{{ url_for('dashboard') }}" class="back-btn" title="Trở về Dashboard"><i class="fas fa-chevron-left"></i></a>
+        
+        <!-- Avatar + Online Indicator -->
+        <div class="avatar-group">
+            <img src="https://ui-avatars.com/api/?name=Partner&background=A3B18A&color=fff" class="avatar-img">
+            <span class="online-badge"></span>
+        </div>
+
+        <div class="room-meta">
+            <h5>Healing Space</h5>
+            <span>Phòng {{ code }}</span>
+        </div>
+    </div>
+
+    <!-- Right Actions -->
+    <div class="d-flex align-items-center gap-3">
+        {% if user_role == 'therapist' %}
+        <span class="badge bg-white text-success border shadow-sm px-3 py-2 rounded-pill d-none d-md-block">
+            <i class="fas fa-user-md me-1"></i> Specialist
+        </span>
+        {% endif %}
+        
+        <!-- Nút Thoát -->
+        <form action="{{ url_for('end_chat') }}" method="POST" class="m-0" onsubmit="return confirm('Hành động này sẽ ngắt kết nối với đối phương.\nBạn chắc chắn chứ?');">
+            <input type="hidden" name="room_code" value="{{code}}">
+            <button type="submit" class="btn-end-session">
+                <i class="fas fa-power-off"></i> <span class="d-none d-sm-inline">Kết thúc</span>
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- CHAT AREA -->
+<div class="chat-scroll-area" id="messages">
+    <!-- Thông báo hệ thống -->
+    <div class="sys-badge">
+        <i class="fas fa-lock me-1"></i> Bảo mật đầu cuối (E2EE) • Cuộc trò chuyện an toàn
+    </div>
+
+    <!-- Placeholder khi chưa có tin nhắn -->
+    <div class="text-center mt-5 opacity-50" id="empty-state">
+        <div class="mb-3">
+            <i class="fab fa-envira fa-3x text-success animate__animated animate__pulse animate__infinite"></i>
+        </div>
+        <p class="small text-muted fw-bold">Không gian này là của bạn.<br>Hãy thả lỏng và chia sẻ.</p>
+    </div>
+</div>
+
+<!-- INPUT DOCK -->
+<div class="input-dock">
+    <div class="glass-input-wrapper">
+        <button class="action-btn" title="Gửi ảnh (Demo)"><i class="far fa-image"></i></button>
+        <button class="action-btn" title="Thả tim" onclick="addEmoji('❤️')"><i class="far fa-heart"></i></button>
+        
+        <input type="text" id="message" class="main-input" placeholder="Nhập tin nhắn..." autocomplete="off">
+        
+        <button id="send-btn" class="action-btn send-btn">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<script>
+    var socketio = io();
+    const myUsername = "{{ name }}"; 
+    const messagesDiv = document.getElementById("messages");
+    const messageInput = document.getElementById("message");
+    const emptyState = document.getElementById("empty-state");
+
+    // --- RENDER MESSAGE ---
+    const createMessage = (name, msg, timestamp, shouldScroll = true) => {
+        if(emptyState) emptyState.style.display = 'none';
+
+        const isOwn = (name === myUsername);
+        
+        // Xử lý Time (Nếu server chưa gửi time, lấy time hiện tại)
+        let timeStr = timestamp;
+        if (!timeStr) {
+            timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        } else if (timeStr.includes(' ')) {
+             timeStr = timeStr.split(' ')[1];
+        }
+
+        let html = '';
+        if(isOwn) {
+            // TIN NHẮN CỦA MÌNH
+            html = `
+            <div class="msg-row msg-me">
+                <div class="msg-content">
+                    ${msg}
+                </div>
+                <div class="msg-time">${timeStr}</div>
+            </div>`;
+        } else {
+            // TIN NHẮN ĐỐI PHƯƠNG
+            html = `
+            <div class="msg-row msg-partner">
+                <div class="sender-name">${name}</div>
+                <div class="msg-content">
+                    ${msg}
+                </div>
+                <div class="msg-time">${timeStr}</div>
+            </div>`;
+        }
+        
+        messagesDiv.insertAdjacentHTML('beforeend', html);
+        if (shouldScroll) scrollToBottom();
+    };
+
+    const scrollToBottom = () => {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    const sendMessage = () => {
+        const msg = messageInput.value.trim();
+        if (msg === "") return;
+        socketio.emit("message", { data: msg });
+        messageInput.value = "";
+        messageInput.focus();
+    };
+
+    // Helper Emoji
+    window.addEmoji = (icon) => {
+        messageInput.value += icon;
+        messageInput.focus();
+    }
+
+    // Events
+    document.getElementById("send-btn").addEventListener("click", sendMessage);
+    messageInput.addEventListener("keypress", (e) => { 
+        if (e.key === "Enter") sendMessage(); 
+    });
+
+    // Socket Listener
+    socketio.on("message", (data) => {
+        createMessage(data.name, data.message, data.timestamp, true);
+    });
+
+    // Load History (nếu có từ Flask)
+    {% if messages %}
+        if(emptyState) emptyState.style.display = 'none';
+        {% for msg in messages %}
+            createMessage("{{msg.name|e}}", "{{msg.message|e}}", "{{msg.timestamp|e}}", false);
+        {% endfor %}
+        scrollToBottom();
+    {% endif %}
+</script>
+{% endblock %}
