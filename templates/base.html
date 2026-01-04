@@ -1,5 +1,3 @@
-<!-- START OF FILE base.html -->
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -7,66 +5,121 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}SoulMate - Chữa lành tâm hồn{% endblock %}</title>
     
-    <!-- Bootstrap 5 CSS -->
+    <!-- 1. FONTS GLOBAL (Import 1 lần dùng cho cả web) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Nunito:wght@600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+
+    <!-- 2. LIBRARIES -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome (Icons) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Animation Library (AOS) -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <!-- Custom CSS -->
+    
+    <!-- 3. MAIN STYLE -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main_style.css') }}">
     
+    <style>
+        /* CSS Bổ sung riêng cho Base để xử lý Layout */
+        
+        /* Giúp Footer luôn ở đáy trang */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        main { flex: 1; }
+
+        /* Custom Scrollbar (Thanh cuộn đẹp hơn) */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #FEFAE0; }
+        ::-webkit-scrollbar-thumb { background: #A3B18A; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #588157; }
+
+        /* Page Loader */
+        #page-loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #FEFAE0; z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.5s ease, visibility 0.5s;
+        }
+        .loader-spinner {
+            width: 50px; height: 50px;
+            border: 5px solid #A3B18A;
+            border-top-color: #344E41;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loaded #page-loader { opacity: 0; visibility: hidden; }
+    </style>
+
     {% block head %}{% endblock %}
 </head>
-<body>
+<body class="">
+
+    <!-- PAGE LOADER -->
+    <div id="page-loader">
+        <div class="text-center">
+            <div class="loader-spinner mb-3 mx-auto"></div>
+            <div class="small fw-bold text-dark" style="font-family: 'Nunito', sans-serif;">Đang tải...</div>
+        </div>
+    </div>
 
     <!-- NAVBAR -->
     <nav class="navbar navbar-expand-lg navbar-custom">
         <div class="container">
+            <!-- Brand -->
             <a class="navbar-brand" href="{{ url_for('home') }}">
-                <i class="fas fa-seedling"></i> SoulMate
+                <i class="fas fa-leaf me-2"></i>SoulMate
             </a>
             
-            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
+            <!-- Toggler Mobile -->
+            <button class="navbar-toggler border-0 shadow-none text-white opacity-75" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <i class="fas fa-bars fs-4"></i>
             </button>
 
+            <!-- Menu Items -->
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('home') }}">Trang chủ</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Về chúng tôi</a></li>
+                    <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'home' }}" href="{{ url_for('home') }}">Trang chủ</a></li>
                     
                     {% if session.get('user_id') %}
                         <!-- Đã đăng nhập -->
                         {% if session.get('role') == 'therapist' %}
-                            <li class="nav-item"><a class="nav-link fw-bold text-primary" href="{{ url_for('therapist_dashboard_redirect') }}">Góc Chuyên Gia</a></li>
+                            <li class="nav-item"><a class="nav-link fw-bold" href="{{ url_for('therapist_dashboard_redirect') }}">Góc Chuyên Gia</a></li>
                         {% elif session.get('role') == 'admin' %}
-                            <li class="nav-item"><a class="nav-link fw-bold text-danger" href="{{ url_for('admin_dashboard') }}">Admin</a></li>
+                            <li class="nav-item"><a class="nav-link fw-bold text-danger" href="{{ url_for('admin_dashboard') }}">Admin Panel</a></li>
                         {% else %}
                             <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a></li>
                             <li class="nav-item"><a class="nav-link" href="{{ url_for('pet_page') }}">Thú cưng</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('chat_home') }}">Tư vấn</a></li>
                         {% endif %}
 
-                        <!-- Dropdown User -->
-                        <li class="nav-item dropdown ms-lg-3">
-                            <a class="nav-link dropdown-toggle p-0 nav-link-avatar" href="#" role="button" data-bs-toggle="dropdown">
+                        <!-- Dropdown User Avatar -->
+                        <li class="nav-item dropdown ms-lg-3 mt-3 mt-lg-0">
+                            <a class="nav-link nav-link-avatar dropdown-toggle p-0" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <div class="d-flex align-items-center gap-2">
-                                    <img src="https://ui-avatars.com/api/?name={{ session.get('username') }}&background=588157&color=fff" class="user-avatar-nav" alt="User">
-                                    <span class="d-lg-none">{{ session.get('username') }}</span>
+                                    <img src="https://ui-avatars.com/api/?name={{ session.get('username') }}&background=E9EDC9&color=344E41&bold=true" class="user-avatar-nav shadow-sm" alt="User">
+                                    <span class="d-lg-none text-white fw-bold">{{ session.get('username') }}</span>
                                 </div>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow rounded-4 mt-2">
-                                <li class="px-3 py-2 text-muted small fw-bold">Xin chào, {{ session.get('username') }}</li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{{ url_for('user_profile') }}"><i class="fas fa-user-circle me-2"></i>Hồ sơ</a></li>
-                                <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-4 mt-3 p-2 animate-float" style="min-width: 200px;">
+                                <li class="px-3 py-2">
+                                    <small class="text-muted d-block">Xin chào,</small>
+                                    <span class="fw-bold text-dark">{{ session.get('username') }}</span>
+                                </li>
+                                <li><hr class="dropdown-divider opacity-25"></li>
+                                <li><a class="dropdown-item rounded-3" href="{{ url_for('user_profile') }}"><i class="fas fa-user-circle me-2 text-success"></i>Hồ sơ cá nhân</a></li>
+                                <li><a class="dropdown-item rounded-3" href="#"><i class="fas fa-cog me-2 text-secondary"></i>Cài đặt</a></li>
+                                <li><hr class="dropdown-divider opacity-25"></li>
+                                <li><a class="dropdown-item rounded-3 text-danger fw-bold" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
                             </ul>
                         </li>
                     {% else %}
                         <!-- Chưa đăng nhập -->
                         <li class="nav-item ms-lg-3 mt-3 mt-lg-0">
-                            <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#authModal">
-                                Bắt đầu ngay
+                            <button class="btn btn-primary-custom shadow-sm" data-bs-toggle="modal" data-bs-target="#authModal">
+                                Bắt đầu ngay <i class="fas fa-arrow-right ms-1 small"></i>
                             </button>
                         </li>
                     {% endif %}
@@ -75,21 +128,27 @@
         </div>
     </nav>
 
-    <!-- FLASH MESSAGES (Thông báo - Đã chuyển xuống góc phải dưới cùng) -->
-    <!-- Đổi class: top-0 -> bottom-0, container -> toast-container -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999;">
+    <!-- MAIN CONTENT -->
+    <!-- flex-grow-1 đẩy footer xuống dưới -->
+    <main class="flex-grow-1 position-relative">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- TOAST NOTIFICATIONS (Góc phải dưới) -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="toast show align-items-center border-0 mb-2 shadow" role="alert" aria-live="assertive" aria-atomic="true" style="background: white; border-left: 5px solid {{ '#588157' if category == 'success' else '#d62828' }};">
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <strong class="{{ 'text-success' if category == 'success' else 'text-danger' }}">
-                                    <i class="fas {{ 'fa-check-circle' if category == 'success' else 'fa-exclamation-circle' }}"></i>
-                                    {{ 'Thành công' if category == 'success' else 'Thông báo' }}
-                                </strong>
-                                <br>
-                                <span class="text-muted small">{{ message }}</span>
+                    <div class="toast align-items-center border-0 mb-2 shadow-lg rounded-4 overflow-hidden" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
+                        <div class="d-flex border-start border-5 {{ 'border-success' if category == 'success' else 'border-danger' }}">
+                            <div class="toast-body bg-white py-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas {{ 'fa-check-circle text-success' if category == 'success' else 'fa-exclamation-circle text-danger' }} fs-4 me-3"></i>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-dark">{{ 'Thành công!' if category == 'success' else 'Chú ý!' }}</h6>
+                                        <small class="text-muted">{{ message }}</small>
+                                    </div>
+                                </div>
                             </div>
                             <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
                         </div>
@@ -99,124 +158,151 @@
         {% endwith %}
     </div>
 
-    <!-- MAIN CONTENT -->
-    <main>
-        {% block content %}{% endblock %}
-    </main>
-
     <!-- FOOTER -->
     <footer>
         <div class="container">
-            <div class="row g-4">
+            <div class="row g-4 mb-4">
                 <div class="col-lg-4">
-                    <h4 class="text-white mb-3"><i class="fas fa-seedling me-2"></i>SoulMate</h4>
-                    <p class="small opacity-75">Nơi bạn tìm thấy sự bình yên giữa cuộc sống bộn bề. Kết nối với chuyên gia, chia sẻ với AI, và chữa lành tâm hồn.</p>
+                    <h4 class="text-white mb-3" style="font-family: 'Playfair Display', serif;"><i class="fas fa-leaf me-2"></i>SoulMate</h4>
+                    <p class="small opacity-75 mb-4">Hành trình chữa lành bắt đầu từ những điều nhỏ bé nhất. Chúng tôi ở đây để lắng nghe bạn.</p>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-white opacity-75 hover-opacity-100 transition"><i class="fab fa-facebook fa-lg"></i></a>
+                        <a href="#" class="text-white opacity-75 hover-opacity-100 transition"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="#" class="text-white opacity-75 hover-opacity-100 transition"><i class="fab fa-youtube fa-lg"></i></a>
+                    </div>
                 </div>
-                <div class="col-lg-2 offset-lg-1">
-                    <h6 class="text-white mb-3">Liên kết</h6>
-                    <ul class="list-unstyled small opacity-75">
-                        <li class="mb-2"><a href="#" class="text-white text-decoration-none">Trang chủ</a></li>
-                        <li class="mb-2"><a href="#" class="text-white text-decoration-none">Về chúng tôi</a></li>
-                        <li class="mb-2"><a href="#" class="text-white text-decoration-none">Dịch vụ</a></li>
+                <div class="col-lg-2 offset-lg-1 col-6">
+                    <h6 class="text-white fw-bold mb-3">Khám phá</h6>
+                    <ul class="list-unstyled small opacity-75 d-grid gap-2">
+                        <li><a href="{{ url_for('home') }}" class="text-white text-decoration-none hover-underline">Trang chủ</a></li>
+                        <li><a href="#" class="text-white text-decoration-none hover-underline">Về chúng tôi</a></li>
+                        <li><a href="#" class="text-white text-decoration-none hover-underline">Gói dịch vụ</a></li>
                     </ul>
                 </div>
-                <div class="col-lg-2">
-                    <h6 class="text-white mb-3">Hỗ trợ</h6>
-                    <ul class="list-unstyled small opacity-75">
-                        <li class="mb-2"><a href="#" class="text-white text-decoration-none">FAQ</a></li>
-                        <li class="mb-2"><a href="#" class="text-white text-decoration-none">Điều khoản</a></li>
-                        <li class="mb-2"><a href="#" class="text-white text-decoration-none">Bảo mật</a></li>
+                <div class="col-lg-2 col-6">
+                    <h6 class="text-white fw-bold mb-3">Hỗ trợ</h6>
+                    <ul class="list-unstyled small opacity-75 d-grid gap-2">
+                        <li><a href="#" class="text-white text-decoration-none hover-underline">Trung tâm trợ giúp</a></li>
+                        <li><a href="#" class="text-white text-decoration-none hover-underline">Chính sách bảo mật</a></li>
+                        <li><a href="#" class="text-white text-decoration-none hover-underline">Điều khoản</a></li>
                     </ul>
                 </div>
                 <div class="col-lg-3">
-                    <h6 class="text-white mb-3">Liên hệ</h6>
-                    <div class="d-flex gap-3">
-                        <a href="#" class="text-white fs-5"><i class="fab fa-facebook"></i></a>
-                        <a href="#" class="text-white fs-5"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="text-white fs-5"><i class="fab fa-twitter"></i></a>
-                    </div>
+                    <h6 class="text-white fw-bold mb-3">Nhận bản tin</h6>
+                    <form class="position-relative">
+                        <input type="email" class="form-control rounded-pill pe-5 small" placeholder="Email của bạn..." style="background: rgba(255,255,255,0.1); border:none; color:white;">
+                        <button type="button" class="btn btn-sm text-white position-absolute top-0 end-0 mt-1 me-1"><i class="fas fa-paper-plane"></i></button>
+                    </form>
                 </div>
             </div>
-            <hr class="opacity-25 my-4">
-            <div class="text-center small opacity-50">
-                &copy; 2025 SoulMate Project. All Rights Reserved.
+            <div class="border-top border-light border-opacity-10 pt-4 text-center">
+                <p class="small opacity-50 mb-0">&copy; 2025 SoulMate Project. Made with ❤️ for healing.</p>
             </div>
         </div>
     </footer>
 
-    <!-- AUTH MODAL (Login/Register) -->
-    <div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true">
+    <!-- AUTH MODAL (LOGIN / REGISTER) -->
+    {% if not session.get('user_id') %}
+    <div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content modal-content-custom shadow-lg">
-                <div class="auth-header">
-                    <h3 class="mb-1">Chào mừng bạn</h3>
-                    <p class="mb-0 opacity-75 small">Đăng nhập để tiếp tục hành trình</p>
+            <div class="modal-content modal-content-custom shadow-lg animate-float">
+                <!-- Modal Header: Xanh rêu đậm -->
+                <div class="auth-header position-relative overflow-hidden">
+                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h3 class="mb-1 text-white fw-bold">Chào mừng trở lại!</h3>
+                    <p class="mb-0 opacity-75 small text-white">Đăng nhập để tiếp tục hành trình.</p>
                 </div>
-                <div class="modal-body p-4 p-md-5">
-                    
-                    <!-- Tabs -->
-                    <ul class="nav nav-pills nav-fill mb-4 p-1 bg-white rounded-pill border" id="authTab" role="tablist">
+                
+                <div class="modal-body p-4 p-md-5 bg-white">
+                    <!-- Tabs Navigation -->
+                    <ul class="nav nav-pills nav-fill mb-4 p-1 bg-light rounded-pill border" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="login-tab" data-bs-toggle="pill" data-bs-target="#login-panel" type="button">Đăng nhập</button>
+                            <button class="nav-link active rounded-pill py-2 small fw-bold" id="login-tab" data-bs-toggle="pill" data-bs-target="#login-panel" type="button">Đăng nhập</button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="register-tab" data-bs-toggle="pill" data-bs-target="#register-panel" type="button">Đăng ký</button>
+                            <button class="nav-link rounded-pill py-2 small fw-bold" id="register-tab" data-bs-toggle="pill" data-bs-target="#register-panel" type="button">Đăng ký mới</button>
                         </li>
                     </ul>
 
                     <div class="tab-content">
-                        <!-- Login Panel -->
+                        <!-- LOGIN FORM -->
                         <div class="tab-pane fade show active" id="login-panel">
                             <form action="{{ url_for('login') }}" method="POST">
                                 <div class="mb-3">
-                                    <label class="form-label small fw-bold text-muted">Email</label>
-                                    <input type="email" name="email" class="form-control form-control-custom" placeholder="name@example.com" required>
+                                    <label class="form-label small text-muted fw-bold">Email</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0 rounded-start-3"><i class="fas fa-envelope text-muted"></i></span>
+                                        <input type="email" name="email" class="form-control form-control-custom border-start-0 ps-0" placeholder="name@email.com" required>
+                                    </div>
                                 </div>
                                 <div class="mb-4">
-                                    <label class="form-label small fw-bold text-muted">Mật khẩu</label>
-                                    <input type="password" name="password" class="form-control form-control-custom" placeholder="******" required>
+                                    <label class="form-label small text-muted fw-bold">Mật khẩu</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0 rounded-start-3"><i class="fas fa-lock text-muted"></i></span>
+                                        <input type="password" name="password" class="form-control form-control-custom border-start-0 ps-0" placeholder="••••••" required>
+                                    </div>
+                                    <div class="text-end mt-2">
+                                        <a href="#" class="small text-muted text-decoration-none">Quên mật khẩu?</a>
+                                    </div>
                                 </div>
-                                <button type="submit" class="btn btn-primary-custom w-100">Đăng nhập</button>
+                                <button type="submit" class="btn btn-primary-custom w-100 py-2 shadow-sm">Đăng nhập ngay</button>
                             </form>
                         </div>
 
-                        <!-- Register Panel -->
+                        <!-- REGISTER FORM -->
                         <div class="tab-pane fade" id="register-panel">
                             <form action="{{ url_for('register') }}" method="POST">
                                 <div class="mb-3">
-                                    <label class="form-label small fw-bold text-muted">Tên hiển thị</label>
+                                    <label class="form-label small text-muted fw-bold">Tên hiển thị</label>
                                     <input type="text" name="username" class="form-control form-control-custom" placeholder="Ví dụ: An Nhiên" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label small fw-bold text-muted">Email</label>
-                                    <input type="email" name="email" class="form-control form-control-custom" placeholder="name@example.com" required>
+                                    <label class="form-label small text-muted fw-bold">Email</label>
+                                    <input type="email" name="email" class="form-control form-control-custom" placeholder="name@email.com" required>
                                 </div>
                                 <div class="mb-4">
-                                    <label class="form-label small fw-bold text-muted">Mật khẩu</label>
+                                    <label class="form-label small text-muted fw-bold">Mật khẩu</label>
                                     <input type="password" name="password" class="form-control form-control-custom" placeholder="Tự tạo mật khẩu" required>
                                 </div>
-                                <button type="submit" class="btn btn-primary-custom w-100">Tạo tài khoản</button>
+                                <button type="submit" class="btn btn-primary-custom w-100 py-2 shadow-sm">Tạo tài khoản</button>
                             </form>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
     </div>
+    {% endif %}
 
     <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
-        AOS.init({ duration: 800, once: true });
+        // 1. Initialize Animation
+        AOS.init({ duration: 1000, once: true, offset: 50 });
 
+        // 2. Remove Page Loader
+        window.addEventListener('load', () => {
+            document.body.classList.add('loaded');
+        });
+
+        // 3. Initialize Toasts (Auto Show)
+        document.addEventListener('DOMContentLoaded', () => {
+            var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+            var toastList = toastElList.map(function(toastEl) {
+                return new bootstrap.Toast(toastEl, { autohide: true, delay: 4000 }); // Tự ẩn sau 4s
+            });
+            toastList.forEach(toast => toast.show());
+        });
+
+        // 4. Logic Tab Đăng ký (Nếu Server trả về form đăng ký lỗi)
         {% if form_type == 'register' %}
-            var myModal = new bootstrap.Modal(document.getElementById('authModal'));
-            myModal.show();
-            document.querySelector('#register-tab').click();
+            const authModal = new bootstrap.Modal(document.getElementById('authModal'));
+            authModal.show();
+            document.getElementById('register-tab').click();
         {% endif %}
     </script>
+    
     {% block scripts %}{% endblock %}
 </body>
 </html>
