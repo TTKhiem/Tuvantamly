@@ -1,162 +1,394 @@
-{% extends 'chat_base.html' %} 
-{% block content %}
+{% extends 'base.html' %} 
 
-<!-- Flash Messages -->
-{% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        <ul class="flashes">
-        {% for category, message in messages %}
-            <li class="{{ category }}">{{ message }}</li>
-        {% endfor %}
-        </ul>
-    {% endif %}
-{% endwith %}
+{% block title %}Sảnh Kết Nối - SoulMate{% endblock %}
 
-<!-- Matchmaking Section -->
-<div class="matchmaking-box buttons">
-    <h3>Xin chào, {{ name }}!</h3>
-    <h4>Tìm kiếm tư vấn viên/Sinh viên</h4>
-    <p>Hồ sơ của bạn có các tags: <strong>{{ user_tags|join(', ') if user_tags else 'Không có' }}</strong></p>
-    <p><small>(Bạn có thể cập nhật tags trong <a href="{{ url_for('dashboard') }}">Dashboard</a>)</small></p>
+{% block head %}
+<style>
+    /* --- 1. ATMOSPHERE BACKGROUND (Không gian) --- */
+    .lobby-wrapper {
+        position: relative;
+        min-height: 85vh; /* Trừ đi chiều cao header/footer */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        /* Nền Gradient động dịu mắt */
+        background: radial-gradient(circle at top left, #F0FDF4, #FEFAE0, #E9EDC9);
+    }
+
+    /* Các đốm sáng trôi lơ lửng (Ambient Lights) */
+    .ambient-light {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(60px);
+        opacity: 0.6;
+        z-index: 0;
+        animation: floatLight 10s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .light-1 { width: 300px; height: 300px; background: #A3B18A; top: -50px; left: -50px; animation-delay: 0s; }
+    .light-2 { width: 400px; height: 400px; background: #D8F3DC; bottom: -100px; right: -50px; animation-delay: -5s; }
     
-    <!-- This div will show match notifications -->
-    <div id="match-status"></div>
+    @keyframes floatLight {
+        0% { transform: translate(0, 0) scale(1); }
+        100% { transform: translate(30px, 50px) scale(1.1); }
+    }
 
-    <button type="button" id="find-match-btn" class="create-btn" style="background-color: #007bff;">
-        Tìm kiếm tư vấn viên/Sinh viên
-    </button>
-    <button type="button" id="cancel-match-btn" style="display:none; background-color: #dc3545;">
-        Hủy tìm kiếm
-    </button>
+    /* --- 2. GLASS PANEL (Khung chính giữa) --- */
+    .glass-panel-lobby {
+        position: relative;
+        width: 100%;
+        max-width: 550px;
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        border-radius: 40px;
+        padding: 50px 40px;
+        box-shadow: 
+            0 20px 50px rgba(52, 78, 65, 0.1),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+        text-align: center;
+        z-index: 10;
+        transition: transform 0.4s ease;
+    }
+
+    /* --- 3. PULSING CORE (Nút Tìm Kiếm Trung Tâm) --- */
+    .core-container {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        margin: 40px auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-core {
+        width: 100px; height: 100px;
+        border-radius: 50%;
+        border: none;
+        color: white;
+        font-size: 2rem;
+        cursor: pointer;
+        z-index: 5;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 15px 35px rgba(52, 78, 65, 0.3);
+        
+        /* Gradient Button (Màu xanh chủ đạo) */
+        background: linear-gradient(135deg, #344E41 0%, #588157 100%);
+        position: relative;
+        outline: none;
+    }
+
+    .btn-core:hover { transform: scale(1.1); box-shadow: 0 20px 40px rgba(52, 78, 65, 0.4); }
+    .btn-core:active { transform: scale(0.95); }
+
+    /* Hiệu ứng sóng lan tỏa (Ripples) */
+    .ripple {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        border: 1px solid #588157;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    /* STATE: SEARCHING (Khi đang tìm kiếm) */
+    /* Đổi màu nút sang Đỏ/Hồng */
+    .is-searching .btn-core {
+        background: linear-gradient(135deg, #BC4749 0%, #E63946 100%); 
+        animation: breathBtn 2s infinite ease-in-out;
+        box-shadow: 0 15px 35px rgba(188, 71, 73, 0.3);
+    }
+    .is-searching .ripple { animation: rippleAnim 2.5s infinite linear; border-color: #BC4749; }
+    .is-searching .ripple:nth-child(1) { animation-delay: 0s; }
+    .is-searching .ripple:nth-child(2) { animation-delay: 0.8s; }
+    .is-searching .ripple:nth-child(3) { animation-delay: 1.6s; }
+
+    @keyframes breathBtn { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    @keyframes rippleAnim {
+        0% { width: 100px; height: 100px; opacity: 0.6; border-width: 4px; }
+        100% { width: 350px; height: 350px; opacity: 0; border-width: 0px; }
+    }
+
+    /* --- 4. TYPOGRAPHY & TAGS --- */
+    .lobby-title {
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        color: #344E41;
+        font-size: 2.2rem;
+        margin-bottom: 10px;
+    }
+
+    .tag-container {
+        display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px;
+    }
+    .tag-pill {
+        background: rgba(255,255,255,0.6);
+        border: 1px solid rgba(52, 78, 65, 0.1);
+        color: #588157;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        font-family: 'Nunito', sans-serif;
+    }
+
+    /* --- 5. RESULT CARDS (Kết quả Match) --- */
+    .match-card {
+        background: #F0FDF4;
+        border: 1px solid #BBF7D0;
+        border-radius: 24px;
+        padding: 25px;
+        margin-top: 30px;
+        text-align: left;
+        display: none; /* Mặc định ẩn */
+        animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    @keyframes slideUpFade {
+        from { opacity: 0; transform: translateY(40px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Status Text */
+    .status-text {
+        height: 24px;
+        transition: opacity 0.3s;
+        font-family: 'Nunito', sans-serif;
+    }
+
+    /* Hiệu ứng hover cho nút Hủy */
+    .hover-danger-bg:hover {
+        background-color: #FEF2F2 !important;
+        border-color: #F87171 !important;
+        color: #DC2626 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lobby-wrapper">
+    <!-- Ambient Lights Background -->
+    <div class="ambient-light light-1"></div>
+    <div class="ambient-light light-2"></div>
+
+    <div class="glass-panel-lobby">
+        
+        <!-- Header Section -->
+        <div class="mb-2">
+            <div class="d-inline-block p-3 rounded-circle bg-white shadow-sm text-success mb-3">
+                <i class="fas fa-spa fa-2x"></i>
+            </div>
+            <h1 class="lobby-title">Kết Nối Tâm Hồn</h1>
+            <p class="text-muted" style="font-size: 0.95rem;">
+                Hệ thống sẽ tìm người lắng nghe phù hợp nhất với trạng thái cảm xúc hiện tại của bạn.
+            </p>
+        </div>
+
+        <!-- Tags Section (Hiển thị tiêu chí tìm kiếm) -->
+        <div class="tag-container">
+            {% if user_tags %}
+                {% for tag in user_tags %}
+                    <span class="tag-pill"><i class="fas fa-hashtag me-1 opacity-50"></i>{{ tag }}</span>
+                {% endfor %}
+            {% else %}
+                <span class="tag-pill">Mọi chủ đề</span>
+            {% endif %}
+            <a href="{{ url_for('dashboard') }}" class="tag-pill bg-white text-secondary" style="border-style: dashed;" title="Sửa Tags"><i class="fas fa-pen"></i></a>
+        </div>
+
+        <!-- THE CORE: Nút Tìm Kiếm Chính -->
+        <div id="core-wrapper" class="core-container">
+            <!-- 3 Vòng sóng (Ripples) -->
+            <div class="ripple"></div>
+            <div class="ripple"></div>
+            <div class="ripple"></div>
+            
+            <!-- Nút Bấm -->
+            <button id="btn-action" class="btn-core" title="Chạm để bắt đầu">
+                <i id="icon-action" class="fas fa-search"></i>
+            </button>
+        </div>
+
+        <!-- Status Display Text -->
+        <div id="status-display" class="status-text fw-bold text-secondary mb-3">
+            Sẵn sàng kết nối...
+        </div>
+
+        <!-- RESULT AREA (Sẽ được JS điền vào) -->
+        <div id="match-result-area"></div>
+
+        <!-- Footer Link -->
+        <div class="mt-4 pt-3 border-top border-light border-opacity-50">
+            <a href="{{ url_for('home') }}" class="text-secondary text-decoration-none small fw-bold">
+                <i class="fas fa-arrow-left me-1"></i> Quay lại trang chủ
+            </a>
+        </div>
+
+    </div>
 </div>
+{% endblock %}
 
+{% block scripts %}
+<!-- Socket.io Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 
-<!-- Manual Room Join (Kept for testing) -->
-<form method="post" action="{{ url_for('chat_room_post') }}" class="buttons" style="margin-top: 20px;">
-  <h4>Tham gia hoặc Tạo phòng (Thủ công)</h4>
-  <div class="join">
-    <input type="text" placeholder="Nhập mã phòng" name="code" />
-    <button type="submit" name="join">Vào phòng</button>
-  </div>
-  <button type="submit" name="create" class="create-btn">Tạo phòng mới</button>
-  <br>
-  <a href="{{ url_for('home') }}" style="margin-top: 20px; display: inline-block;">Quay về trang chủ</a>
-</form>
-
-<!-- Socket.IO JavaScript -->
-<script type="text/javascript">
-    // --- FIX: Wait for the page to load before running JS ---
+<script>
     document.addEventListener('DOMContentLoaded', function() {
-        // NOTE: chat_base.html already includes the socket.io library
-        var socketio = io();
+        const socket = io();
         
-        const findBtn = document.getElementById('find-match-btn');
-        const cancelBtn = document.getElementById('cancel-match-btn');
-        const statusDiv = document.getElementById('match-status');
+        // DOM Elements
+        const btnAction = document.getElementById('btn-action');
+        const iconAction = document.getElementById('icon-action');
+        const coreWrapper = document.getElementById('core-wrapper');
+        const statusText = document.getElementById('status-display');
+        const matchArea = document.getElementById('match-result-area');
+        
+        let isSearching = false;
 
-        // --- Emit Events ---
-        if (findBtn) {
-            findBtn.addEventListener('click', () => {
-                console.log("Emitting 'find_match'...");
-                socketio.emit("find_match");
-                findBtn.style.display = 'none';
-                cancelBtn.style.display = 'block';
-                statusDiv.innerHTML = `<p style="color:blue;">Đang tìm kiếm...</p>`;
-            });
+        // --- HÀM CẬP NHẬT GIAO DIỆN ---
+        function updateUIState(searching) {
+            isSearching = searching;
+            
+            if (searching) {
+                // Chế độ Tìm kiếm: Nút đỏ, Icon X, Sóng radar
+                coreWrapper.classList.add('is-searching');
+                iconAction.className = 'fas fa-times'; 
+                statusText.innerHTML = '<span class="text-success animate-pulse"><i class="fas fa-satellite-dish me-2 fa-spin"></i>Đang quét tần số cảm xúc...</span>';
+                matchArea.style.display = 'none'; // Ẩn kết quả cũ
+            } else {
+                // Chế độ Chờ: Nút xanh, Icon Search
+                coreWrapper.classList.remove('is-searching');
+                iconAction.className = 'fas fa-search'; 
+                statusText.innerHTML = '<span>Sẵn sàng kết nối...</span>';
+            }
         }
 
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', () => {
-                console.log("Emitting 'cancel_match'...");
-                socketio.emit("cancel_match");
-                findBtn.style.display = 'block';
-                cancelBtn.style.display = 'none';
-                statusDiv.innerHTML = `<p style="color:red;">Đã hủy tìm kiếm.</p>`;
-            });
-        }
-        
-        // --- Listen for Server Events ---
-        
-        // Server confirms we are searching
-        socketio.on("finding_match", (data) => {
-            console.log(data.message);
-            statusDiv.innerHTML = `<p style="color:blue;">${data.message}</p>`;
+        // --- SỰ KIỆN CLICK NÚT TRUNG TÂM ---
+        btnAction.addEventListener('click', () => {
+            if (!isSearching) {
+                // Bắt đầu tìm
+                socket.emit("find_match");
+                updateUIState(true);
+            } else {
+                // Hủy tìm
+                socket.emit("cancel_match");
+                updateUIState(false);
+                statusText.innerHTML = '<span class="text-muted">Đã hủy tìm kiếm.</span>';
+            }
         });
 
-        // Server says we cancelled
-        socketio.on("match_cancelled", (data) => {
-            console.log(data.message);
-            statusDiv.innerHTML = `<p style="color:red;">${data.message}</p>`;
-            findBtn.style.display = 'block';
-            cancelBtn.style.display = 'none';
+        // --- SOCKET EVENT LISTENERS ---
+
+        // 1. Xử lý LỖI hoặc ĐANG CÓ PHÒNG (Fix Lỗi Zombie Match)
+        socket.on("match_error", (data) => {
+            updateUIState(false);
+            
+            if (data.action === "redirect_to_active_room" && data.room_code) {
+                // Render Card Cảnh Báo + Nút Hủy
+                matchArea.innerHTML = `
+                    <div class="match-card d-block" style="background: #FFFBF0; border: 1px solid #FDE68A;">
+                        <div class="d-flex align-items-start">
+                            <div class="p-2 bg-warning bg-opacity-10 rounded-circle me-3 text-warning">
+                                <i class="fas fa-exclamation-triangle fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1">Bạn đang có cuộc trò chuyện</h6>
+                                <p class="small mb-2 text-muted" style="line-height: 1.4;">
+                                    Hệ thống ghi nhận bạn đang ở phòng <strong>${data.room_code}</strong>. 
+                                    Bạn muốn quay lại hay kết thúc nó?
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-3">
+                            <!-- Nút 1: Cố gắng vào lại -->
+                            <button id="btn-rejoin" class="btn btn-warning text-dark fw-bold shadow-sm py-2 rounded-pill" style="border: 1px solid rgba(0,0,0,0.05);">
+                                <i class="fas fa-sign-in-alt me-2"></i>Quay lại phòng chat
+                            </button>
+
+                            <!-- Nút 2: Hủy kèo (Force End) -->
+                            <form action="{{ url_for('end_chat') }}" method="POST" style="margin:0;">
+                                <input type="hidden" name="room_code" value="${data.room_code}">
+                                <button type="submit" class="btn btn-light text-danger w-100 fw-bold py-2 rounded-pill hover-danger-bg transition" 
+                                        style="border: 1px solid #FECACA; background: #FEF2F2;"
+                                        onclick="if(!confirm('Hành động này sẽ ngắt kết nối ngay lập tức để bạn có thể tìm người mới.\\n\\nBạn chắc chắn chứ?')) return false; this.innerHTML='<i class=\'fas fa-spinner fa-spin me-2\'></i>Đang xử lý...';">
+                                    <i class="fas fa-unlink me-2"></i>Rời phòng & Tìm mới
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                `;
+                matchArea.style.display = 'block';
+                
+                // Gắn sự kiện cho nút Rejoin
+                document.getElementById('btn-rejoin').addEventListener('click', function() {
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang vào lại...';
+                    this.disabled = true;
+                    socket.emit("join_private_room", { room_code: data.room_code });
+                });
+
+            } else {
+                // Lỗi thông thường (ví dụ: Server lỗi)
+                statusText.innerHTML = `<span class="text-danger fw-bold"><i class="fas fa-exclamation-circle me-1"></i>${data.message}</span>`;
+            }
         });
-        
-        // Server reports an error
-        socketio.on("match_error", (data) => {
-        console.error(data.message);
-        
-        if (data.action === "redirect_to_active_room" && data.room_code) {
-            // Trường hợp: Sinh viên đã matched, server yêu cầu chuyển hướng
-            statusDiv.innerHTML = `
-                <p style="color:orange;">${data.message}</p>
-                <button id="join-active-match-btn" class="create-btn" style="background-color: #ffc107;">
-                    Tiếp tục vào phòng ${data.room_code}
-                </button>
-            `;
+
+        // 2. TÌM THẤY MATCH THÀNH CÔNG
+        socket.on("match_found", (data) => {
+            // Tắt chế độ tìm kiếm nhưng giữ UI đặc biệt (ẩn nút tìm đi)
+            coreWrapper.classList.remove('is-searching');
+            btnAction.style.display = 'none'; 
+            coreWrapper.style.display = 'none'; 
             
-            // Chuyển hướng khi click
-            document.getElementById('join-active-match-btn').addEventListener('click', () => {
-                socketio.emit("join_private_room", { room_code: data.room_code });
-            });
+            statusText.innerHTML = '<span class="text-success fw-bold">Kết nối thành công! 🎉</span>';
+
+            const partnerName = data.matched_with || "Người bạn bí ẩn";
             
-            findBtn.style.display = 'none';
-            cancelBtn.style.display = 'none';
-            
-        } else {
-            // Trường hợp lỗi thông thường
-            statusDiv.innerHTML = `<p style="color:red;">Lỗi: ${data.message}</p>`;
-            findBtn.style.display = 'block';
-            cancelBtn.style.display = 'none';
-        }
-        });
-        
-        // --- THE IMPORTANT PART ---
-        // Server found a match!
-        socketio.on("match_found", (data) => {
-            console.log("Match found!", data);
-            
-            const roomCode = data.room_code;
-            const matchedUser = data.matched_with;
-            const commonTags = data.tags.join(', ');
-            
-            // Show the notification and the "Join" button
-            statusDiv.innerHTML = `
-                <div style="padding: 10px; border: 2px solid green; border-radius: 5px;">
-                    <p style="color:green; font-weight:bold;">Đã tìm thấy người phù hợp!</p>
-                    <p>Phù hợp với: <strong>${matchedUser}</strong></p>
-                    <p>Chủ đề chung: <strong>${commonTags}</strong></p>
-                    <button id="join-match-btn" class="create-btn">Vào phòng tư vấn</button>
+            // Render Card Kết Quả
+            matchArea.innerHTML = `
+                <div class="match-card d-block">
+                    <div class="text-center mb-4">
+                        <div class="d-inline-flex p-3 rounded-circle bg-white shadow-sm mb-3">
+                            <img src="https://ui-avatars.com/api/?name=${partnerName}&background=A3B18A&color=fff" class="rounded-circle shadow-sm" width="64" height="64">
+                        </div>
+                        <h5 class="fw-bold text-dark mb-0">Đã tìm thấy bạn đồng hành</h5>
+                        <small class="text-muted">Sẵn sàng lắng nghe bạn</small>
+                    </div>
+
+                    <div class="bg-white p-3 rounded-4 border mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small text-muted fw-bold">Người tham gia</span>
+                            <span class="small fw-bold text-success">${partnerName}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="small text-muted fw-bold">Mã phòng</span>
+                            <span class="small fw-bold text-dark bg-light px-2 rounded">${data.room_code}</span>
+                        </div>
+                    </div>
+
+                    <button id="btn-join" class="btn btn-primary-custom w-100 py-3 shadow">
+                        Vào phòng ngay <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
                 </div>
             `;
-            
-            // Make the new "Join" button work
-            document.getElementById('join-match-btn').addEventListener('click', () => {
-                console.log(`Emitting 'join_private_room' for ${roomCode}`);
-                statusDiv.innerHTML = `<p style="color:blue;">Đang vào phòng...</p>`;
-                socketio.emit("join_private_room", { room_code: roomCode });
-            });
+            matchArea.style.display = 'block';
 
-            // Hide the find/cancel buttons
-            findBtn.style.display = 'none';
-            cancelBtn.style.display = 'none';
+            // Sự kiện Click Join
+            document.getElementById('btn-join').addEventListener('click', function() {
+                this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang kết nối...';
+                this.disabled = true;
+                socket.emit("join_private_room", { room_code: data.room_code });
+            });
         });
 
-        // Server tells us to redirect
-        socketio.on("redirect_to_room", (data) => {
-            console.log(`Redirecting to ${data.url}`);
+        // 3. CHUYỂN HƯỚNG TỚI PHÒNG CHAT
+        socket.on("redirect_to_room", (data) => {
             window.location.href = data.url;
         });
-
-    }); // --- END of DOMContentLoaded ---
+    });
 </script>
 {% endblock %}
