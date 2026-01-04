@@ -447,7 +447,7 @@
     async function endSession() {
         if(confirm("Bạn muốn kết thúc cuộc trò chuyện và lưu lại nhật ký cảm xúc?")) {
             await fetch('/api/chat/complete', { method: 'POST' });
-            window.location.href = "{{ url_for('dashboard') }}";
+            window.location.href = "{{ url_for('home') }}";
         }
     }
 </script>
