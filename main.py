@@ -111,10 +111,8 @@ def dashboard():
         
     quests_data = pet_system.get_daily_quests(db, session['user_id'])
     # -------------------------------------------
-    
     # KIỂM TRA XEM CÓ ĐANG MATCH KHÔNG
     current_match_code = get_current_match_roomcode(session['user_id'])
-    
     # Gửi thêm biến pet và quests sang template
     return render_template('dashboard.html', 
                            user=user_data, 

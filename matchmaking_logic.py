@@ -4,6 +4,8 @@ def check_student_urgency(student):
     return True if student["urgency"] == 1 else False
 
 def check_student_topic_with_therapist_expertise(student, therapist):
+    if student["topic"] == "General":
+        return True
     return True if student["topic"] == therapist["expertise"] else False
 
 def write_matchmaking_result(student, therapist):
