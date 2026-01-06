@@ -1,19 +1,307 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-    <meta charset="UTF-8" />
-    <title>Chat App</title>
-    <link
-    rel="stylesheet"
-    href="{{url_for('static', filename='chat_style.css')}}"
-    />
-    <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
-    integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
-    crossorigin="anonymous"
-    ></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SoulMate Workspace{% endblock %}</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Nunito:wght@600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main_style.css') }}">
+    
+    <style>
+        :root {
+            /* Palette cao cấp */
+            --glass-surface: rgba(255, 255, 255, 0.75);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.6);
+            --glass-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.1);
+            --neon-glow: 0 0 20px rgba(88, 129, 87, 0.2);
+            --blur-strength: 16px;
+            --radius-xl: 24px;
+            --header-height: 76px; /* Chiều cao ước lượng của Navbar */
+        }
+
+        /* --- CẤU TRÚC APP (Tràn màn hình, không cuộn body) --- */
+        body {
+            display: flex; flex-direction: column;
+            height: 100vh; /* Khóa cứng chiều cao */
+            overflow: hidden; /* Chặn thanh cuộn của trình duyệt */
+            background-color: #FEFAE0;
+            
+            /* Nền Artistic: Noise + Gradient động */
+            background-image: 
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E"),
+                radial-gradient(circle at top left, rgba(163, 177, 138, 0.4), transparent 40%),
+                radial-gradient(circle at bottom right, rgba(88, 129, 87, 0.2), transparent 40%);
+            background-size: auto, cover, cover;
+            background-repeat: repeat, no-repeat, no-repeat;
+        }
+
+        /* Tinh chỉnh Navbar để khớp với Workspace */
+        .navbar-custom {
+            flex-shrink: 0; /* Không cho phép header bị co lại */
+            z-index: 100;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.05);
+            /* Giữ nguyên màu của bạn nhưng thêm chút trong suốt nếu muốn modern */
+        }
+
+        /* --- BENTO GRID LAYOUT (Vùng làm việc chính) --- */
+        .workspace-wrapper {
+            flex: 1; /* Chiếm toàn bộ không gian còn lại */
+            display: flex;
+            gap: 20px;
+            padding: 20px 20px 25px; /* Căn lề thoáng */
+            width: 100%;
+            max-width: 1920px;
+            margin: 0 auto;
+            position: relative;
+            perspective: 1000px; /* Chuẩn bị cho hiệu ứng 3D nhẹ */
+        }
+
+        /* --- GLASS PANELS (Các khung chứa nội dung) --- */
+        .glass-panel {
+            background: var(--glass-surface);
+            backdrop-filter: blur(var(--blur-strength));
+            -webkit-backdrop-filter: blur(var(--blur-strength));
+            border: var(--glass-border);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--glass-shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        
+        /* Hiệu ứng Hover nhẹ cho Panel */
+        .glass-panel:hover {
+            box-shadow: 0 15px 50px 0 rgba(31, 38, 135, 0.15);
+            border-color: #fff;
+        }
+
+        /* 1. SIDEBAR TRÁI (Menu/List) */
+        .panel-left {
+            width: 340px;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.5); /* Nhạt hơn để tạo lớp */
+        }
+
+        /* 2. MAIN STAGE (Chat/Content) - Trọng tâm */
+        .panel-center {
+            flex: 1;
+            background: #ffffff; /* Nền trắng sạch sẽ nhất cho nội dung */
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 3. SIDEBAR PHẢI (Info/Tools) */
+        .panel-right {
+            width: 300px;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* --- UTILS & ANIMATIONS --- */
+        /* Scrollbar tàng hình nhưng hiện khi hover */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(163, 177, 138, 0.0); border-radius: 10px; transition: 0.3s; }
+        *:hover::-webkit-scrollbar-thumb { background: rgba(163, 177, 138, 0.5); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary-main) !important; }
+
+        /* Loader */
+        #page-loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #FEFAE0; z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.6s ease, visibility 0.6s;
+        }
+        .loader-spinner {
+            width: 60px; height: 60px;
+            border: 6px solid #A3B18A;
+            border-top-color: #344E41;
+            border-radius: 50%;
+            animation: spin 1s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loaded #page-loader { opacity: 0; visibility: hidden; }
+
+        /* Responsive Mobile */
+        @media (max-width: 992px) {
+            .panel-left, .panel-right { display: none; } /* Tạm ẩn 2 bên trên Mobile */
+            .workspace-wrapper { padding: 0; }
+            .glass-panel { border-radius: 0; border: none; }
+        }
+    </style>
+    {% block head %}{% endblock %}
 </head>
 <body>
-    <div class="content">{% block content %} {% endblock %}</div>
+
+    <div id="page-loader">
+        <div class="text-center">
+            <div class="loader-spinner mb-3 mx-auto"></div>
+            <div class="small fw-bold text-dark" style="letter-spacing: 2px;">SOULMATE WORKSPACE</div>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('home') }}">
+                <i class="fas fa-leaf me-2"></i>SoulMate
+            </a>
+            
+            <button class="navbar-toggler border-0 shadow-none text-white opacity-75" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <i class="fas fa-bars fs-4"></i>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('home') }}">Trang chủ</a></li>
+                    
+                    {% if session.get('user_id') %}
+                        {% if session.get('role') == 'therapist' %}
+                            <li class="nav-item"><a class="nav-link fw-bold active" href="{{ url_for('therapist_dashboard_redirect') }}">Góc Chuyên Gia</a></li>
+                        {% elif session.get('role') == 'admin' %}
+                            <li class="nav-item"><a class="nav-link fw-bold text-danger" href="{{ url_for('admin_dashboard') }}">Admin Panel</a></li>
+                        {% else %}
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('pet_page') }}">Thú cưng</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('chat_home') }}">Tư vấn</a></li>
+                        {% endif %}
+
+                        <li class="nav-item dropdown ms-lg-3 mt-3 mt-lg-0">
+                            <a class="nav-link nav-link-avatar dropdown-toggle p-0" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <div class="d-flex align-items-center gap-2">
+                                    <img src="https://ui-avatars.com/api/?name={{ session.get('username') }}&background=E9EDC9&color=344E41&bold=true" class="user-avatar-nav shadow-sm" alt="User">
+                                    <span class="d-lg-none text-white fw-bold">{{ session.get('username') }}</span>
+                                </div>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-4 mt-3 p-2 animate-float" style="min-width: 200px;">
+                                <li class="px-3 py-2">
+                                    <small class="text-muted d-block">Xin chào,</small>
+                                    <span class="fw-bold text-dark">{{ session.get('username') }}</span>
+                                </li>
+                                <li><hr class="dropdown-divider opacity-25"></li>
+                                <li><a class="dropdown-item rounded-3" href="{{ url_for('dashboard') }}"><i class="fas fa-user-circle me-2 text-success"></i>Hồ sơ cá nhân</a></li>
+                                <li><hr class="dropdown-divider opacity-25"></li>
+                                <li><a class="dropdown-item rounded-3 text-danger fw-bold" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item ms-lg-3 mt-3 mt-lg-0">
+                            <button class="btn btn-primary-custom shadow-sm" data-bs-toggle="modal" data-bs-target="#authModal">
+                                Bắt đầu ngay <i class="fas fa-arrow-right ms-1 small"></i>
+                            </button>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="workspace-wrapper">
+        
+        {% block left_panel %}
+        <aside class="glass-panel panel-left animate__animated animate__fadeInLeft">
+            <div class="d-flex align-items-center justify-content-center h-100 text-muted opacity-50 flex-column">
+                <i class="far fa-list-alt fa-3x mb-3"></i>
+                <span class="small fw-bold">MENU / LIST</span>
+            </div>
+        </aside>
+        {% endblock %}
+
+        <main class="glass-panel panel-center animate__animated animate__zoomIn">
+            {% block chat_content %}
+            <div class="d-flex align-items-center justify-content-center h-100 flex-column text-muted">
+                <div class="spinner-border text-success mb-3" role="status"></div>
+                <span class="small">Đang tải dữ liệu không gian...</span>
+            </div>
+            {% endblock %}
+        </main>
+
+        {% block right_panel %}
+        {% endblock %}
+        
+    </div>
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="toast align-items-center border-0 mb-2 shadow-lg rounded-4 overflow-hidden" role="alert">
+                        <div class="d-flex border-start border-5 {{ 'border-success' if category == 'success' else 'border-danger' }}">
+                            <div class="toast-body bg-white py-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas {{ 'fa-check-circle text-success' if category == 'success' else 'fa-exclamation-circle text-danger' }} fs-5 me-2"></i>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-dark">{{ 'Thông báo' if category == 'success' else 'Chú ý' }}</h6>
+                                        <small class="text-muted">{{ message }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    
+    <script>
+        // Init Animation
+        AOS.init({ duration: 800, once: true });
+
+        // Remove Loader
+        window.addEventListener('load', () => {
+            document.body.classList.add('loaded');
+        });
+
+        // Auto Show Toasts (Flask Flash)
+        document.addEventListener('DOMContentLoaded', () => {
+            var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+            var toastList = toastElList.map(function(toastEl) {
+                return new bootstrap.Toast(toastEl, { autohide: true, delay: 4000 });
+            });
+            toastList.forEach(toast => toast.show());
+        });
+
+        // JS Toast (Dùng cho SocketIO / Fetch API)
+        function showToast(message, type = 'info') {
+            const container = document.querySelector('.toast-container');
+            const el = document.createElement('div');
+            const colorClass = type === 'success' ? 'border-success' : (type === 'error' ? 'border-danger' : 'border-primary');
+            const iconClass = type === 'success' ? 'fa-check-circle text-success' : (type === 'error' ? 'fa-exclamation-circle text-danger' : 'fa-info-circle text-primary');
+            const title = type === 'success' ? 'Thành công' : (type === 'error' ? 'Lỗi' : 'Thông tin');
+
+            el.className = 'toast align-items-center border-0 mb-2 shadow-lg rounded-4 overflow-hidden animate__animated animate__fadeInUp bg-white';
+            el.innerHTML = `
+                <div class="d-flex border-start border-5 ${colorClass}">
+                    <div class="toast-body w-100 py-3">
+                        <div class="d-flex align-items-center">
+                            <i class="fas ${iconClass} fs-4 me-3"></i>
+                            <div>
+                                <h6 class="fw-bold mb-0 text-dark">${title}</h6>
+                                <small class="text-muted">${message}</small>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+            container.appendChild(el);
+            new bootstrap.Toast(el).show();
+        }
+    </script>
+    
+    {% block scripts %}{% endblock %}
 </body>
 </html>
