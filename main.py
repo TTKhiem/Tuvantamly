@@ -10,6 +10,7 @@ import socket_handlers
 import pet_system
 import random
 from datetime import datetime
+from chatbot import analyze_student_state
 from socket_helperfuncs import generate_unique_code1, get_user_data, notify_users_of_new_match,get_user_data_by_id
 from socket_handlers import load_room_data_from_sqlite
 from matchmaking_repository import get_all_matched_roomcodes_for_therapist,delete_match_by_roomcode,get_current_match_roomcode,get_all_users,get_all_matchmaking_results,admin_create_match_result
@@ -254,8 +255,8 @@ def api_chat_complete():
 # --- ROUTES CHO THERAPIST ---
 
 
-@app.route('/therapist/messenger')
-def therapist_messenger():
+@app.route('/therapist/dashboard')
+def therapist_dashboard():
     if session.get('role') != 'therapist' or 'user_id' not in session:
         flash("Bạn không có quyền truy cập trang này!", "error")
         return redirect(url_for('home'))
@@ -268,22 +269,32 @@ def therapist_messenger():
         room_code = match["roomcode"]
         student_user_id = match["student_user_id"]
         
-        # 1. Khôi phục phòng vào bộ nhớ nếu cần (Quan trọng)
         load_room_data_from_sqlite(room_code) 
             
-        # 2. Thu thập dữ liệu
         if room_code in rooms:
             student_data = get_user_data_by_id(student_user_id)
-            messages = rooms[room_code]["messages"]
+            messages = rooms[room_code]["messages"] # Lấy full lịch sử
             last_message = messages[-1] if messages else None
             
+            # # --- [UPDATE] GỌI AI ĐỂ PHÂN TÍCH ---
+            # # Chuyển đổi format messages của rooms (dict) sang format của chatbot (list dict role/message)
+            # formatted_history = []
+            # for m in messages:
+            #     # Map tên user thành role để AI hiểu
+            #     role = "Sinh viên" if m['name'] == student_data['username'] else "Therapist"
+            #     formatted_history.append({"role": role, "message": m['message']})
+            
+            # # Gọi hàm phân tích mới
+            # ai_summary_points = chatbot.analyze_student_state(formatted_history)
+            # # ------------------------------------
+
             active_chat_rooms.append({
                 "room_code": room_code,
                 "student_name": student_data["username"] if student_data else f"Sinh viên {student_user_id}",
                 "matched_at": match["matched_at"],
                 "last_message": last_message,
                 "ai_summary": get_ai_summary_for_student(student_user_id),
-                "messages": messages, # Truyền lịch sử tin nhắn để JS load nhanh
+                "messages": messages, 
             })
     
     # Thiết lập phòng mặc định và truyền dữ liệu ban đầu
@@ -307,7 +318,7 @@ def therapist_messenger():
 
 @app.route('/therapist/dashboard')
 def therapist_dashboard_redirect():
-    return redirect(url_for('therapist_messenger'))
+    return redirect(url_for('therapist_dashboard'))
 
 # @app.route('/therapist/workspace')
 # def therapist_workspace():

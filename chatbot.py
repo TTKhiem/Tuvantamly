@@ -6,9 +6,16 @@ import re
 import google.generativeai as genai
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
+API_KEYS = {
+    "soulmate": None,
+    "pet": None,
+    "therapist": None
+}
+
 # --- CẤU HÌNH GLOBAL ---
-chatbot_client = None 
-pet_bot_client = None   
+chatbot_model = None 
+pet_bot_model = None
+therapist_bot_model = None   
 MODEL_ID = "gemini-2.5-flash" # Dùng bản flash mới nhất cho nhanh và rẻ, hoặc 1.5-pro nếu cần thông minh hơn
 
 # Cấu hình an toàn: Cho phép nói về các chủ đề buồn/tâm lý (BLOCK_ONLY_HIGH)
@@ -54,29 +61,56 @@ Quy tắc:
 - Không đưa ra lời khuyên phức tạp, chỉ động viên tinh thần.
 """
 
+THERAPIST_ASSISTANT_PROMPT = """
+Bạn là AI Supervisor (Trợ lý Giám sát Lâm sàng) hỗ trợ cho một Chuyên gia tâm lý (Therapist).
+Nhiệm vụ của bạn không phải là nói chuyện với bệnh nhân, mà là PHÂN TÍCH dữ liệu hội thoại để hỗ trợ Therapist.
+
+Nguyên tắc phân tích:
+1. Khách quan, dựa trên bằng chứng văn bản.
+2. Sử dụng thuật ngữ tâm lý học cơ bản (CBT, Cảm xúc, Cơ chế phòng vệ).
+3. Cực kỳ chú ý đến các dấu hiệu Rủi ro (Tự hại, Tự sát).
+4. Output phải ngắn gọn, súc tích, đi thẳng vào vấn đề để Therapist đọc nhanh.
+"""
+
 # --- 2. HÀM TIỆN ÍCH (HELPER FUNCTIONS) ---
 
-def init_gemini_clients(chatbot_api_key, petbot_api_key):
-    """Khởi tạo client với cấu hình an toàn."""
-    global chatbot_client, pet_bot_client
+def use_key(bot_type):
+    """
+    Chuyển đổi cấu hình Global sang key của bot tương ứng.
+    bot_type: 'soulmate', 'pet', hoặc 'therapist'
+    """
+    key = API_KEYS.get(bot_type)
+    if key:
+        genai.configure(api_key=key)
+    else:
+        # Fallback nếu không có key riêng thì dùng key soulmate làm mặc định
+        if API_KEYS["soulmate"]:
+            genai.configure(api_key=API_KEYS["soulmate"])
 
-    if chatbot_api_key:
-        try:
-            genai.configure(api_key=chatbot_api_key)
-            chatbot_client = genai.GenerativeModel(model_name=MODEL_ID)
-            print("✅ SoulMate AI (Counseling) ready.")
-        except Exception as e:
-            print(f"❌ Error initializing SoulMate AI: {e}")
+def init_gemini_clients(chatbot_key, pet_key, therapist_key=None):
+    """Lưu trữ key và khởi tạo model object."""
+    global chatbot_model, pet_bot_model, therapist_bot_model, API_KEYS
 
-    if petbot_api_key:
-        try:
-            # Nếu dùng chung key thì không cần configure lại, nhưng để an toàn cứ check
-            if petbot_api_key != chatbot_api_key:
-                genai.configure(api_key=petbot_api_key)
-            pet_bot_client = genai.GenerativeModel(model_name=MODEL_ID)
-            print("✅ Pet AI ready.")
-        except Exception as e:
-            print(f"❌ Error initializing Pet AI: {e}")
+    # Lưu key vào dictionary
+    API_KEYS["soulmate"] = chatbot_key
+    API_KEYS["pet"] = pet_key if pet_key else chatbot_key
+    API_KEYS["therapist"] = therapist_key if therapist_key else chatbot_key
+
+    # Khởi tạo các Model Object (Model object không giữ key, nó dùng config global tại thời điểm gọi lệnh)
+    try:
+        chatbot_model = genai.GenerativeModel(model_name=MODEL_ID)
+        print("✅ SoulMate Model initialized.")
+    except Exception as e: print(f"❌ Error SoulMate Model: {e}")
+
+    try:
+        pet_bot_model = genai.GenerativeModel(model_name=MODEL_ID)
+        print("✅ Pet Model initialized.")
+    except Exception as e: print(f"❌ Error Pet Model: {e}")
+
+    try:
+        therapist_bot_model = genai.GenerativeModel(model_name=MODEL_ID, system_instruction=THERAPIST_ASSISTANT_PROMPT)
+        print("✅ Therapist Assistant Model initialized.")
+    except Exception as e: print(f"❌ Error Therapist Model: {e}")
 
 def clean_json_response(text):
     """Làm sạch chuỗi JSON do AI trả về (xóa markdown, fix lỗi quote)."""
@@ -93,11 +127,12 @@ def clean_json_response(text):
 # --- 3. CHỨC NĂNG CHÍNH: PHÂN TÍCH & TRẢ LỜI (CHATBOT TƯ VẤN) ---
 
 def analyze_user_input(message):
+    use_key("soulmate")
     """
     Phân tích tâm lý người dùng đằng sau tin nhắn.
     Trả về: Intent, Sentiment, Risk Level.
     """
-    if not chatbot_client: 
+    if not chatbot_model: 
         return {"intent": "unknown", "sentiment": "neutral", "risk_level": "low"}
     
     prompt = f"""
@@ -112,7 +147,7 @@ def analyze_user_input(message):
     """
     
     try:
-        response = chatbot_client.generate_content(prompt, safety_settings=SAFETY_SETTINGS)
+        response = chatbot_model.generate_content(prompt, safety_settings=SAFETY_SETTINGS)
         data = clean_json_response(response.text)
         if data: return data
         return {"intent": "unknown", "sentiment": "neutral", "risk_level": "low"}
@@ -121,11 +156,12 @@ def analyze_user_input(message):
         return {"intent": "unknown", "sentiment": "neutral", "risk_level": "low"}
 
 def generate_soulmate_response(user_message, history=[]):
+    use_key("soulmate")
     """
     Sinh câu trả lời của SoulMate dựa trên lịch sử chat.
     Đây là hàm quan trọng nhất cho tính năng Chat.
     """
-    if not chatbot_client: return FALLBACK_RESPONSES["default"]
+    if not chatbot_model: return FALLBACK_RESPONSES["default"]
 
     try:
         # Chuyển đổi lịch sử chat của app sang format của Gemini
@@ -140,7 +176,7 @@ def generate_soulmate_response(user_message, history=[]):
             gemini_history.append({"role": role, "parts": [msg['message']]})
         
         # Khởi tạo chat session
-        chat = chatbot_client.start_chat(history=gemini_history)
+        chat = chatbot_model.start_chat(history=gemini_history)
         
         # Gửi tin nhắn mới
         response = chat.send_message(user_message, safety_settings=SAFETY_SETTINGS)
@@ -149,12 +185,11 @@ def generate_soulmate_response(user_message, history=[]):
     except Exception as e:
         print(f"Generate Error: {e}")
         return FALLBACK_RESPONSES["default"]
-
-# --- 4. CHỨC NĂNG HỖ TRỢ: TAGGING & SUMMARY ---
-
+    
 def extract_tags_from_conversation(history_list):
+    use_key("soulmate") 
     """Tự động gắn Tag cho user dựa trên toàn bộ cuộc hội thoại."""
-    if not chatbot_client or not history_list: return "General"
+    if not chatbot_model or not history_list: return "General"
 
     transcript = "\n".join([f"{h['role']}: {h['message']}" for h in history_list])
     
@@ -169,65 +204,93 @@ def extract_tags_from_conversation(history_list):
     """
     
     try:
-        response = chatbot_client.generate_content(prompt)
+        response = chatbot_model.generate_content(prompt)
         return response.text.strip().replace(".", "")
     except Exception:
         return "General"
+    
+# --- 4. CÁC HÀM CHO THERAPIST (DÙNG KEY THERAPIST) ---
 
 def summarize_conversation(history_list):
-    """Tóm tắt cho Therapist."""
-    if not chatbot_client: return "Lỗi kết nối AI."
+    use_key("therapist") # <--- Switch sang key Therapist
+    if not therapist_bot_model: return "Chưa kết nối AI Trợ lý."
     
     transcript = "\n".join([f"{h['role']}: {h['message']}" for h in history_list])
+    prompt = f"Tóm tắt hội thoại sau:\n{transcript}\n..." # (Giữ nguyên prompt cũ)
+    
+    try:
+        response = therapist_bot_model.generate_content(prompt)
+        return response.text.strip()
+    except Exception as e:
+        return "Lỗi tóm tắt."
+
+def analyze_student_state(user_id, history_list):
+    use_key("therapist") # <--- Switch sang key Therapist
+    if not therapist_bot_model: return [{"point": "Lỗi kết nối AI."}]
+    # Nếu lịch sử trống, trả về mặc định để tránh lỗi Gemini
+    if not history_list:
+        return [{"point": "Chưa có dữ liệu hội thoại."}]
+
+    transcript = "\n".join([f"{h['role']}: {h['message']}" for h in history_list[-15:]])
     prompt = f"""
-    Đóng vai trợ lý bác sĩ tâm lý. Tóm tắt hồ sơ sau (Tiếng Việt):
-    ---
+    Phân tích đoạn chat sau và trả về JSON gồm 3 điểm quan trọng (point):
     {transcript}
-    ---
-    Output format:
-    - Vấn đề chính: ...
-    - Cảm xúc: ...
-    - Đánh giá rủi ro: ...
-    - Khuyến nghị sơ bộ: ...
+    Output JSON format: [ {{"point": "..."}}, ... ]
     """
     try:
-        return chatbot_client.generate_content(prompt).text
-    except Exception:
-        return "Không thể tóm tắt."
+        response = therapist_bot_model.generate_content(prompt)
+        data = clean_json_response(response.text)
+        if data: return data
+        return [{"point": "Lỗi định dạng."}]
+    except Exception as e:
+        print(f"Analyze State Error: {e}")
+        return [{"point": "Lỗi phân tích."}]
 
 def get_therapist_suggestions(student_msg, context):
-    """Gợi ý câu trả lời cho Therapist trong thời gian thực."""
-    if not chatbot_client: return None
-    
-    context_str = "\n".join([f"{m['role']}: {m['message']}" for m in context[-3:]])
-    prompt = f"""
-    Context: {context_str}
-    User: "{student_msg}"
-    
-    Gợi ý 3 câu trả lời ngắn cho Therapist (JSON):
-    {{
-        "empathetic": "Thấu cảm...",
-        "probing": "Đặt câu hỏi khai thác...",
-        "action": "Hướng giải pháp..."
-    }}
+    use_key("therapist") # <--- Switch sang key Therapist
     """
+    Gợi ý câu trả lời cho Therapist (Real-time).
+    Dùng Therapist Bot để "nhắc bài".
+    """
+    if not therapist_bot_model: return None
+    
+    # Lấy bối cảnh 5 tin gần nhất
+    context_str = "\n".join([f"{m['role']}: {m['message']}" for m in context[-5:]])
+    
+    prompt = f"""
+    Bạn đang hỗ trợ Therapist trả lời Sinh viên.
+    Bối cảnh hội thoại:
+    {context_str}
+    
+    Tin nhắn mới nhất của Sinh viên: "{student_msg}"
+    
+    Hãy đưa ra 3 gợi ý phản hồi theo 3 hướng tiếp cận khác nhau (Output JSON):
+    {{
+        "empathetic": "Hướng thấu cảm, xoa dịu (Validation)",
+        "probing": "Hướng đặt câu hỏi khai thác sâu (Exploration)",
+        "cbt_action": "Hướng giải pháp/Nhận thức hành vi (Solution-focused)"
+    }}
+    Tiếng Việt, giọng văn tự nhiên, chuyên nghiệp nhưng gần gũi.
+    """
+    
     try:
-        res = chatbot_client.generate_content(prompt)
+        res = therapist_bot_model.generate_content(prompt)
         return clean_json_response(res.text)
-    except Exception:
+    except Exception as e:
+        print(f"Suggestion Error: {e}")
         return None
-
 # --- 5. CHỨC NĂNG PET (VUI VẺ) ---
 
 def get_pet_chat_response(pet_name, user_message):
+    use_key("pet")
     """Pet phản hồi nhanh, vui vẻ."""
-    if not pet_bot_client: return f"{pet_name} đang ngủ... Zzz..."
+    if not pet_bot_model: return f"{pet_name} đang ngủ... Zzz..."
 
     try:
         # Prompt được format với tên Pet cụ thể
         system = PET_SYSTEM_PROMPT.format(pet_name=pet_name)
         
-        chat = pet_bot_client.start_chat(history=[
+        chat = pet_bot_model.start_chat(history=[
             {"role": "user", "parts": [system]},
             {"role": "model", "parts": [f"Gâu gâu! {pet_name} đã sẵn sàng! 🦴"]}
         ])

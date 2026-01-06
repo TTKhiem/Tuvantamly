@@ -29,9 +29,10 @@ app.secret_key = os.getenv("APP_SECRET")
 # Lấy các API key từ file .env
 chatbot_api_key = os.getenv("GOOGLE_CHATBOT_API_KEY")
 petbot_api_key = os.getenv("GOOGLE_PETBOT_API_KEY")
+therapist_api_key = os.getenv("GOOGLE_THERAPIST_API_KEY")
 
 # Khởi tạo các Gemini client với các key tương ứng
-chatbot.init_gemini_clients(chatbot_api_key, petbot_api_key)
+chatbot.init_gemini_clients(chatbot_api_key, petbot_api_key, therapist_api_key)
 
 # Đăng ký các hàm database với app
 database.init_app(app)
