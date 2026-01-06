@@ -309,12 +309,12 @@ def therapist_messenger():
 def therapist_dashboard_redirect():
     return redirect(url_for('therapist_messenger'))
 
-@app.route('/therapist/workspace')
-def therapist_workspace():
-    if session.get('role') != 'therapist':
-        flash("Chỉ dành cho chuyên gia!", "error")
-        return redirect(url_for('home'))
-    return render_template('therapist_chat.html')
+# @app.route('/therapist/workspace')
+# def therapist_workspace():
+#     if session.get('role') != 'therapist':
+#         flash("Chỉ dành cho chuyên gia!", "error")
+#         return redirect(url_for('home'))
+#     return render_template('therapist_chat.html')
 
 
 
