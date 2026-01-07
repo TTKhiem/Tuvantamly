@@ -270,6 +270,35 @@
         background: var(--primary-med); color: #fff;
     }
 
+    /* Button Tìm sinh viên mới - Style giống navbar */
+    .btn-find-student {
+        background: var(--primary-med); /* #588157 */
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: 0 2px 8px rgba(88, 129, 87, 0.2);
+    }
+    .btn-find-student:hover {
+        background: var(--primary-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(88, 129, 87, 0.3);
+        color: #fff;
+        text-decoration: none;
+    }
+    .btn-find-student:active {
+        transform: translateY(0);
+    }
+
 </style>
 {% endblock %}
 
@@ -277,16 +306,18 @@
 {% block left_panel %}
 <aside class="glass-panel panel-left animate__animated animate__fadeInLeft">
     <div class="p-4 pb-2">
-        <!-- [MOD] Header with Link to Chat Room -->
-        <div class="d-flex justify-content-between align-items-center mb-2">
+        <!-- [MOD] Header with Button Find Student -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold mb-0" style="color: var(--primary-dark); font-family: 'Playfair Display', serif;">
                 Hồ sơ tư vấn
             </h5>
-            <!-- ĐÃ ĐỔI THÀNH THẺ A ĐỂ LINK RA CHAT_HOME -->
-            <a href="{{ url_for('chat_home') }}" class="btn-icon-search shadow-sm" title="Tìm kiếm sinh viên">
-                <i class="fas fa-search" style="font-size: 0.8rem;"></i>
-            </a>
         </div>
+        
+        <!-- Button Tìm sinh viên mới -->
+        <a href="{{ url_for('chat_home') }}" class="btn-find-student mb-3">
+            <i class="fas fa-user-plus"></i>
+            <span>Tìm sinh viên mới</span>
+        </a>
         
         <!-- Search input hidden but functional (Visual improved) -->
         <div class="search-box-wrapper d-flex align-items-center">
