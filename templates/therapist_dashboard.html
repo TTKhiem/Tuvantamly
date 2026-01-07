@@ -470,25 +470,22 @@
             <!-- SECTION 3: BEAUTIFUL SUGGESTIONS -->
             <div class="ai-section-title mt-4">
                 <i class="fas fa-magic text-warning"></i> Gợi ý phản hồi
-                <i class="fas fa-sync-alt ms-auto text-muted cursor-pointer" onclick="alert('Làm mới gợi ý AI...')" style="font-size: 0.8rem;"></i>
+                <i class="fas fa-sync-alt ms-auto text-muted cursor-pointer" 
+                onclick="refreshAiSuggestions()" 
+                title="Xóa cache và làm mới"
+                style="font-size: 0.8rem;"></i>
             </div>
             
             <div id="ai-suggestions-area">
-                <!-- [MOD] Beautiful Chip Styles -->
-                <button class="suggestion-chip chip-empathy" onclick="fillInput(this)">
-                    <span class="chip-label text-danger"><i class="far fa-heart"></i> Thấu cảm</span>
-                    <span class="chip-content">Anh hiểu em đang cảm thấy rất áp lực và mệt mỏi...</span>
-                </button>
-                
-                <button class="suggestion-chip chip-question" onclick="fillInput(this)">
-                    <span class="chip-label text-primary"><i class="far fa-question-circle"></i> Khai thác</span>
-                    <span class="chip-content">Điều gì cụ thể khiến em lo lắng nhất lúc này?</span>
-                </button>
-                
-                <button class="suggestion-chip chip-safe" onclick="fillInput(this)">
-                    <span class="chip-label text-success"><i class="fas fa-shield-alt"></i> Trấn an</span>
-                    <span class="chip-content">Đây là không gian an toàn, em cứ thoải mái chia sẻ nhé.</span>
-                </button>
+                <div class="text-center py-4">
+                    <p class="text-muted small mb-3 opacity-75">
+                        AI sẽ đọc tin nhắn của sinh viên<br>và gợi ý cách trả lời.
+                    </p>
+                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm" 
+                            onclick="triggerManualSuggestions()">
+                        <i class="fas fa-magic me-2"></i>Gợi ý câu trả lời
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -501,6 +498,7 @@
 {% block scripts %}
 <script>
     let activeStudentId = null; // Biến lưu ID sinh viên hiện tại
+    const suggestionCache = new Map(); // Cache gợi ý AI để đỡ tốn tiền gọi lại
     const summaryCache = new Map(); // Cache kết quả AI để đỡ tốn tiền gọi lại
     const ALL_ROOM_DATA = JSON.parse('{{ active_chat_rooms_json | safe }}');
     const INITIAL_MESSAGES = JSON.parse('{{ initial_messages_json | safe }}');
@@ -535,13 +533,15 @@
     }
 
     // [JS LOGIC] Switch Room
+    // [CODE ĐÃ TỐI ƯU HÓA]
     window.switchRoom = function(el) {
         const newCode = el.getAttribute('data-room-code');
         const sName = el.getAttribute('data-student-name');
-        const sId = el.getAttribute('data-student-id'); // Lấy ID sinh viên
+        const sId = el.getAttribute('data-student-id'); 
 
         activeStudentId = sId;
         
+        // 1. Xử lý UI Active
         document.querySelectorAll('.patient-list-item').forEach(e => e.classList.remove('active'));
         el.classList.add('active');
 
@@ -553,12 +553,10 @@
         
         toggleView(true);
         
-        // Kiểm tra xem phòng này đã có kết quả phân tích trong Cache chưa?
+        // 2. Xử lý Summary (Tóm tắt ca) - Check Cache
         if (summaryCache.has(newCode)) {
-            // Có rồi -> Hiện luôn, không tốn request
             renderAiSummary(summaryCache.get(newCode));
         } else {
-            // Chưa có -> Hiện hướng dẫn bấm nút
             ui.summary.innerHTML = `
                 <li class="text-center text-muted small py-4">
                     <i class="fas fa-brain fa-2x mb-2 opacity-25"></i><br>
@@ -566,20 +564,107 @@
                 </li>`;
         }
 
-        socketio.emit('join_room_request', { room_code: newCode });
-
-        ui.container.innerHTML = ''; 
-        if (historyCache.has(newCode)) {
-            // Dữ liệu đã được cache
-            renderMessages(historyCache.get(newCode));
-        } else if (rData && rData.messages && rData.messages.length > 0) {
-            // Load từ ALL_ROOM_DATA (dữ liệu từ backend)
-            historyCache.set(newCode, rData.messages);
-            renderMessages(rData.messages);
+        // 3. Xử lý Suggestion (Gợi ý phản hồi) - Check Cache
+        if (suggestionCache.has(newCode)) {
+            renderSuggestions(suggestionCache.get(newCode));
         } else {
-            ui.container.innerHTML = '<div class="text-center mt-5 text-muted small opacity-50">Bắt đầu cuộc trò chuyện mới.</div>';
+            resetSuggestionUI();
+        }
+
+        // 4. Xử lý Tin nhắn (Render Messages) - ĐÃ SỬA LỖI LẶP CODE
+        ui.container.innerHTML = ''; 
+        let currentMessages = [];
+
+        // Ưu tiên 1: Lấy từ Cache phiên hiện tại
+        if (historyCache.has(newCode)) {
+            currentMessages = historyCache.get(newCode);
+        } 
+        // Ưu tiên 2: Lấy từ dữ liệu gốc server trả về (ALL_ROOM_DATA)
+        else if (ALL_ROOM_DATA) {
+             const rData = ALL_ROOM_DATA.find(r => r.room_code === newCode);
+             if (rData && rData.messages) {
+                 // Lưu vào cache ngay để lần sau dùng lại
+                 historyCache.set(newCode, rData.messages);
+                 currentMessages = rData.messages;
+             }
+        }
+
+        // Render ra màn hình
+        renderMessages(currentMessages);
+
+        // 5. Kết nối Socket
+        socketio.emit('join_room_request', { room_code: newCode });
+    };
+
+    function resetSuggestionUI() {
+        const area = document.getElementById('ai-suggestions-area');
+        area.innerHTML = `
+            <div class="text-center py-4">
+                <p class="text-muted small mb-3 opacity-75">
+                    AI sẽ đọc tin nhắn của sinh viên<br>và gợi ý cách trả lời.
+                </p>
+                <button class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm" 
+                        onclick="triggerManualSuggestions()">
+                    <i class="fas fa-magic me-2"></i>Gợi ý câu trả lời
+                </button>
+            </div>`;
+    }
+
+    window.triggerManualSuggestions = function() {
+        if (!activeRoomCode) {
+            // Trường hợp chưa chọn phòng: Có thể dùng alert hoặc update UI tùy ý
+            // Nhưng thường UI đã disable nút nếu chưa active phòng, nên alert ở đây tạm ổn
+            alert("Vui lòng chọn phòng chat trước."); 
+            return;
+        }
+
+        // Lấy lịch sử từ cache
+        let fullHistory = historyCache.get(activeRoomCode) || [];
+        
+        // --- EDGE CASE 1: Lịch sử hoàn toàn trống ---
+        if (fullHistory.length === 0) {
+            showEmptyStateSuggestion("Chưa có tin nhắn nào trong cuộc hội thoại này.");
+            return;
+        }
+        
+        // --- LẤY CONTEXT (4 tin cuối) ---
+        let recentContext = fullHistory.slice(-4); 
+
+        // Tìm tin nhắn cuối cùng của SINH VIÊN
+        let lastStudentMsg = null;
+        for (let i = fullHistory.length - 1; i >= 0; i--) {
+             if (fullHistory[i].name !== myUsername) {
+                 lastStudentMsg = fullHistory[i].message;
+                 break;
+             }
+        }
+
+        // --- EDGE CASE 2: Có tin nhắn nhưng sinh viên chưa nói câu nào ---
+        // (Ví dụ: Therapist vào chào hỏi trước liên tục)
+        if (lastStudentMsg) {
+            // Có tin nhắn -> Gọi AI bình thường
+            fetchTherapistSuggestions(lastStudentMsg, recentContext);
+        } else {
+            // Không tìm thấy tin của sinh viên -> Hiển thị thông báo đẹp
+            showEmptyStateSuggestion("Sinh viên chưa gửi tin nhắn nào để phân tích.");
         }
     };
+
+    //Hiển thị thông báo lỗi đẹp trong khung AI
+    function showEmptyStateSuggestion(message) {
+        const area = document.getElementById('ai-suggestions-area');
+        area.innerHTML = `
+            <div class="text-center py-4 fade-in">
+                <div class="text-muted small mb-3 opacity-75">
+                    <i class="fas fa-comment-slash fa-2x mb-2"></i><br>
+                    ${message}
+                </div>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm" 
+                        onclick="resetSuggestionUI()">
+                    <i class="fas fa-undo me-1"></i>Quay lại
+                </button>
+            </div>`;
+    }
 
     window.triggerAnalysis = function() {
         if (!activeRoomCode) {
@@ -667,34 +752,42 @@
     };
 
     // ===== HÀM LẤY GỢI Ý TỪ AI =====
-    function fetchTherapistSuggestions(studentMsg) {
+    function fetchTherapistSuggestions(studentMsg, customContext = []) {
         if (!activeRoomCode) return;
         
-        const currentContext = historyCache.get(activeRoomCode) || [];
+        const area = document.getElementById('ai-suggestions-area');
+        
+        // Hiển thị Loading
+        area.innerHTML = `
+            <div class="text-center text-muted small py-4">
+                <i class="fas fa-circle-notch fa-spin text-primary mb-2"></i><br>
+                Đang phân tích...
+            </div>`;
+
+        // Nếu không truyền customContext thì fallback về lấy hết (đề phòng)
+        const contextToSend = (customContext.length > 0) 
+                              ? customContext 
+                              : (historyCache.get(activeRoomCode) || []);
         
         fetch('/api/therapist/suggest', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 message: studentMsg,
-                context: currentContext
+                context: contextToSend // Gửi 4 tin nhắn này xuống backend
             })
         })
         .then(res => res.json())
         .then(data => {
-            // data có format: { empathetic: "...", probing: "...", cbt_action: "..." }
+            // Lưu cache mới
+            suggestionCache.set(activeRoomCode, data);
             renderSuggestions(data);
         })
         .catch(err => {
-            console.error('Fetch suggestions error:', err);
-            // Hiển thị gợi ý fallback khi lỗi
-            renderSuggestions({
-                empathetic: "Em cảm thấy thế nào?",
-                probing: "Em có muốn kể thêm chi tiết không?",
-                cbt_action: "Chúng ta cùng tìm giải pháp nhé."
-            });
+            console.error(err);
+            // Nếu lỗi thì quay về nút bấm
+            resetSuggestionUI();
+            alert("Lỗi kết nối AI, vui lòng thử lại.");
         });
     }
 
@@ -736,6 +829,25 @@
         }
     }
 
+    window.refreshAiSuggestions = function() {
+        if (!activeRoomCode) return;
+
+        // 1. Xóa cache cũ
+        suggestionCache.delete(activeRoomCode);
+        
+        // 2. Hiệu ứng xoay icon cho đẹp
+        const icon = document.querySelector('.ai-section-title .fa-sync-alt');
+        if(icon) {
+            icon.classList.add('fa-spin');
+            // Tắt xoay sau 1 giây (hoặc khi load xong, nhưng set cứng 1s cho mượt)
+            setTimeout(() => icon.classList.remove('fa-spin'), 1000);
+        }
+
+        // 3. [QUAN TRỌNG] Tự động gọi lại AI ngay lập tức
+        // Thay vì reset về nút bấm, ta gọi luôn hàm này để nó fetch dữ liệu mới
+        triggerManualSuggestions();
+    };
+
     document.getElementById("chat-form").addEventListener("submit", (e) => {
         e.preventDefault();
         const msg = ui.input.value.trim();
@@ -762,8 +874,7 @@
             if(!historyCache.has(activeRoomCode)) historyCache.set(activeRoomCode, []);
             historyCache.get(activeRoomCode).push(data);
             
-            // Lấy gợi ý AI khi nhận tin nhắn từ sinh viên
-            fetchTherapistSuggestions(data.message);
+            resetSuggestionUI();
         }
     });
 
