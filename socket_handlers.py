@@ -313,11 +313,11 @@ def join_private_room(data):
     if room_code not in rooms:
         restored_messages = load_room_data_from_sqlite(room_code)
         
-        if not restored_messages:
-            # Nếu không tìm thấy trong bộ nhớ và cũng không tìm thấy lịch sử trong DB
-            emit("match_error", {"message": "Lỗi: Phòng được tìm thấy không còn tồn tại hoặc đã bị xóa khỏi DB."})
-            return
-            
+        # if not restored_messages:
+        #     # Nếu không tìm thấy trong bộ nhớ và cũng không tìm thấy lịch sử trong DB
+        #     emit("match_error", {"message": "Lỗi: Phòng được tìm thấy không còn tồn tại hoặc đã bị xóa khỏi DB."})
+        #     return
+        
         # Nếu khôi phục thành công, phòng đã được thêm vào biến global 'rooms'
         print(f"Phòng {room_code} đã được khôi phục trong SocketIO handler.")
     
