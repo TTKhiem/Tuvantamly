@@ -276,24 +276,28 @@ def therapist_dashboard():
             messages = rooms[room_code]["messages"] # Lấy full lịch sử
             last_message = messages[-1] if messages else None
             
-            # # --- [UPDATE] GỌI AI ĐỂ PHÂN TÍCH ---
-            # # Chuyển đổi format messages của rooms (dict) sang format của chatbot (list dict role/message)
-            # formatted_history = []
-            # for m in messages:
-            #     # Map tên user thành role để AI hiểu
-            #     role = "Sinh viên" if m['name'] == student_data['username'] else "Therapist"
-            #     formatted_history.append({"role": role, "message": m['message']})
+            # --- [UPDATE] GỌI AI ĐỂ PHÂN TÍCH ---
+            # Chuyển đổi format messages của rooms (dict) sang format của chatbot (list dict role/message)
+            formatted_history = []
+            for m in messages:
+                # Map tên user thành role để AI hiểu
+                role = "Sinh viên" if m['name'] == student_data['username'] else "Therapist"
+                formatted_history.append({"role": role, "message": m['message']})
             
-            # # Gọi hàm phân tích mới
-            # ai_summary_points = chatbot.analyze_student_state(formatted_history)
-            # # ------------------------------------
+            # Gọi hàm phân tích mới
+            try:
+                ai_summary_points = chatbot.analyze_student_state(student_user_id, formatted_history)
+            except Exception as e:
+                print(f"Lỗi AI phân tích: {e}")
+                ai_summary_points = [{"point": "Không thể phân tích (lỗi AI)"}]
+            # ------------------------------------
 
             active_chat_rooms.append({
                 "room_code": room_code,
                 "student_name": student_data["username"] if student_data else f"Sinh viên {student_user_id}",
                 "matched_at": match["matched_at"],
                 "last_message": last_message,
-                "ai_summary": get_ai_summary_for_student(student_user_id),
+                "ai_summary": ai_summary_points,
                 "messages": messages, 
             })
     
@@ -333,10 +337,16 @@ def therapist_dashboard_redirect():
 def therapist_suggest():
     if session.get('role') != 'therapist': return jsonify({"error": "Unauthorized"}), 403
     data = request.json
-    suggestions = chatbot.get_therapist_suggestions(data.get('message'), data.get('context', []))
-    if suggestions:
-        return jsonify(suggestions)
-    return jsonify({"error": "Failed to generate"}), 500
+    try:
+        suggestions = chatbot.get_therapist_suggestions(data.get('message'), data.get('context', []))
+        if suggestions:
+            return jsonify(suggestions)
+        else:
+            # Fallback suggestions nếu AI không sinh được
+            return jsonify({"empathetic": "Tôi hiểu cảm xúc của em.", "probing": "Em có muốn kể thêm chi tiết không?", "cbt_action": "Hãy thử nhìn vấn đề từ góc độ khác."})
+    except Exception as e:
+        print(f"Therapist suggest error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 # --- API ROUTES CHO PET SYSTEM ---
@@ -939,6 +949,10 @@ if __name__ == '__main__':
             database.init_db()
     socketio.run(app, host='0.0.0.0', port=5000, debug=True, allow_unsafe_werkzeug=True)
     # app.run(host='0.0.0.0', port=5000, debug=True)
+
+
+
+
 
 
 
