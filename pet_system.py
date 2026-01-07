@@ -29,12 +29,12 @@ PET_SKINS = {
 # --- CẤU HÌNH BACKGROUND (HÌNH NỀN) ---
 PET_BACKGROUNDS = {
     0: "/static/images/pet_backgrounds/default.png", 
-    201: "https://img.freepik.com/free-vector/landscape-with-grassy-hills-mountains-vector-illustration_1284-53043.jpg",
-    202: "https://img.freepik.com/free-vector/empty-room-with-window-sun-light_107791-2999.jpg",
-    203: "https://img.freepik.com/free-vector/tropical-beach-landscape-scene-background_1308-57777.jpg",
-    204: "https://img.freepik.com/free-vector/space-background-with-planets_107791-66.jpg",
-    205: "https://img.freepik.com/free-vector/fairy-tale-landscape-with-road-forest_107791-6386.jpg",
-    206: "https://img.freepik.com/free-vector/underwater-background-with-marine-life_107791-536.jpg",
+    201: "/static/images/pet_backgrounds/dong_co.png",
+    202: "/static/images/pet_backgrounds/phong_khach.png",
+    203: "/static/images/pet_backgrounds/bai_bien.png",
+    204: "/static/images/pet_backgrounds/vu_tru.png",
+    205: "/static/images/pet_backgrounds/rung.png",
+    206: "/static/images/pet_backgrounds/dai_duong.png",
 }
 
 # --- HỆ THỐNG PET ---
@@ -142,7 +142,6 @@ class Pet:
         elif action == "rest": self.energy = min(100, self.energy + 20); return {"action": "rest", "quote": quote, **self.to_dict()}
         else: self.happiness = min(100, self.happiness + 5); return {"action": "motivate", "quote": quote, **self.to_dict()}
 
-# --- HỆ THỐNG NHIỆM VỤ & SHOP (GIỮ NGUYÊN) ---
 QUEST_POOL = [
     {"id": 1, "type": "simple", "title": "Uống một ly nước đầy", "reward_exp": 10, "reward_gold": 5},
     {"id": 2, "type": "simple", "title": "Dọn dẹp một góc nhỏ trong phòng", "reward_exp": 25, "reward_gold": 10},
@@ -152,23 +151,32 @@ QUEST_POOL = [
     {"id": 102, "type": "breathing", "title": "Bài tập Hít Thở Hộp (1 phút)", "reward_exp": 40, "reward_gold": 10, "data": {"duration_seconds": 60}}
 ]
 
+# --- CỬA HÀNG (SKIN + BACKGROUND + FOOD) ---
 SHOP_ITEMS = [
-    # SKIN
+    # ================= SKIN (THÚ CƯNG) =================
     {"id": 101, "name": "Skin: Mèo Cam", "price": 100, "icon": "🐱", "type": "skin", "description": "Hoàng thượng."},
     {"id": 102, "name": "Skin: Chó Shiba", "price": 100, "icon": "🐶", "type": "skin", "description": "Gâu gâu!"},
-    {"id": 103, "name": "Skin: Rồng Lửa", "price": 550, "icon": "🐲", "type": "skin", "description": "Siêu ngầu."},
-    {"id": 104, "name": "Skin: Alien", "price": 350, "icon": "👽", "type": "skin", "description": "Sao Hỏa."},
+    {"id": 107, "name": "Skin: Thỏ Ngọc", "price": 120, "icon": "🐰", "type": "skin", "description": "Nhảy nhót."},
+    {"id": 113, "name": "Skin: Gà Con", "price": 120, "icon": "🐥", "type": "skin", "description": "Chip chip!"},
     {"id": 105, "name": "Skin: Cá Mập", "price": 250, "icon": "🦈", "type": "skin", "description": "Baby Shark."},
-    
-    # BACKGROUND
+    {"id": 109, "name": "Skin: Cánh Cụt", "price": 250, "icon": "🐧", "type": "skin", "description": "Nam Cực."},
+    {"id": 104, "name": "Skin: Alien", "price": 350, "icon": "👽", "type": "skin", "description": "Sao Hỏa."},
+    {"id": 103, "name": "Skin: Rồng Lửa", "price": 550, "icon": "🐲", "type": "skin", "description": "Siêu ngầu."},
+    {"id": 117, "name": "Skin: Robot", "price": 800, "icon": "🤖", "type": "skin", "description": "Công nghệ AI."},
+
+    # ================= BACKGROUND (HÌNH NỀN) =================
     {"id": 201, "name": "Nền: Đồng Cỏ", "price": 150, "icon": "🏞️", "type": "background", "description": "Không khí trong lành."},
-    {"id": 202, "name": "Nền: Phòng Khách", "price": 200, "icon": "🛋️", "type": "background", "description": "Ấm cúng."},
+    {"id": 202, "name": "Nền: Phòng Khách", "price": 200, "icon": "🛋️", "type": "background", "description": "Ấm cúng, tiện nghi."},
     {"id": 203, "name": "Nền: Bãi Biển", "price": 300, "icon": "🏖️", "type": "background", "description": "Nắng vàng biển xanh."},
-    
-    # FOOD
+    {"id": 205, "name": "Nền: Rừng Phép Thuật", "price": 400, "icon": "🌲", "type": "background", "description": "Huyền bí."},
+    {"id": 206, "name": "Nền: Đại Dương", "price": 450, "icon": "🌊", "type": "background", "description": "Thích hợp cho cá."},
+    {"id": 204, "name": "Nền: Vũ Trụ", "price": 600, "icon": "🌌", "type": "background", "description": "Bay vào không gian."},
+
+    # ================= FOOD (THỨC ĂN) =================
     {"id": 3003, "name": "Kẹo Ngọt", "price": 5, "icon": "🍬", "type": "food", "value": 15, "description": "+15 HP"},
     {"id": 3004, "name": "Sữa Tươi", "price": 10, "icon": "🥛", "type": "food", "value": 25, "description": "+25 HP"},
     {"id": 3001, "name": "Bánh Donut", "price": 20, "icon": "🍩", "type": "food", "value": 50, "description": "+50 HP"},
+    {"id": 3005, "name": "Pizza", "price": 30, "icon": "🍕", "type": "food", "value": 65, "description": "+65 HP"},
     {"id": 3008, "name": "Bánh Kem", "price": 60, "icon": "🎂", "type": "food", "value": 100, "description": "Full HP"}
 ]
 
