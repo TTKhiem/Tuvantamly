@@ -461,6 +461,7 @@
 <script>
     const ALL_ROOM_DATA = JSON.parse('{{ active_chat_rooms_json | safe }}');
     const INITIAL_MESSAGES = JSON.parse('{{ initial_messages_json | safe }}');
+    const INITIAL_SUMMARY = JSON.parse('{{ initial_summary_json | safe }}');
     
     var socketio = io();
     const myUsername = "{{ name }}"; 
@@ -514,12 +515,14 @@
 
         ui.container.innerHTML = ''; 
         if (historyCache.has(newCode)) {
+            // Dữ liệu đã được cache
             renderMessages(historyCache.get(newCode));
-        } else if (newCode === "{{ session['room'] }}" && INITIAL_MESSAGES.length > 0) {
-            historyCache.set(newCode, INITIAL_MESSAGES);
-            renderMessages(INITIAL_MESSAGES);
+        } else if (rData && rData.messages && rData.messages.length > 0) {
+            // Load từ ALL_ROOM_DATA (dữ liệu từ backend)
+            historyCache.set(newCode, rData.messages);
+            renderMessages(rData.messages);
         } else {
-            ui.container.innerHTML = '<div class="text-center mt-5 text-muted small"><i class="fas fa-spinner fa-spin"></i> Đang tải lịch sử...</div>';
+            ui.container.innerHTML = '<div class="text-center mt-5 text-muted small opacity-50">Bắt đầu cuộc trò chuyện mới.</div>';
         }
     };
 
@@ -570,16 +573,93 @@
         ui.input.focus();
     };
 
+    // ===== HÀM LẤY GỢI Ý TỪ AI =====
+    function fetchTherapistSuggestions(studentMsg) {
+        if (!activeRoomCode) return;
+        
+        const currentContext = historyCache.get(activeRoomCode) || [];
+        
+        fetch('/api/therapist/suggest', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: studentMsg,
+                context: currentContext
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            // data có format: { empathetic: "...", probing: "...", cbt_action: "..." }
+            renderSuggestions(data);
+        })
+        .catch(err => {
+            console.error('Fetch suggestions error:', err);
+            // Hiển thị gợi ý fallback khi lỗi
+            renderSuggestions({
+                empathetic: "Em cảm thấy thế nào?",
+                probing: "Em có muốn kể thêm chi tiết không?",
+                cbt_action: "Chúng ta cùng tìm giải pháp nhé."
+            });
+        });
+    }
+
+    function renderSuggestions(suggestionsData) {
+        const area = document.getElementById('ai-suggestions-area');
+        if (!suggestionsData) return;
+        
+        let html = '';
+        
+        // Empathetic suggestion
+        if (suggestionsData.empathetic) {
+            html += `
+                <button class="suggestion-chip chip-empathy" onclick="fillInput(this)">
+                    <span class="chip-label text-danger"><i class="far fa-heart"></i> Thấu cảm</span>
+                    <span class="chip-content">${suggestionsData.empathetic}</span>
+                </button>`;
+        }
+        
+        // Probing suggestion
+        if (suggestionsData.probing) {
+            html += `
+                <button class="suggestion-chip chip-question" onclick="fillInput(this)">
+                    <span class="chip-label text-primary"><i class="far fa-question-circle"></i> Khai thác</span>
+                    <span class="chip-content">${suggestionsData.probing}</span>
+                </button>`;
+        }
+        
+        // CBT/Action suggestion
+        if (suggestionsData.cbt_action) {
+            html += `
+                <button class="suggestion-chip chip-safe" onclick="fillInput(this)">
+                    <span class="chip-label text-success"><i class="fas fa-shield-alt"></i> Hành động</span>
+                    <span class="chip-content">${suggestionsData.cbt_action}</span>
+                </button>`;
+        }
+        
+        if (html) {
+            area.innerHTML = html;
+        }
+    }
+
     document.getElementById("chat-form").addEventListener("submit", (e) => {
         e.preventDefault();
         const msg = ui.input.value.trim();
         if(msg && activeRoomCode) {
+            // Render message ngay lập tức
             createMessageUI(myUsername, msg, null, true);
             socketio.emit("message", { data: msg, room_code: activeRoomCode });
-            ui.input.value = "";
             
+            // Lấy gợi ý AI cho tin nhắn mới nhất của sinh viên
+            // Lưu message vào cache trước khi gọi API
             if(!historyCache.has(activeRoomCode)) historyCache.set(activeRoomCode, []);
             historyCache.get(activeRoomCode).push({name: myUsername, message: msg, timestamp: null});
+            
+            // Gọi API để lấy suggestions cho tin nhắn mới nhất của sinh viên (nếu có)
+            // Tuy nhiên, chúng ta cần lắng nghe tin nhắn từ sinh viên trước
+            
+            ui.input.value = "";
         }
     });
 
@@ -588,6 +668,9 @@
             createMessageUI(data.name, data.message, data.timestamp, false);
             if(!historyCache.has(activeRoomCode)) historyCache.set(activeRoomCode, []);
             historyCache.get(activeRoomCode).push(data);
+            
+            // Lấy gợi ý AI khi nhận tin nhắn từ sinh viên
+            fetchTherapistSuggestions(data.message);
         }
     });
 
@@ -595,6 +678,45 @@
         if(data.room_code === activeRoomCode) {
             historyCache.set(data.room_code, data.messages);
             renderMessages(data.messages);
+        }
+    });
+
+    // ===== INITIALIZATION ON PAGE LOAD =====
+    document.addEventListener('DOMContentLoaded', function() {
+        if (ALL_ROOM_DATA && ALL_ROOM_DATA.length > 0) {
+            // Lấy room code từ backend session (room mà therapist đang xem)
+            const firstRoomCode = ALL_ROOM_DATA[0].room_code;
+            const firstRoomEl = document.querySelector(`[data-room-code="${firstRoomCode}"]`);
+            
+            if (firstRoomEl) {
+                // Set active state
+                firstRoomEl.classList.add('active');
+                
+                // Set room data và load messages ngay (không cần gọi switchRoom)
+                activeRoomCode = firstRoomCode;
+                ui.name.textContent = firstRoomEl.getAttribute('data-student-name');
+                ui.roomCodeDisplay.textContent = "ID: " + firstRoomCode;
+                ui.avatar.src = `https://ui-avatars.com/api/?name=${ui.name.textContent}&background=588157&color=fff`;
+                ui.endInput.value = firstRoomCode;
+                
+                toggleView(true);
+                
+                // Load messages từ INITIAL_MESSAGES (dữ liệu từ backend)
+                if (INITIAL_MESSAGES && INITIAL_MESSAGES.length > 0) {
+                    historyCache.set(firstRoomCode, INITIAL_MESSAGES);
+                    renderMessages(INITIAL_MESSAGES);
+                } else {
+                    ui.container.innerHTML = '<div class="text-center mt-5 text-muted small opacity-50">Bắt đầu cuộc trò chuyện mới.</div>';
+                }
+                
+                // Load AI summary từ backend
+                renderAiSummary(INITIAL_SUMMARY);
+                
+                // Join socket room
+                socketio.emit('join_room_request', { room_code: firstRoomCode });
+            }
+        } else {
+            toggleView(false);
         }
     });
 
