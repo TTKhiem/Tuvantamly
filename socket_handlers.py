@@ -23,8 +23,8 @@ def load_room_data_from_sqlite(room_code):
             )
             existing_messages = cur.fetchall()
         
-        if not existing_messages:
-            return None # Phòng không có lịch sử
+        # if not existing_messages:
+        #     return None # Phòng không có lịch sử
 
         # -----------------------------------------------------------------
         # BƯỚC 1: Xử lý và Định dạng tin nhắn (Định nghĩa loaded_messages)
@@ -88,7 +88,6 @@ def connect(auth):
     # --- Logic tham gia phòng (sau khi phòng đã được đảm bảo tồn tại trong 'rooms') ---
     join_room(room)
     now_display_format = datetime.now().strftime('%Y-%m-%d %H:%M')
-    send({"name": name, "message": "da tham gia phong.", "timestamp": now_display_format}, to=room)
     rooms[room]["members"] += 1
     print(f"{name} tham gia phong {room} (Thanh vien: {rooms[room]['members']})")
 

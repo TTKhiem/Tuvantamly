@@ -268,27 +268,12 @@ def therapist_dashboard():
         student_user_id = match["student_user_id"]
         
         load_room_data_from_sqlite(room_code) 
-            
+        
         if room_code in rooms:
             student_data = get_user_data_by_id(student_user_id)
             messages = rooms[room_code]["messages"] # Lấy full lịch sử
             last_message = messages[-1] if messages else None
-            
-            # # --- [UPDATE] GỌI AI ĐỂ PHÂN TÍCH ---
-            # # Chuyển đổi format messages của rooms (dict) sang format của chatbot (list dict role/message)
-            # formatted_history = []
-            # for m in messages:
-            #     # Map tên user thành role để AI hiểu
-            #     role = "Sinh viên" if m['name'] == student_data['username'] else "Therapist"
-            #     formatted_history.append({"role": role, "message": m['message']})
-            
-            # # Gọi hàm phân tích mới
-            # try:
-            #     ai_summary_points = chatbot.analyze_student_state(student_user_id, formatted_history)
-            # except Exception as e:
-            #     print(f"Lỗi AI phân tích: {e}")
-            #     ai_summary_points = [{"point": "Không thể phân tích (lỗi AI)"}]
-            # # ------------------------------------
+
             ai_summary_points = []
 
             active_chat_rooms.append({

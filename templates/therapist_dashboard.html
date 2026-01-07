@@ -449,11 +449,21 @@
         </div>
 
         <div class="p-3">
-            <!-- SECTION 2: SUMMARY -->
-            <div class="ai-section-title"><i class="fas fa-clipboard-list"></i> Tóm tắt ca</div>
+            <div class="ai-section-title d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-clipboard-list"></i> Tóm tắt ca</span>
+                <button class="btn btn-sm btn-outline-success border-0 py-0 px-2" 
+                        onclick="triggerAnalysis()" 
+                        title="Bấm để AI phân tích hồ sơ này ngay lập tức">
+                    <i class="fas fa-bolt me-1"></i>Phân tích
+                </button>
+            </div>
+            
             <div class="ai-card-modern">
                 <ul class="list-unstyled mb-0" id="ai-summary-list">
-                    <li class="text-center text-muted small fst-italic py-3">Đang chờ dữ liệu...</li>
+                    <li class="text-center text-muted small py-4">
+                        <i class="fas fa-brain fa-2x mb-2 opacity-50"></i><br>
+                        Nhấn nút <b>"Phân tích"</b> ở trên<br>để AI đọc hồ sơ.
+                    </li>
                 </ul>
             </div>
 
@@ -490,6 +500,8 @@
 {# --- 4. SCRIPTS (LOGIC GIỮ NGUYÊN) --- #}
 {% block scripts %}
 <script>
+    let activeStudentId = null; // Biến lưu ID sinh viên hiện tại
+    const summaryCache = new Map(); // Cache kết quả AI để đỡ tốn tiền gọi lại
     const ALL_ROOM_DATA = JSON.parse('{{ active_chat_rooms_json | safe }}');
     const INITIAL_MESSAGES = JSON.parse('{{ initial_messages_json | safe }}');
     const INITIAL_SUMMARY = JSON.parse('{{ initial_summary_json | safe }}');
@@ -527,6 +539,8 @@
         const newCode = el.getAttribute('data-room-code');
         const sName = el.getAttribute('data-student-name');
         const sId = el.getAttribute('data-student-id'); // Lấy ID sinh viên
+
+        activeStudentId = sId;
         
         document.querySelectorAll('.patient-list-item').forEach(e => e.classList.remove('active'));
         el.classList.add('active');
@@ -539,14 +553,19 @@
         
         toggleView(true);
         
-        // Bước 1: Hiển thị trạng thái "Đang phân tích..." ngay lập tức
-        ui.summary.innerHTML = `
-            <li class="text-center text-muted small py-3">
-                <i class="fas fa-circle-notch fa-spin me-2"></i>AI đang đọc hồ sơ...
-            </li>`;
+        // Kiểm tra xem phòng này đã có kết quả phân tích trong Cache chưa?
+        if (summaryCache.has(newCode)) {
+            // Có rồi -> Hiện luôn, không tốn request
+            renderAiSummary(summaryCache.get(newCode));
+        } else {
+            // Chưa có -> Hiện hướng dẫn bấm nút
+            ui.summary.innerHTML = `
+                <li class="text-center text-muted small py-4">
+                    <i class="fas fa-brain fa-2x mb-2 opacity-25"></i><br>
+                    Chưa có dữ liệu.<br>Nhấn nút <b>"Phân tích"</b> để tạo.
+                </li>`;
+        }
 
-        // Bước 2: Gọi API ngầm để lấy phân tích
-        fetchAiAnalysis(newCode, sId);
         socketio.emit('join_room_request', { room_code: newCode });
 
         ui.container.innerHTML = ''; 
@@ -562,6 +581,22 @@
         }
     };
 
+    window.triggerAnalysis = function() {
+        if (!activeRoomCode) {
+            alert("Vui lòng chọn một hồ sơ trước.");
+            return;
+        }
+
+        // Hiển thị loading
+        ui.summary.innerHTML = `
+            <li class="text-center text-muted small py-3">
+                <i class="fas fa-circle-notch fa-spin me-2"></i>AI đang đọc hồ sơ...
+            </li>`;
+
+        // Gọi API (chỉ khi bấm nút này mới tốn request)
+        fetchAiAnalysis(activeRoomCode, activeStudentId);
+    }
+
     // --- HÀM MỚI: GỌI API PHÂN TÍCH ---
     function fetchAiAnalysis(roomCode, studentId) {
         fetch('/api/therapist/analyze_now', {
@@ -572,6 +607,7 @@
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
+                summaryCache.set(roomCode, data.summary);
                 renderAiSummary(data.summary); // Cập nhật giao diện khi có kết quả
             } else {
                 ui.summary.innerHTML = '<li class="text-danger small">Lỗi phân tích AI.</li>';
@@ -757,6 +793,8 @@
                 ui.endInput.value = firstRoomCode;
                 
                 toggleView(true);
+
+                activeStudentId = firstRoomEl.getAttribute('data-student-id');
                 
                 // Load messages từ INITIAL_MESSAGES (dữ liệu từ backend)
                 if (INITIAL_MESSAGES && INITIAL_MESSAGES.length > 0) {
@@ -769,11 +807,14 @@
                 // GỌI AI CHO PHÒNG ĐẦU TIÊN
                 const sId = firstRoomEl.getAttribute('data-student-id');
                 
-                // Set trạng thái loading
-                ui.summary.innerHTML = '<li class="text-center text-muted small py-3"><i class="fas fa-circle-notch fa-spin me-2"></i>AI đang khởi động...</li>';
+                ui.summary.innerHTML = `
+                <li class="text-center text-muted small py-4">
+                    <i class="fas fa-brain fa-2x mb-2 opacity-25"></i><br>
+                    Sẵn sàng.<br>Nhấn nút <b>"Phân tích"</b> để bắt đầu.
+                </li>`;
                 
-                // Gọi API
-                fetchAiAnalysis(firstRoomCode, sId);
+                // // Gọi API
+                // fetchAiAnalysis(firstRoomCode, sId);
                 
                 // Join socket room
                 socketio.emit('join_room_request', { room_code: firstRoomCode });
