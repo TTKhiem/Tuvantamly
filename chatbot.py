@@ -255,7 +255,13 @@ def get_therapist_suggestions(student_msg, context):
     if not therapist_bot_model: return None
     
     # Lấy bối cảnh 5 tin gần nhất
-    context_str = "\n".join([f"{m['role']}: {m['message']}" for m in context[-5:]])
+    # Context có structure: {name, message, timestamp} hoặc {role, message}
+    context_str = ""
+    for m in context[-5:]:
+        # Hỗ trợ cả 2 format: role/message hoặc name/message
+        speaker = m.get('role') or m.get('name', 'Unknown')
+        msg = m.get('message', '')
+        context_str += f"{speaker}: {msg}\n"
     
     prompt = f"""
     Bạn đang hỗ trợ Therapist trả lời Sinh viên.
@@ -277,7 +283,20 @@ def get_therapist_suggestions(student_msg, context):
         res = therapist_bot_model.generate_content(prompt)
         return clean_json_response(res.text)
     except Exception as e:
-        print(f"Suggestion Error: {e}")
+        error_msg = str(e).lower()
+        
+        # Kiểm tra nếu là quota exceeded error
+        if "quota" in error_msg or "429" in error_msg:
+            print(f"⚠️ API Quota exceeded: {e}")
+            print("✅ Using fallback suggestions")
+            # Trả về gợi ý fallback khi hết quota
+            return {
+                "empathetic": "Em cảm thấy thế nào về điều đó?",
+                "probing": "Em có thể kể thêm chi tiết hơn không?",
+                "cbt_action": "Chúng ta cùng tìm cách giải quyết nhé."
+            }
+        
+        print(f"❌ Suggestion Error: {e}")
         return None
 # --- 5. CHỨC NĂNG PET (VUI VẺ) ---
 
@@ -299,3 +318,4 @@ def get_pet_chat_response(pet_name, user_message):
         return response.text.strip()
     except Exception:
         return f"{pet_name} dụi đầu vào bạn... (Mất kết nối)" 
+
