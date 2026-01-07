@@ -302,7 +302,7 @@
             <div class="patient-list-item" 
                  data-room-code="{{ room.room_code }}" 
                  data-student-name="{{ room.student_name }}"
-                 onclick="switchRoom(this)">
+                 data-student-id="{{ room.student_id }}" onclick="switchRoom(this)">
                 
                 <div class="position-relative">
                     <img src="https://ui-avatars.com/api/?name={{ room.student_name }}&background=588157&color=fff&bold=true" 
@@ -495,6 +495,7 @@
     window.switchRoom = function(el) {
         const newCode = el.getAttribute('data-room-code');
         const sName = el.getAttribute('data-student-name');
+        const sId = el.getAttribute('data-student-id'); // Lấy ID sinh viên
         
         document.querySelectorAll('.patient-list-item').forEach(e => e.classList.remove('active'));
         el.classList.add('active');
@@ -507,10 +508,14 @@
         
         toggleView(true);
         
-        // Render Summary Data
-        const rData = ALL_ROOM_DATA.find(r => r.room_code === newCode);
-        renderAiSummary(rData ? rData.ai_summary : []);
-        
+        // Bước 1: Hiển thị trạng thái "Đang phân tích..." ngay lập tức
+        ui.summary.innerHTML = `
+            <li class="text-center text-muted small py-3">
+                <i class="fas fa-circle-notch fa-spin me-2"></i>AI đang đọc hồ sơ...
+            </li>`;
+
+        // Bước 2: Gọi API ngầm để lấy phân tích
+        fetchAiAnalysis(newCode, sId);
         socketio.emit('join_room_request', { room_code: newCode });
 
         ui.container.innerHTML = ''; 
@@ -525,6 +530,27 @@
             ui.container.innerHTML = '<div class="text-center mt-5 text-muted small opacity-50">Bắt đầu cuộc trò chuyện mới.</div>';
         }
     };
+
+    // --- HÀM MỚI: GỌI API PHÂN TÍCH ---
+    function fetchAiAnalysis(roomCode, studentId) {
+        fetch('/api/therapist/analyze_now', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ room_code: roomCode, student_id: studentId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                renderAiSummary(data.summary); // Cập nhật giao diện khi có kết quả
+            } else {
+                ui.summary.innerHTML = '<li class="text-danger small">Lỗi phân tích AI.</li>';
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            ui.summary.innerHTML = '<li class="text-danger small">Không thể kết nối Server AI.</li>';
+        });
+    }
 
     function renderMessages(msgs) {
         ui.container.innerHTML = '';
@@ -709,8 +735,14 @@
                     ui.container.innerHTML = '<div class="text-center mt-5 text-muted small opacity-50">Bắt đầu cuộc trò chuyện mới.</div>';
                 }
                 
-                // Load AI summary từ backend
-                renderAiSummary(INITIAL_SUMMARY);
+                // GỌI AI CHO PHÒNG ĐẦU TIÊN
+                const sId = firstRoomEl.getAttribute('data-student-id');
+                
+                // Set trạng thái loading
+                ui.summary.innerHTML = '<li class="text-center text-muted small py-3"><i class="fas fa-circle-notch fa-spin me-2"></i>AI đang khởi động...</li>';
+                
+                // Gọi API
+                fetchAiAnalysis(firstRoomCode, sId);
                 
                 // Join socket room
                 socketio.emit('join_room_request', { room_code: firstRoomCode });

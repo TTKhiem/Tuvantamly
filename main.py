@@ -253,8 +253,6 @@ def api_chat_complete():
     return jsonify({"summary": summary, "tags": detected_tags}) 
 
 # --- ROUTES CHO THERAPIST ---
-
-
 @app.route('/therapist/dashboard')
 def therapist_dashboard():
     if session.get('role') != 'therapist' or 'user_id' not in session:
@@ -276,21 +274,22 @@ def therapist_dashboard():
             messages = rooms[room_code]["messages"] # Lấy full lịch sử
             last_message = messages[-1] if messages else None
             
-            # --- [UPDATE] GỌI AI ĐỂ PHÂN TÍCH ---
-            # Chuyển đổi format messages của rooms (dict) sang format của chatbot (list dict role/message)
-            formatted_history = []
-            for m in messages:
-                # Map tên user thành role để AI hiểu
-                role = "Sinh viên" if m['name'] == student_data['username'] else "Therapist"
-                formatted_history.append({"role": role, "message": m['message']})
+            # # --- [UPDATE] GỌI AI ĐỂ PHÂN TÍCH ---
+            # # Chuyển đổi format messages của rooms (dict) sang format của chatbot (list dict role/message)
+            # formatted_history = []
+            # for m in messages:
+            #     # Map tên user thành role để AI hiểu
+            #     role = "Sinh viên" if m['name'] == student_data['username'] else "Therapist"
+            #     formatted_history.append({"role": role, "message": m['message']})
             
-            # Gọi hàm phân tích mới
-            try:
-                ai_summary_points = chatbot.analyze_student_state(student_user_id, formatted_history)
-            except Exception as e:
-                print(f"Lỗi AI phân tích: {e}")
-                ai_summary_points = [{"point": "Không thể phân tích (lỗi AI)"}]
-            # ------------------------------------
+            # # Gọi hàm phân tích mới
+            # try:
+            #     ai_summary_points = chatbot.analyze_student_state(student_user_id, formatted_history)
+            # except Exception as e:
+            #     print(f"Lỗi AI phân tích: {e}")
+            #     ai_summary_points = [{"point": "Không thể phân tích (lỗi AI)"}]
+            # # ------------------------------------
+            ai_summary_points = []
 
             active_chat_rooms.append({
                 "room_code": room_code,
@@ -331,7 +330,42 @@ def therapist_dashboard_redirect():
 #         return redirect(url_for('home'))
 #     return render_template('therapist_chat.html')
 
+@app.route('/api/therapist/analyze_now', methods=['POST'])
+def api_analyze_patient_now():
+    if session.get('role') != 'therapist': 
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    data = request.json
+    room_code = data.get('room_code')
+    student_id = data.get('student_id')
+    
+    # 1. Lấy lịch sử chat (Ưu tiên từ bộ nhớ rooms, nếu không có thì query DB)
+    chat_history = []
+    if room_code in rooms:
+        raw_messages = rooms[room_code]["messages"]
+    else:
+        # Fallback: Load từ DB nếu trong rooms chưa có (ít khi xảy ra nếu logic join đúng)
+        load_room_data_from_sqlite(room_code)
+        raw_messages = rooms.get(room_code, {}).get("messages", [])
 
+    # 2. Format dữ liệu cho AI
+    # Cần lấy tên student để map đúng role
+    student_data = get_user_data_by_id(student_id)
+    student_name = student_data['username'] if student_data else ""
+    
+    formatted_history = []
+    for m in raw_messages:
+        role = "Sinh viên" if m['name'] == student_name else "Therapist"
+        formatted_history.append({"role": role, "message": m['message']})
+
+    # 3. Gọi AI (Việc nặng nhất nằm ở đây, giờ nó chạy riêng biệt)
+    try:
+        # Gọi hàm AI của bạn
+        ai_summary_points = chatbot.analyze_student_state(student_id, formatted_history)
+        return jsonify({"status": "success", "summary": ai_summary_points})
+    except Exception as e:
+        print(f"Lỗi AI Analyze API: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/api/therapist/suggest', methods=['POST'])
 def therapist_suggest():
