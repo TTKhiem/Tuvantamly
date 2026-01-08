@@ -198,7 +198,7 @@ def extract_tags_from_conversation(history_list):
     {transcript}
     
     Chọn tối đa 2 từ khóa tiếng Anh chính xác nhất miêu tả vấn đề của user trong danh sách:
-    [Academic, Relationship, Family, Anxiety, Depression, Loneliness, Career, General]
+    [Academic, Relationship, Family, Anxiety, Depression, Loneliness, Career, General, Suicide]
     
     Output: Chỉ trả về từ khóa, ngăn cách bằng dấu phẩy. Ví dụ: Academic, Stress
     """

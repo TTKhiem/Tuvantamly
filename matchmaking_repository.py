@@ -152,6 +152,11 @@ def get_all_matchmaking_results():
         cursor.execute("SELECT * FROM matchmaking_results ORDER BY matched_at DESC")
         return cursor.fetchall()
 
+def extract_topic_from_tags(tags):
+    # Chuyển đổi tags thành danh sách các chủ đề
+    topics = [tag.strip() for tag in tags.split(",")]
+    return topics
+
 def admin_create_match_result(pair: dict):
     """
     Tạo bản ghi match thủ công từ Admin.

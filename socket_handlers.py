@@ -235,7 +235,7 @@ def find_match():
         if user_tags and 'urgency' in user_tags:
             urgency = 1
         if user_tags and len(user_tags) > 0:
-            topic = user_tags[0]
+            topic = str(user_tags)
         
         print(f"--- [FIND MATCH] Adding Student to Queue: Topic={topic}, Urgency={urgency}")
 
@@ -246,7 +246,7 @@ def find_match():
 
     elif user_role == 'therapist':
         if user_tags and len(user_tags) > 0:
-            expertise = user_tags[0]
+            expertise = str(user_tags)
             
         print(f"--- [FIND MATCH] Adding Therapist to Queue: Expertise={expertise}")
 

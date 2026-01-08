@@ -1,12 +1,14 @@
-from matchmaking_repository import get_all_students_from_matchmaking_queue, get_all_therapists_from_matchmaking_queue, delete_student_and_therapist_from_matchmaking_queue, add_student_and_therapist_to_matchmaking_results, get_match_id_based_on_pair
+from matchmaking_repository import get_all_students_from_matchmaking_queue, get_all_therapists_from_matchmaking_queue, delete_student_and_therapist_from_matchmaking_queue, add_student_and_therapist_to_matchmaking_results, get_match_id_based_on_pair, extract_topic_from_tags
 
 def check_student_urgency(student):
     return True if student["urgency"] == 1 else False
 
 def check_student_topic_with_therapist_expertise(student, therapist):
-    if student["topic"] == "General":
+    student_topic = extract_topic_from_tags(student["topic"])
+    therapist_expertise = extract_topic_from_tags(therapist["expertise"])
+    if "General" in student_topic:
         return True
-    return True if student["topic"] == therapist["expertise"] else False
+    return True if any(topic in therapist_expertise for topic in student_topic) else False
 
 def write_matchmaking_result(student, therapist):
     return {
