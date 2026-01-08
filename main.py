@@ -30,14 +30,17 @@ def get_ai_summary_for_student(student_user_id):
 
 @app.route('/')
 def home():
-    user_data, pet_data, quests_data = None, None, None
+    # Nếu user đã login, redirect tới dashboard
     if 'user_id' in session:
-        db = database.get_db()
-        user_data = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
-        pet_obj = pet_system.load_pet(db, session['user_id'])
-        if pet_obj: pet_data = pet_obj.to_dict()
-        quests_data = pet_system.get_daily_quests(db, session['user_id'])
-    return render_template('index.html', user=user_data, pet=pet_data, quests=quests_data, form_type='login')
+        if session.get('role') == 'admin':
+            return redirect(url_for('admin_dashboard'))
+        elif session.get('role') == 'therapist':
+            return redirect(url_for('therapist_dashboard_redirect'))
+        else:
+            return redirect(url_for('dashboard'))
+    
+    # Nếu chưa login, hiện demo landing page
+    return render_template('index.html', form_type='login')
 
 @app.route('/register_page')
 def register_page():
