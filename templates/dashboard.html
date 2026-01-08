@@ -77,6 +77,122 @@
 
     /* 2. MAIN CONTENT (Cột phải) */
     
+    /* Welcome Hero Section (NEW) */
+    .welcome-hero {
+        background: linear-gradient(135deg, #588157 0%, #344E41 100%);
+        border-radius: 24px;
+        padding: 25px 30px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 15px 35px rgba(52, 78, 65, 0.12);
+        animation: slideInDown 0.8s ease-out;
+        margin-bottom: 25px;
+    }
+
+    .welcome-hero-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .welcome-emoji {
+        font-size: 3.5rem;
+        animation: float 3s ease-in-out infinite;
+        flex-shrink: 0;
+    }
+
+    .welcome-text h2.welcome-greeting {
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin: 0;
+        margin-bottom: 5px;
+        animation: fadeInUp 0.8s ease-out 0.2s both;
+    }
+
+    .welcome-text p.welcome-subtitle {
+        font-size: 0.95rem;
+        opacity: 0.9;
+        margin: 0;
+        font-weight: 500;
+        animation: fadeInUp 0.8s ease-out 0.4s both;
+    }
+
+    .welcome-decoration {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        opacity: 0.2;
+    }
+
+    .deco-circle {
+        position: absolute;
+        border: 3px solid white;
+        border-radius: 50%;
+    }
+
+    .deco-1 {
+        width: 150px;
+        height: 150px;
+        top: -50px;
+        right: -30px;
+        animation: rotate 20s linear infinite;
+    }
+
+    .deco-2 {
+        width: 100px;
+        height: 100px;
+        top: 50%;
+        right: 50px;
+        animation: rotate 15s linear infinite reverse;
+    }
+
+    .deco-3 {
+        width: 200px;
+        height: 200px;
+        bottom: -80px;
+        right: -60px;
+        animation: rotate 25s linear infinite;
+    }
+
+    @keyframes slideInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-15px); }
+    }
+
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
     /* Title Section */
     .dashboard-title {
         font-family: 'Nunito', sans-serif;
@@ -195,6 +311,7 @@
     }
     .btn-close-popup:hover { background: #e0e0e0; }
 
+
 </style>
 {% endblock %}
 
@@ -253,84 +370,136 @@
             <!-- --- CỘT PHẢI: WIDGETS & CONTENT --- -->
             <div class="col-lg-8">
                 
-                <h4 class="dashboard-title">
-                    <span style="font-size: 1.5rem;">👋</span> Xin chào, {{ user.username }}!
-                </h4>
+                <!-- ✨ WELCOME HERO SECTION (NEW) -->
+                <div class="welcome-hero mb-2" id="welcomeHero">
+                    <div class="welcome-hero-content">
+                        <div class="welcome-emoji" id="welcomeEmoji">👋</div>
+                        <div class="welcome-text">
+                            <h2 class="welcome-greeting" id="welcomeGreeting">Chào buổi sáng</h2>
+                            <p class="welcome-subtitle" id="welcomeSubtitle">{{ user.username }}! Hôm nay sẽ là một ngày tuyệt vời.</p>
+                        </div>
+                    </div>
+                    <div class="welcome-decoration">
+                        <div class="deco-circle deco-1"></div>
+                        <div class="deco-circle deco-2"></div>
+                        <div class="deco-circle deco-3"></div>
+                    </div>
+                </div>
+
+                <script>
+                    // Xác định thời gian và hiển thị greeting phù hợp
+                    function updateWelcomeGreeting() {
+                        const hour = new Date().getHours();
+                        const welcomeGreeting = document.getElementById('welcomeGreeting');
+                        const welcomeEmoji = document.getElementById('welcomeEmoji');
+                        const welcomeSubtitle = document.getElementById('welcomeSubtitle');
+                        
+                        let greeting, emoji, subtitle;
+                        
+                        if (hour >= 5 && hour < 12) {
+                            greeting = '☀️ Chào buổi sáng';
+                            emoji = '🌅';
+                            subtitle = '{{ user.username }}! Hôm nay sẽ là một ngày tuyệt vời.';
+                        } else if (hour >= 12 && hour < 17) {
+                            greeting = '🌤️ Chào buổi chiều';
+                            emoji = '✨';
+                            subtitle = '{{ user.username }}! Bạn đang làm tốt lắm!';
+                        } else if (hour >= 17 && hour < 21) {
+                            greeting = '🌆 Chào buổi tối';
+                            emoji = '🌙';
+                            subtitle = '{{ user.username }}! Hãy thư giãn và chăm sóc bản thân.';
+                        } else {
+                            greeting = '🌙 Chào đêm';
+                            emoji = '⭐';
+                            subtitle = '{{ user.username }}! Hãy có một giấc ngủ ngon.';
+                        }
+                        
+                        welcomeGreeting.textContent = greeting;
+                        welcomeEmoji.textContent = emoji;
+                        welcomeSubtitle.textContent = subtitle;
+                    }
+                    
+                    // Cập nhật khi trang load
+                    updateWelcomeGreeting();
+                    
+                    // Cập nhật mỗi phút
+                    setInterval(updateWelcomeGreeting, 60000);
+                </script>
 
                 <!-- 1. MATCH STATUS (Trạng thái kết nối) -->
-                <div class="mb-4">
+                <div class="mb-2">
                     {% if current_match_code %}
                         <!-- TRẠNG THÁI: ĐANG CÓ PHÒNG CHAT -->
-                        <div class="widget-card match-card-active d-flex align-items-center justify-content-between p-4">
+                        <div class="widget-card match-card-active d-flex align-items-center justify-content-between p-3">
                             <div>
-                                <h5 class="fw-bold mb-1">
+                                <h6 class="fw-bold mb-1">
                                     <span class="pulse-dot"></span> Cuộc trò chuyện đang diễn ra
-                                </h5>
-                                <p class="mb-0 opacity-75 small">Phòng số: <strong>{{ current_match_code }}</strong></p>
+                                </h6>
+                                <p class="mb-0 opacity-75 small">Phòng: <strong>{{ current_match_code }}</strong></p>
                             </div>
-                            <a href="{{ url_for('chat_room_view', room_code=current_match_code) }}" class="btn btn-light text-success fw-bold rounded-pill px-4 shadow">
+                            <a href="{{ url_for('chat_room_view', room_code=current_match_code) }}" class="btn btn-light text-success fw-bold rounded-pill px-3 shadow" style="font-size: 0.85rem;">
                                 Tiếp tục <i class="fas fa-arrow-right ms-2"></i>
                             </a>
                         </div>
                     {% else %}
                         <!-- TRẠNG THÁI: CHƯA CÓ PHÒNG -->
-                        <div class="widget-card d-flex align-items-center justify-content-between p-4" style="background: #F0FDF4; border: 1px solid #DCFCE7;">
+                        <div class="widget-card d-flex align-items-center justify-content-between p-3" style="background: #F0FDF4; border: 1px solid #DCFCE7;">
                             <div>
-                                <h5 class="fw-bold mb-1 text-dark"><i class="fas fa-user-md text-success me-2"></i>Bạn cần chia sẻ?</h5>
-                                <p class="mb-0 text-muted small">Các chuyên gia và AI luôn sẵn sàng lắng nghe bạn.</p>
+                                <h6 class="fw-bold mb-1 text-dark"><i class="fas fa-user-md text-success me-2"></i>Bạn cần chia sẻ?</h6>
+                                <p class="mb-0 text-muted small">Các chuyên gia sẵn sàng lắng nghe.</p>
                             </div>
                             <div class="d-flex gap-2">
-                                <a href="{{ url_for('chat_interface') }}" class="btn btn-outline-custom btn-sm rounded-pill bg-white">Chat AI</a>
-                                <a href="{{ url_for('chat_home') }}" class="btn btn-primary-custom btn-sm rounded-pill">Tìm chuyên gia</a>
+                                <a href="{{ url_for('chat_interface') }}" class="btn btn-outline-custom btn-sm rounded-pill bg-white" style="font-size: 0.75rem;">Chat AI</a>
+                                <a href="{{ url_for('chat_home') }}" class="btn btn-primary-custom btn-sm rounded-pill" style="font-size: 0.75rem;">Tìm chuyên gia</a>
                             </div>
                         </div>
                     {% endif %}
                 </div>
 
-                <div class="row g-4">
-                    <!-- 2. PET WIDGET (ĐÃ CẬP NHẬT LOGIC TRỨNG CHO USER MỚI) -->
+                <div class="row g-3">
+                    <!-- 2. PET WIDGET -->
                     <div class="col-md-6">
-                        <div class="widget-card h-100 d-flex flex-column">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-paw text-warning me-2"></i>Pet của tôi</h5>
+                        <div class="widget-card h-100 d-flex flex-column" style="padding: 15px;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-paw text-warning me-2"></i>Pet</h6>
                                 {% if pet %}
-                                    <span class="badge bg-warning text-dark rounded-pill">{{ pet.mood }}</span>
+                                    <span class="badge bg-warning text-dark rounded-pill" style="font-size: 0.7rem;">{{ pet.mood }}</span>
                                 {% endif %}
                             </div>
 
                             {% if pet %}
                                 <!-- TRƯỜNG HỢP 1: ĐÃ CÓ PET -->
-                                <div class="pet-preview-box">
+                                <div class="pet-preview-box" style="height: 120px; margin: 10px 0;">
                                     <div class="pet-emoji-anim">
                                         {{ pet.appearance.face if pet.appearance else '🐶' }}
                                     </div>
                                 </div>
                                 
                                 <div class="mt-auto">
-                                    <h5 class="fw-bold text-center mb-2">{{ pet.name }}</h5>
+                                    <h6 class="fw-bold text-center mb-2" style="font-size: 0.95rem;">{{ pet.name }}</h6>
                                     
-                                    <div class="d-flex justify-content-between small text-muted mb-1">
+                                    <div class="d-flex justify-content-between small text-muted mb-1" style="font-size: 0.75rem;">
                                         <span>Năng lượng</span>
                                         <span>{{ pet.energy }}%</span>
                                     </div>
-                                    <div class="progress progress-custom">
+                                    <div class="progress progress-custom" style="height: 6px;">
                                         <div class="progress-bar progress-bar-custom bg-warning" style="width: {{ pet.energy }}%"></div>
                                     </div>
 
-                                    <a href="{{ url_for('pet_page') }}" class="btn btn-primary-custom w-100 mt-3 btn-sm rounded-pill">
-                                        Chăm sóc ngay
+                                    <a href="{{ url_for('pet_page') }}" class="btn btn-primary-custom w-100 mt-2 btn-sm rounded-pill" style="font-size: 0.75rem;">
+                                        Chăm sóc
                                     </a>
                                 </div>
                             {% else %}
                                 <!-- TRƯỜNG HỢP 2: CHƯA CÓ PET (HIỆN TRỨNG) -->
-                                <div class="flex-grow-1 d-flex flex-column align-items-center justify-content-center text-center py-3">
-                                    <div class="egg-anim mb-3" title="Chạm vào trứng để ấp!">🥚</div>
-                                    <h5 class="fw-bold text-dark">Bạn chưa có bạn đồng hành</h5>
-                                    <p class="text-muted small mb-3">Nhận nuôi một quả trứng để bắt đầu hành trình.</p>
+                                <div class="flex-grow-1 d-flex flex-column align-items-center justify-content-center text-center py-2">
+                                    <div class="egg-anim mb-2" title="Chạm vào trứng để ấp!" style="font-size: 3rem;">🥚</div>
+                                    <h6 class="fw-bold text-dark" style="font-size: 0.9rem;">Bạn chưa có pet</h6>
+                                    <p class="text-muted small mb-2" style="font-size: 0.75rem;">Nhận nuôi để bắt đầu.</p>
                                     
                                     <!-- Nút gọi API Adopt -->
-                                    <button id="btnAdoptPet" class="btn btn-primary-custom rounded-pill px-4">
-                                        <i class="fas fa-magic me-2"></i>Nhận nuôi ngay
+                                    <button id="btnAdoptPet" class="btn btn-primary-custom rounded-pill px-3" style="font-size: 0.75rem;">
+                                        <i class="fas fa-magic me-2"></i>Nhận nuôi
                                     </button>
                                 </div>
                             {% endif %}
@@ -339,40 +508,38 @@
 
                     <!-- 3. DAILY QUESTS -->
                     <div class="col-md-6">
-                        <div class="widget-card h-100 d-flex flex-column">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-tasks text-info me-2"></i>Nhiệm vụ</h5>
-                                <small class="text-muted">Hôm nay</small>
+                        <div class="widget-card h-100 d-flex flex-column" style="padding: 15px;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-tasks text-info me-2"></i>Nhiệm vụ</h6>
+                                <small class="text-muted" style="font-size: 0.7rem;">Hôm nay</small>
                             </div>
 
-                            <div class="d-flex flex-column gap-2 flex-grow-1">
+                            <div class="d-flex flex-column gap-1 flex-grow-1" style="font-size: 0.85rem;">
                                 {% if quests %}
                                     {% for quest in quests %}
-                                    <div class="quest-item">
+                                    <div class="quest-item" style="padding: 8px 0; border-bottom: 1px solid #f5f5f5;">
                                         <div class="d-flex align-items-center gap-2">
-                                            <div class="rounded-circle {{ 'bg-success' if quest.completed else 'bg-light' }}" style="width: 8px; height: 8px;"></div>
-                                            <span class="small {{ 'text-muted text-decoration-line-through' if quest.completed else 'fw-bold text-dark' }}">
-                                                {{ quest.title }}
-                                            </span>
+                                            {% if quest.completed %}
+                                                <i class="fas fa-check-circle text-success" style="font-size: 0.85rem;"></i>
+                                                <span class="small text-muted">{{ quest.title }}</span>
+                                            {% else %}
+                                                <i class="far fa-circle text-muted" style="font-size: 0.85rem;"></i>
+                                                <span class="small fw-bold text-dark">{{ quest.title }}</span>
+                                            {% endif %}
                                         </div>
-                                        {% if quest.completed %}
-                                            <i class="fas fa-check-circle quest-check-done"></i>
-                                        {% else %}
-                                            <i class="far fa-circle quest-check-pending"></i>
-                                        {% endif %}
                                     </div>
                                     {% endfor %}
                                     
-                                    <div class="mt-auto text-center pt-3">
-                                        <a href="{{ url_for('pet_page') }}" class="text-decoration-none small fw-bold text-primary">
-                                            Thực hiện nhiệm vụ <i class="fas fa-arrow-right ms-1"></i>
+                                    <div class="mt-auto text-center pt-2">
+                                        <a href="{{ url_for('pet_page') }}" class="text-decoration-none small fw-bold text-primary" style="font-size: 0.75rem;">
+                                            Làm nhiệm vụ <i class="fas fa-arrow-right ms-1"></i>
                                         </a>
                                     </div>
                                 {% else %}
-                                    <div class="text-center py-5 text-muted small flex-grow-1 d-flex flex-column justify-content-center">
+                                    <div class="text-center py-2 text-muted small flex-grow-1 d-flex flex-column justify-content-center">
                                         <div>
-                                            <i class="fas fa-mug-hot fs-3 mb-2 opacity-50"></i><br>
-                                            Chưa có nhiệm vụ mới.
+                                            <i class="fas fa-mug-hot fs-4 mb-2 opacity-50"></i><br>
+                                            <span style="font-size: 0.75rem;">Chưa có nhiệm vụ</span>
                                         </div>
                                     </div>
                                 {% endif %}
@@ -381,10 +548,10 @@
                     </div>
                 </div>
 
-                <!-- 4. FOOTER QUOTE -->
-                <div class="mt-4 p-4 rounded-4 text-center" style="background: rgba(255,255,255,0.6); border: 1px dashed #A3B18A;">
+                <!-- FOOTER QUOTE -->
+                <div class="mt-2 p-2 rounded-3 text-center" style="background: rgba(255,255,255,0.6); border: 1px dashed #A3B18A; font-size: 0.75rem;">
                     <p class="mb-0 fst-italic text-muted">
-                        "Hạnh phúc không phải là đích đến, mà là hành trình chúng ta đang đi." 🌿
+                        "Hạnh phúc là hành trình chúng ta đang đi." 🌿
                     </p>
                 </div>
 
@@ -420,7 +587,7 @@
     </form>
 </div>
 
-<!-- SCRIPT CHO POPUP & ADOPT PET -->
+<!-- SCRIPT CHO POPUP & ADOPT PET & NEW WIDGETS -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Popup Update Logic
