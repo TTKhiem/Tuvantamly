@@ -81,8 +81,13 @@
             <!-- Menu Items -->
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'home' }}" href="{{ url_for('home') }}">Trang chủ</a></li>
-                    <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'resources' }}" href="{{ url_for('resources') }}">Tài nguyên</a></li>
+                    {% if session.get('user_id') %}
+                        <!-- Đã đăng nhập - Trang chủ = Dashboard -->
+                        <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'dashboard' }}" href="{{ url_for('dashboard') }}">Trang chủ</a></li>
+                    {% else %}
+                        <!-- Chưa đăng nhập - Trang chủ = Home (Demo) -->
+                        <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'home' }}" href="{{ url_for('home') }}">Trang chủ</a></li>
+                    {% endif %}
                     
                     {% if session.get('user_id') %}
                         <!-- Đã đăng nhập -->
@@ -91,9 +96,9 @@
                         {% elif session.get('role') == 'admin' %}
                             <li class="nav-item"><a class="nav-link fw-bold text-danger" href="{{ url_for('admin_dashboard') }}">Admin Panel</a></li>
                         {% else %}
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a></li>
                             <li class="nav-item"><a class="nav-link" href="{{ url_for('pet_page') }}">Thú cưng</a></li>
                             <li class="nav-item"><a class="nav-link" href="{{ url_for('chat_home') }}">Tư vấn</a></li>
+                            <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'resources' }}" href="{{ url_for('resources') }}">Tài nguyên</a></li>
                         {% endif %}
 
                         <!-- Dropdown User Avatar -->
