@@ -168,6 +168,73 @@ def pet_page():
     # ------------------------------
 
     return render_template('pet.html', username=session.get('username'))
+
+@app.route('/resources')
+def resources():
+    """Trang Resources - Hiển thị Videos và E-books"""
+    user_data = None
+    headline = "Tài Nguyên Hỗ Trợ"
+    videos = []
+    ebooks = []
+    error_message = None
+    
+    # Nếu user đã login
+    if 'user_id' in session:
+        db = database.get_db()
+        user_data = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
+        user_tags = user_data['tags'] if user_data and user_data['tags'] else ""
+        
+        print(f"DEBUG: User tags from DB: '{user_tags}'")
+        
+        # Nếu user chưa chat (không có tags)
+        if not user_tags:
+            error_message = "Bạn chưa hoàn thành phiên tư vấn"
+        else:
+            # Load resources JSON
+            try:
+                with open(os.path.join(app.root_path, 'static/static/resources.json'), 'r', encoding='utf-8') as f:
+                    resources_data = json.load(f)
+                
+                # Parse user tags (có thể là chuỗi được phân tách bởi dấu phẩy)
+                user_tag_list = [tag.strip() for tag in user_tags.split(',') if tag.strip()]
+                print(f"DEBUG: Parsed user tags: {user_tag_list}")
+                
+                # Lọc videos theo tags
+                all_videos = resources_data.get('videos', [])
+                for video in all_videos:
+                    video_tag = video.get('tags', '').strip()
+                    if video_tag in user_tag_list:
+                        videos.append(video)
+                        print(f"DEBUG: Found matching video: {video['title']} (tag: {video_tag})")
+                
+                # Lọc ebooks theo tags
+                all_ebooks = resources_data.get('ebooks', [])
+                for ebook in all_ebooks:
+                    ebook_tag = ebook.get('tags', '').strip()
+                    if ebook_tag in user_tag_list:
+                        ebooks.append(ebook)
+                        print(f"DEBUG: Found matching ebook: {ebook['title']} (tag: {ebook_tag})")
+                
+                print(f"DEBUG: Total videos found: {len(videos)}, Total ebooks found: {len(ebooks)}")
+                
+                # Thiết lập headline
+                headline = f"Tài Nguyên được gợi ý cho bạn ({', '.join(user_tag_list)})"
+                
+            except FileNotFoundError as e:
+                error_message = f"Không tìm thấy file tài nguyên: {e}"
+                print(f"DEBUG: FileNotFoundError: {e}")
+            except json.JSONDecodeError as e:
+                error_message = f"Lỗi đọc file tài nguyên: {e}"
+                print(f"DEBUG: JSONDecodeError: {e}")
+    else:
+        error_message = "Vui lòng đăng nhập để xem tài nguyên"
+    
+    return render_template('resources.html', 
+                         user=user_data,
+                         headline=headline,
+                         videos=videos,
+                         ebooks=ebooks,
+                         error_message=error_message)
 @app.route('/user_profile')
 def user_profile():
     if 'user_id' not in session: return redirect(url_for('home'))
