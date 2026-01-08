@@ -82,6 +82,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'home' }}" href="{{ url_for('home') }}">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'resources' }}" href="{{ url_for('resources') }}">Tài nguyên</a></li>
                     
                     {% if session.get('user_id') %}
                         <!-- Đã đăng nhập -->
