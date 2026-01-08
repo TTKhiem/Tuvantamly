@@ -253,7 +253,12 @@
         margin: 20px 0;
         border: 2px dashed #CCD5AE;
     }
-    .pet-emoji-anim { font-size: 4rem; animation: bounce 3s infinite; }
+    .pet-emoji-anim { 
+        font-size: 4rem; 
+        animation: bounce 3s infinite; 
+        /* Thêm text-shadow để emoji nổi lên trên nền ảnh */
+         text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
     
     /* Animation cho quả trứng */
     @keyframes egg-wobble {
@@ -469,7 +474,18 @@
 
                             {% if pet %}
                                 <!-- TRƯỜNG HỢP 1: ĐÃ CÓ PET -->
-                                <div class="pet-preview-box" style="height: 120px; margin: 10px 0;">
+                                <div class="pet-preview-box" 
+                                     style="height: 120px; 
+                                            margin: 10px 0;
+                                            /* Kiểm tra nếu có link ảnh thì mới set background image */
+                                            {% if pet.background_url %}
+                                                background-image: url('{{ pet.background_url }}');
+                                                background-size: cover;
+                                                background-position: center;
+                                                background-repeat: no-repeat;
+                                                border: 2px solid #CCD5AE; /* (Tùy chọn) Đổi border thành solid cho dễ nhìn hơn trên nền ảnh */
+                                            {% endif %}">
+                                    
                                     <div class="pet-emoji-anim">
                                         {{ pet.appearance.face if pet.appearance else '🐶' }}
                                     </div>

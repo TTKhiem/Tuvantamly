@@ -39,9 +39,9 @@ PET_BACKGROUNDS = {
 
 # --- HỆ THỐNG PET ---
 EVOLUTION_STAGES = {
-    1: {"name_template": "Young {}", "face": "^_^"},
-    5: {"name_template": "Energetic {}", "face": "O_O"},
-    10: {"name_template": "Wise {}", "face": "(`-´)"}
+    1: {"name_template": "{}", "face": "^_^"},
+    5: {"name_template": "{}", "face": "O_O"},
+    10: {"name_template": "{}", "face": "(`-´)"}
 }
 
 class Pet:
