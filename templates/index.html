@@ -75,23 +75,45 @@
         box-shadow: 0 15px 35px rgba(52, 78, 65, 0.4);
     }
 
-    /* --- RIGHT SIDE DESIGN (UI COMPOSITION) --- */
-    /* Khung chứa các thành phần bay lơ lửng */
-    .hero-visual-wrapper {
+    /* --- HERO ILLUSTRATION --- */
+    .hero-illustration {
         position: relative;
-        height: 500px;
+        z-index: 2;
+        animation: slideInIllustration 0.8s ease-out;
         width: 100%;
-        perspective: 1000px; /* Tạo chiều sâu 3D */
+        max-width: 450px;
+        filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.1));
     }
 
-    /* 1. Main Glass Card (Thẻ chính giữa) */
+    .hero-illustration svg {
+        width: 100%;
+        height: auto;
+        transition: transform 0.3s ease;
+    }
+
+    .hero-illustration:hover svg {
+        transform: translateY(-8px);
+    }
+
+    @keyframes slideInIllustration {
+        from {
+            opacity: 0;
+            transform: translateX(40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    /* --- GLASS CARD & FLOATING WIDGETS --- */
     .glass-dashboard-card {
         position: absolute;
         top: 50%; left: 50%;
         transform: translate(-50%, -50%);
         width: 320px;
-        background: rgba(255, 255, 255, 0.65); /* Màu trắng đục */
-        backdrop-filter: blur(20px); /* Kính mờ cực mạnh */
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(20px);
         border: 1px solid rgba(255, 255, 255, 0.8);
         border-radius: 24px;
         padding: 25px;
@@ -100,7 +122,6 @@
         animation: floatMain 6s ease-in-out infinite;
     }
 
-    /* Nội dung giả lập bên trong thẻ chính */
     .ui-header { display: flex; align-items: center; margin-bottom: 20px; }
     .ui-avatar { width: 45px; height: 45px; border-radius: 50%; background: #A3B18A; margin-right: 12px; border: 2px solid white; }
     .ui-lines { flex: 1; }
@@ -117,7 +138,7 @@
     .ui-emoji { opacity: 0.4; transition: 0.3s; }
     .ui-emoji.active { opacity: 1; transform: scale(1.3); }
 
-    /* 2. Floating Widget 1 (Góc trên phải - Thông báo) */
+    /* Floating Widget 1 (Top Right) */
     .float-widget-1 {
         position: absolute;
         top: 10%; right: 0;
@@ -133,7 +154,7 @@
         animation-delay: 1s;
     }
 
-    /* 3. Floating Widget 2 (Góc dưới trái - Pet) */
+    /* Floating Widget 2 (Bottom Left) */
     .float-widget-2 {
         position: absolute;
         bottom: 15%; left: -20px;
@@ -149,6 +170,32 @@
         animation: float 7s ease-in-out infinite;
         animation-delay: 2s;
     }
+
+    /* Animation bay nhẹ */
+    @keyframes floatMain {
+        0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+        50% { transform: translate(-50%, -50%) translateY(-15px); }
+    }
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    /* --- RIGHT SIDE DESIGN (UI COMPOSITION) --- */
+    /* Khung chứa các thành phần bay lơ lửng */
+    .hero-visual-wrapper {
+        position: relative;
+        height: 600px;
+        width: 100%;
+        perspective: 1000px; /* Tạo chiều sâu 3D */
+    }
+
+    /* 1. Main Glass Card (Thẻ chính giữa) */
+    /* Old unused styles removed */
+
+    /* Old glass card styles - REMOVED */
+    /* .glass-dashboard-card { } */
+    /* Old unused styles removed */
 
     /* Animation bay nhẹ */
     @keyframes floatMain {
@@ -378,110 +425,310 @@
     </div>
 </section>
 
-<!-- 3. FEATURED THERAPISTS -->
-<section class="py-5" style="background-color: #F8F9FA;">
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-end mb-5" data-aos="fade-right">
-            <div>
-                <h2 class="fw-bold mb-2 text-dark">Chuyên gia tiêu biểu</h2>
-                <p class="text-muted mb-0">Những người lắng nghe tốt nhất tuần này</p>
-            </div>
-            <a href="#" class="btn btn-outline-secondary rounded-pill px-4">Xem tất cả</a>
+<!-- 3. WHY SOULMATE - ANIMATED STATS + FEATURES -->
+<section class="py-5 position-relative overflow-hidden" style="background: linear-gradient(135deg, #f5f7f6 0%, #ffffff 100%);">
+    <!-- Decorative background elements -->
+    <div style="position: absolute; top: -100px; right: -100px; width: 300px; height: 300px; background: rgba(163, 177, 138, 0.1); border-radius: 50%; z-index: 0;"></div>
+    <div style="position: absolute; bottom: -50px; left: -50px; width: 200px; height: 200px; background: rgba(88, 129, 87, 0.08); border-radius: 50%; z-index: 0;"></div>
+    
+    <div class="container position-relative" style="z-index: 1;">
+        <!-- Header -->
+        <div class="text-center mb-5" data-aos="fade-up">
+            <h2 class="fw-bold mb-3" style="font-size: 2.5rem; color: #2F3E46;">Tại sao chọn SoulMate?</h2>
+            <p class="text-muted fs-5" style="max-width: 600px; margin: 0 auto;">Chúng tôi không chỉ là ứng dụng tư vấn - chúng tôi là hành trình chữa lành cá nhân hóa của bạn</p>
         </div>
 
+<!-- 2. SERVICES SECTION -->
+
+        <!-- Stats Section - Animated Counters -->
+        <div class="row g-4 mb-5">
+            <!-- Stat 1: Users -->
+            <div class="col-md-3 col-sm-6" data-aos="zoom-in" data-aos-delay="0">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #588157 0%, #A3B18A 100%);">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number" data-target="2500">0</h3>
+                        <p class="stat-label">Sinh viên đã giúp</p>
+                        <p class="stat-subtext">Hành trình chữa lành đã bắt đầu</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stat 2: Therapists -->
+            <div class="col-md-3 col-sm-6" data-aos="zoom-in" data-aos-delay="100">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #D4A5A5 0%, #BC4749 100%);">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number" data-target="150">0</h3>
+                        <p class="stat-label">Chuyên gia tâm lý</p>
+                        <p class="stat-subtext">Được xác thực & kỳ cựu</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stat 3: Messages -->
+            <div class="col-md-3 col-sm-6" data-aos="zoom-in" data-aos-delay="200">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #A8D5BA 0%, #52B788 100%);">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number" data-target="50000">0</h3>
+                        <p class="stat-label">Cuộc trò chuyện</p>
+                        <p class="stat-subtext">Hỗ trợ 24/7, không khoảng trắng</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stat 4: Success Rate -->
+            <div class="col-md-3 col-sm-6" data-aos="zoom-in" data-aos-delay="300">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #FFE082 0%, #FDD835 100%);">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number" data-target="94">0<span>%</span></h3>
+                        <p class="stat-label">Hài lòng</p>
+                        <p class="stat-subtext">Đánh giá từ người dùng</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Grid -->
+        <h3 class="fw-bold mb-4 text-center" style="color: #2F3E46; font-size: 1.8rem;">Các tính năng nổi bật</h3>
         <div class="row g-4">
-            <!-- Therapist 1 -->
-            <div class="col-md-6 col-lg-3" data-aos="zoom-in" data-aos-delay="100">
-                <div class="therapist-card">
-                    <div class="therapist-img-wrapper">
-                        <span class="status-badge"><i class="fas fa-circle text-success me-1" style="font-size: 8px;"></i> Online</span>
-                        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1976&auto=format&fit=crop" class="therapist-img" alt="Doctor">
+            <!-- Feature 1 -->
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="0">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
                     </div>
-                    <div class="therapist-body">
-                        <h5 class="fw-bold mb-1 text-dark">Dr. Sarah Nguyễn</h5>
-                        <p class="text-muted small mb-2">Chuyên gia Tâm lý học</p>
-                        <div class="d-flex align-items-center mb-3">
-                            <i class="fas fa-star rating-star me-1"></i>
-                            <span class="fw-bold me-1 text-dark">4.9</span>
-                            <span class="text-muted small">(120 đánh giá)</span>
-                        </div>
-                        <div class="d-flex flex-wrap gap-1 mb-3">
-                            <span class="badge bg-light text-dark fw-normal">Trầm cảm</span>
-                            <span class="badge bg-light text-dark fw-normal">Lo âu</span>
-                        </div>
-                    </div>
+                    <h5 class="fw-bold mb-2">AI Thấu Cảm 24/7</h5>
+                    <p class="text-muted mb-3">Chatbot thông minh luôn sẵn sàng lắng nghe, hỗ trợ ngay khi bạn cần, bất kỳ lúc nào.</p>
+                    <div class="feature-highlight">✓ Phân tích cảm xúc</div>
                 </div>
             </div>
 
-            <!-- Therapist 2 -->
-            <div class="col-md-6 col-lg-3" data-aos="zoom-in" data-aos-delay="200">
-                <div class="therapist-card">
-                    <div class="therapist-img-wrapper">
-                        <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop" class="therapist-img" alt="Doctor">
+            <!-- Feature 2 -->
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-handshake"></i>
                     </div>
-                    <div class="therapist-body">
-                        <h5 class="fw-bold mb-1 text-dark">ThS. Trần Minh</h5>
-                        <p class="text-muted small mb-2">Tư vấn viên</p>
-                        <div class="d-flex align-items-center mb-3">
-                            <i class="fas fa-star rating-star me-1"></i>
-                            <span class="fw-bold me-1 text-dark">4.8</span>
-                            <span class="text-muted small">(85 đánh giá)</span>
-                        </div>
-                        <div class="d-flex flex-wrap gap-1 mb-3">
-                            <span class="badge bg-light text-dark fw-normal">Stress</span>
-                            <span class="badge bg-light text-dark fw-normal">Gia đình</span>
-                        </div>
-                    </div>
+                    <h5 class="fw-bold mb-2">Kết Nối Chuyên Gia</h5>
+                    <p class="text-muted mb-3">Được ghép cặp với therapist phù hợp dựa trên nhu cầu cá nhân của bạn.</p>
+                    <div class="feature-highlight">✓ Lựa chọn phù hợp</div>
                 </div>
             </div>
 
-            <!-- Therapist 3 -->
-            <div class="col-md-6 col-lg-3" data-aos="zoom-in" data-aos-delay="300">
-                <div class="therapist-card">
-                    <div class="therapist-img-wrapper">
-                        <span class="status-badge"><i class="fas fa-circle text-success me-1" style="font-size: 8px;"></i> Online</span>
-                        <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=2070&auto=format&fit=crop" class="therapist-img" alt="Doctor">
+            <!-- Feature 3 -->
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-paw"></i>
                     </div>
-                    <div class="therapist-body">
-                        <h5 class="fw-bold mb-1 text-dark">Dr. Emily Trần</h5>
-                        <p class="text-muted small mb-2">Trị liệu nhận thức</p>
-                        <div class="d-flex align-items-center mb-3">
-                            <i class="fas fa-star rating-star me-1"></i>
-                            <span class="fw-bold me-1 text-dark">5.0</span>
-                            <span class="text-muted small">(200 đánh giá)</span>
-                        </div>
-                        <div class="d-flex flex-wrap gap-1 mb-3">
-                            <span class="badge bg-light text-dark fw-normal">Trauma</span>
-                            <span class="badge bg-light text-dark fw-normal">Giấc ngủ</span>
-                        </div>
-                    </div>
+                    <h5 class="fw-bold mb-2">Pet Đồng Hành</h5>
+                    <p class="text-muted mb-3">Nuôi dưỡng người bạn ảo. Mỗi bước tiến đều giúp thú cưng của bạn lớn lên.</p>
+                    <div class="feature-highlight">✓ Động lực hàng ngày</div>
                 </div>
             </div>
 
-            <!-- Therapist 4 -->
-            <div class="col-md-6 col-lg-3" data-aos="zoom-in" data-aos-delay="400">
-                <div class="therapist-card">
-                    <div class="therapist-img-wrapper">
-                        <img src="https://images.unsplash.com/photo-1537368910025-700350fe46c7?q=80&w=2070&auto=format&fit=crop" class="therapist-img" alt="Doctor">
+            <!-- Feature 4 -->
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-lock"></i>
                     </div>
-                    <div class="therapist-body">
-                        <h5 class="fw-bold mb-1 text-dark">BS. Lê Hoàng</h5>
-                        <p class="text-muted small mb-2">Bác sĩ tâm thần</p>
-                        <div class="d-flex align-items-center mb-3">
-                            <i class="fas fa-star rating-star me-1"></i>
-                            <span class="fw-bold me-1 text-dark">4.7</span>
-                            <span class="text-muted small">(50 đánh giá)</span>
-                        </div>
-                        <div class="d-flex flex-wrap gap-1 mb-3">
-                            <span class="badge bg-light text-dark fw-normal">Rối loạn</span>
-                            <span class="badge bg-light text-dark fw-normal">Thuốc</span>
-                        </div>
+                    <h5 class="fw-bold mb-2">Bảo Mật Tuyệt Đối</h5>
+                    <p class="text-muted mb-3">Dữ liệu của bạn được mã hóa end-to-end. Sự riêng tư là ưu tiên hàng đầu.</p>
+                    <div class="feature-highlight">✓ HIPAA compliant</div>
+                </div>
+            </div>
+
+            <!-- Feature 5 -->
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="400">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-book"></i>
                     </div>
+                    <h5 class="fw-bold mb-2">Thư Viện Tài Nguyên</h5>
+                    <p class="text-muted mb-3">500+ bài viết, video, và bài tập do chuyên gia tuyển chọn.</p>
+                    <div class="feature-highlight">✓ Học tập liên tục</div>
+                </div>
+            </div>
+
+            <!-- Feature 6 -->
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="500">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Theo Dõi Tiến Độ</h5>
+                    <p class="text-muted mb-3">Xem hành trình của bạn qua các biểu đồ và nhận insights cá nhân.</p>
+                    <div class="feature-highlight">✓ Đo lường cải thiện</div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Inline Styles for Stats and Features -->
+    <style>
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px 20px;
+            display: flex;
+            gap: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(163, 177, 138, 0.2);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+
+        .stat-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+
+        .stat-content {
+            flex: 1;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #2F3E46;
+            margin: 0;
+            line-height: 1;
+        }
+
+        .stat-number span {
+            font-size: 1.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #344E41;
+            margin: 8px 0 4px;
+        }
+
+        .stat-subtext {
+            font-size: 0.85rem;
+            color: #888;
+            margin: 0;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(163, 177, 138, 0.2);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+        }
+
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, rgba(163, 177, 138, 0.2), rgba(88, 129, 87, 0.1));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 2rem;
+            color: #588157;
+        }
+
+        .feature-highlight {
+            margin-top: auto;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #588157;
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        @media (max-width: 768px) {
+            .stat-card {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .stat-icon {
+                margin: 0 auto;
+            }
+        }
+    </style>
 </section>
+
+<!-- JavaScript for animated counters -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const statNumbers = document.querySelectorAll('.stat-number');
+        
+        const animateCounter = (element) => {
+            const target = parseInt(element.getAttribute('data-target'));
+            const duration = 2000; // 2 seconds
+            const start = 0;
+            const startTime = Date.now();
+            
+            const updateCounter = () => {
+                const now = Date.now();
+                const progress = Math.min((now - startTime) / duration, 1);
+                const current = Math.floor(start + (target - start) * progress);
+                
+                element.textContent = current.toLocaleString();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(updateCounter);
+                } else {
+                    element.textContent = target.toLocaleString();
+                }
+            };
+            
+            updateCounter();
+        };
+
+        // Trigger animation when element comes into view
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateCounter(entry.target);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        statNumbers.forEach(el => observer.observe(el));
+    });
+</script>
 
 <!-- 4. CTA -->
 <section class="py-5">
