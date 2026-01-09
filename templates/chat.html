@@ -122,100 +122,281 @@
             border-color: transparent;
         }
 
-        /* --- 4. GIAO DIỆN CHAT (GLASS FRAME - UPGRADED) --- */
+        /* --- 4. GIAO DIỆN CHAT (MODERN LIGHT DESIGN) --- */
         .chat-wrapper {
             position: fixed; width: 1100px; height: 90vh; max-width: 95vw;
-            /* Glassmorphism mạnh hơn */
-            background: rgba(20, 30, 25, 0.65); 
-            backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
-            border: 1px solid rgba(255,255,255,0.15); border-radius: 30px;
-            box-shadow: 0 50px 100px -20px rgba(0,0,0,0.7);
+            background: linear-gradient(135deg, #FFFFFF 0%, #F5F9F8 100%);
+            border: 2px solid rgba(163, 177, 138, 0.2);
+            border-radius: 30px;
+            box-shadow: 0 30px 80px rgba(52, 78, 65, 0.15);
             display: flex; overflow: hidden;
             opacity: 0; transform: scale(0.95) translateY(50px); pointer-events: none;
             transition: all 1s cubic-bezier(0.16, 1, 0.3, 1); z-index: 30;
         }
 
-        /* Sidebar */
+        /* Sidebar - FULL REDESIGN */
         .chat-sidebar {
-            width: 320px; background: rgba(0,0,0,0.25); border-right: 1px solid rgba(255,255,255,0.08);
-            padding: 50px 30px; display: flex; flex-direction: column; align-items: center;
+            width: 320px; 
+            background: linear-gradient(180deg, #2A3E37 0%, #1F2E2A 50%, #344E41 100%);
+            border-right: 2px solid rgba(163, 177, 138, 0.2);
+            padding: 40px 28px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chat-sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 0%, rgba(163, 177, 138, 0.05), transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .sidebar-content {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+
+        /* Mini Orb - GLOWING EFFECT với Soul Ring */
+        .mini-orb-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+            animation: floatMini 3s ease-in-out infinite;
         }
 
         .mini-orb {
-            width: 90px; height: 90px; background: radial-gradient(circle at 30% 30%, #588157, #3A5A40);
-            border-radius: 50%; margin-bottom: 25px;
-            box-shadow: 0 0 30px rgba(74, 222, 128, 0.4); 
-            animation: morph 6s infinite alternate;
+            width: 100px; 
+            height: 100px; 
+            background: radial-gradient(circle at 35% 35%, #A3B18A, #588157, #3A5A40);
+            border-radius: 50%; 
+            box-shadow: 
+                0 0 40px rgba(163, 177, 138, 0.6),
+                0 0 60px rgba(88, 129, 87, 0.3),
+                inset -2px -2px 10px rgba(0, 0, 0, 0.3),
+                inset 2px 2px 10px rgba(255, 255, 255, 0.2);
+            animation: orbGlow 4s ease-in-out infinite, morphMini 6s ease-in-out infinite alternate;
+            position: relative;
+            z-index: 2;
         }
 
-        .sidebar-title { font-family: 'Playfair Display', serif; font-size: 2rem; margin-bottom: 5px; color: #fff; }
-        .sidebar-desc { color: var(--accent-glow); font-size: 0.95rem; margin-bottom: 50px; font-weight: 300; letter-spacing: 1px; }
+        .mini-orb::after {
+            content: '';
+            position: absolute;
+            top: 20%;
+            left: 25%;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            filter: blur(3px);
+        }
 
-        .feature-list { width: 100%; text-align: left; flex: 1; }
-        .feature-item { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; color: rgba(255,255,255,0.8); font-size: 0.95rem; font-weight: 300; }
-        .feature-icon { width: 36px; height: 36px; background: rgba(255,255,255,0.08); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--accent-glow); }
+        /* Soul Ring cho mini-orb */
+        .mini-soul-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid rgba(163, 177, 138, 0.4);
+            border-radius: 50%;
+            animation: spinMini 12s linear infinite;
+            z-index: 1;
+        }
 
+        .mini-soul-ring::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 8px;
+            background: rgba(163, 177, 138, 0.8);
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(163, 177, 138, 0.8);
+        }
+
+        @keyframes floatMini {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
+        }
+
+        @keyframes spinMini {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes morphMini {
+            0%, 100% { border-radius: 50%; }
+            50% { border-radius: 40% 60% 60% 40% / 50% 50% 50% 50%; }
+        }
+
+        /* Sidebar Text */
+        .sidebar-title { 
+            font-family: 'Playfair Display', serif; 
+            font-size: 2.2rem; 
+            margin-bottom: 8px; 
+            color: #FFFFFF;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .sidebar-desc { 
+            color: #A3B18A;
+            font-size: 0.9rem; 
+            margin-bottom: 40px; 
+            font-weight: 400;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+
+        /* Feature List - REDESIGNED */
+        .feature-list { 
+            width: 100%; 
+            text-align: left; 
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .feature-item { 
+            display: flex; 
+            align-items: flex-start; 
+            gap: 14px; 
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.9rem; 
+            font-weight: 400;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            border: 1px solid rgba(163, 177, 138, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover {
+            background: rgba(163, 177, 138, 0.12);
+            border-color: rgba(163, 177, 138, 0.3);
+            transform: translateX(4px);
+        }
+
+        .feature-icon { 
+            width: 40px; 
+            height: 40px; 
+            background: linear-gradient(135deg, rgba(88, 129, 87, 0.3), rgba(163, 177, 138, 0.2));
+            border: 1px solid rgba(163, 177, 138, 0.3);
+            border-radius: 10px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: #A3B18A;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        /* Button - MODERN DESIGN */
         .btn-end {
-            width: 100%; background: linear-gradient(135deg, #BC4749, #9B2226); 
-            color: white; border: none; padding: 16px;
-            border-radius: 16px; font-weight: 600; cursor: pointer; transition: 0.3s;
-            box-shadow: 0 10px 20px rgba(188, 71, 73, 0.3);
+            width: 100%; 
+            background: linear-gradient(135deg, #588157 0%, #3A5A40 100%);
+            color: #FFFFFF; 
+            border: none; 
+            padding: 16px 24px;
+            border-radius: 14px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 8px 24px rgba(88, 129, 87, 0.3);
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
-        .btn-end:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(188, 71, 73, 0.5); }
+
+        .btn-end:hover { 
+            transform: translateY(-4px); 
+            box-shadow: 0 12px 32px rgba(88, 129, 87, 0.4);
+        }
+
+        .btn-end:active {
+            transform: translateY(-1px);
+        }
 
         /* Main Chat Area */
-        .chat-main { flex: 1; display: flex; flex-direction: column; position: relative; background: rgba(0,0,0,0.1); }
+        .chat-main { flex: 1; display: flex; flex-direction: column; position: relative; background: #FFFFFF; }
         
         .chat-header {
-            padding: 25px 40px; border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding: 25px 40px; border-bottom: 2px solid rgba(163, 177, 138, 0.15);
             display: flex; justify-content: space-between; align-items: center;
+            background: linear-gradient(90deg, rgba(255,255,255,0.9) 0%, rgba(241, 245, 242, 0.7) 100%);
         }
-        .user-welcome { font-weight: 600; font-size: 1.2rem; color: #fff; }
+        .user-welcome { font-weight: 700; font-size: 1.2rem; color: #344E41; }
         .status-badge { 
-            font-size: 0.85rem; color: #064E3B; background: var(--accent-glow); 
-            padding: 6px 14px; border-radius: 20px; font-weight: 700; 
-            box-shadow: 0 0 15px rgba(74, 222, 128, 0.5);
-            display: flex; align-items: center; gap: 6px;
+            font-size: 0.85rem; color: #FFFFFF; background: #588157; 
+            padding: 8px 16px; border-radius: 20px; font-weight: 700; 
+            box-shadow: 0 4px 12px rgba(88, 129, 87, 0.25);
+            display: flex; align-items: center; gap: 8px;
         }
-        .status-dot { width: 8px; height: 8px; background: #064E3B; border-radius: 50%; animation: pulse 2s infinite; }
+        .status-dot { width: 8px; height: 8px; background: #FFFFFF; border-radius: 50%; animation: pulse 2s infinite; }
 
         .chat-window {
             flex: 1; padding: 40px; overflow-y: auto;
-            display: flex; flex-direction: column; gap: 25px; scroll-behavior: smooth;
+            display: flex; flex-direction: column; gap: 20px; scroll-behavior: smooth;
+            background: #FFFFFF;
         }
         
-        /* Scrollbar */
-        .chat-window::-webkit-scrollbar { width: 6px; }
-        .chat-window::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+        /* Scrollbar - Light Theme */
+        .chat-window::-webkit-scrollbar { width: 8px; }
+        .chat-window::-webkit-scrollbar-track { background: transparent; }
+        .chat-window::-webkit-scrollbar-thumb { background: rgba(163, 177, 138, 0.3); border-radius: 4px; }
+        .chat-window::-webkit-scrollbar-thumb:hover { background: rgba(163, 177, 138, 0.5); }
 
         .message { 
-            max-width: 75%; padding: 18px 26px; font-size: 1.05rem; line-height: 1.6; 
+            max-width: 75%; padding: 16px 24px; font-size: 1rem; line-height: 1.6; 
             animation: msgPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
+            border-radius: 18px;
         }
         .bot { 
             align-self: flex-start; 
-            background: rgba(255,255,255,0.08); 
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 24px 24px 24px 4px; 
-            color: rgba(255,255,255,0.95);
+            background: #F5F5F5; 
+            border: 1px solid rgba(163, 177, 138, 0.2);
+            color: #333;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         .user { 
             align-self: flex-end; 
-            background: var(--accent-glow); 
-            color: #064E3B; 
-            border-radius: 24px 24px 4px 24px; 
+            background: linear-gradient(135deg, #588157 0%, #3A5A40 100%);
+            color: #FFFFFF; 
             font-weight: 500;
-            box-shadow: 0 10px 30px rgba(74, 222, 128, 0.15);
+            box-shadow: 0 6px 20px rgba(88, 129, 87, 0.2);
         }
 
-        /* Input Area (FIX LỖI LỆCH NÚT) */
+        /* Input Area */
         .input-area { 
             padding: 30px 40px; 
-            border-top: 1px solid rgba(255,255,255,0.08); 
+            border-top: 2px solid rgba(163, 177, 138, 0.15); 
             position: relative; 
             display: flex; 
             justify-content: center;
+            background: #FFFFFF;
         }
         
         .input-wrapper-inner {
@@ -227,33 +408,39 @@
 
         .chat-input {
             width: 100%; 
-            background: rgba(0,0,0,0.3); 
-            border: 1px solid rgba(255,255,255,0.15);
-            padding: 20px 25px; padding-right: 70px; /* Chừa chỗ cho nút gửi */
-            border-radius: 60px;
-            color: white; font-family: 'Outfit', sans-serif; font-size: 1.1rem; 
+            background: #F5F9F8; 
+            border: 2px solid rgba(163, 177, 138, 0.25);
+            padding: 16px 22px; padding-right: 70px;
+            border-radius: 30px;
+            color: #333; font-family: 'Outfit', sans-serif; font-size: 1rem; 
             outline: none; transition: 0.3s;
         }
-        .chat-input:focus { border-color: var(--accent-glow); background: rgba(0,0,0,0.5); box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.1); }
+        .chat-input::placeholder { color: #999; }
+        .chat-input:focus { 
+            border-color: #588157; 
+            background: #FFFFFF; 
+            box-shadow: 0 0 0 3px rgba(88, 129, 87, 0.1); 
+        }
         
-        /* Nút gửi nằm TRONG input */
+        /* Send Button */
         .btn-send {
             position: absolute; 
-            right: 10px; 
+            right: 8px; 
             top: 50%; transform: translateY(-50%);
-            width: 50px; height: 50px; 
-            background: var(--accent-glow); 
+            width: 44px; height: 44px; 
+            background: linear-gradient(135deg, #588157 0%, #3A5A40 100%);
             border: none; border-radius: 50%;
-            color: #064E3B; font-size: 1.3rem; 
+            color: #FFFFFF; font-size: 1.1rem; 
             cursor: pointer; display: flex; align-items: center; justify-content: center;
             transition: 0.3s;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(88, 129, 87, 0.25);
         }
-        .btn-send:hover { transform: translateY(-50%) scale(1.1); box-shadow: 0 0 20px var(--accent-glow); }
+        .btn-send:hover { transform: translateY(-50%) scale(1.08); box-shadow: 0 6px 16px rgba(88, 129, 87, 0.35); }
+        .btn-send:active { transform: translateY(-50%) scale(0.95); }
 
         /* Typing */
-        .typing { display: none; align-self: flex-start; background: rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 30px; gap: 6px; margin-bottom: 10px; }
-        .dot { width: 8px; height: 8px; background: rgba(255,255,255,0.5); border-radius: 50%; animation: bounce 1.4s infinite; }
+        .typing { display: none; align-self: flex-start; background: #F5F5F5; padding: 12px 20px; border-radius: 20px; gap: 6px; margin-bottom: 10px; border: 1px solid rgba(163, 177, 138, 0.2); }
+        .dot { width: 8px; height: 8px; background: #999; border-radius: 50%; animation: bounce 1.4s infinite; }
         .dot:nth-child(2) { animation-delay: 0.2s; } .dot:nth-child(3) { animation-delay: 0.4s; }
 
         /* ACTIVE STATE */
@@ -269,11 +456,134 @@
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
         @keyframes pulse { 0% { transform: scale(0.9); opacity: 0.7; } 50% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.9); opacity: 0.7; } }
 
+        /* CUSTOM MODAL DIALOG */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #FFFFFF;
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            text-align: center;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        .modal-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #344E41;
+            margin-bottom: 15px;
+        }
+
+        .modal-message {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn-modal {
+            padding: 12px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .btn-modal-cancel {
+            background: #F5F5F5;
+            color: #666;
+            border: 2px solid rgba(163, 177, 138, 0.3);
+        }
+
+        .btn-modal-cancel:hover {
+            background: #E8E8E8;
+            border-color: rgba(163, 177, 138, 0.5);
+        }
+
+        .btn-modal-confirm {
+            background: linear-gradient(135deg, #588157 0%, #3A5A40 100%);
+            color: #FFFFFF;
+            box-shadow: 0 4px 15px rgba(88, 129, 87, 0.25);
+        }
+
+        .btn-modal-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(88, 129, 87, 0.35);
+        }
+
+        .btn-modal-confirm.loading {
+            position: relative;
+            color: transparent;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #FFFFFF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .chat-wrapper { width: 100%; height: 100%; border-radius: 0; border: none; }
             .chat-sidebar { display: none; }
             .soul-orb-container { transform: scale(0.8); }
+            .modal-content { padding: 30px; }
         }
     </style>
 </head>
@@ -311,22 +621,27 @@
         
         <!-- Sidebar Thông tin -->
         <div class="chat-sidebar">
-            <div class="mini-orb"></div>
-            <h3 class="sidebar-title">SoulMate</h3>
-            <span class="sidebar-desc">Trợ lý cảm xúc AI</span>
+            <div class="sidebar-content">
+                <div class="mini-orb-container">
+                    <div class="mini-soul-ring"></div>
+                    <div class="mini-orb"></div>
+                </div>
+                <h3 class="sidebar-title">SoulMate</h3>
+                <span class="sidebar-desc">Trợ lý cảm xúc AI</span>
 
-            <div class="feature-list">
-                <div class="feature-item">
-                    <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
-                    <span>Bảo mật & Riêng tư</span>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon"><i class="fas fa-brain"></i></div>
-                    <span>Thấu hiểu cảm xúc</span>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon"><i class="fas fa-history"></i></div>
-                    <span>Lưu nhật ký tự động</span>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                        <span>Bảo mật & Riêng tư</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-brain"></i></div>
+                        <span>Thấu hiểu cảm xúc</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-history"></i></div>
+                        <span>Lưu nhật ký tự động</span>
+                    </div>
                 </div>
             </div>
 
@@ -357,6 +672,26 @@
                     <input type="text" id="userInput" class="chat-input" placeholder="Gửi gắm tâm tư vào đây..." autocomplete="off">
                     <button class="btn-send" onclick="handleSend()"><i class="fas fa-paper-plane"></i></button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOM MODAL DIALOG -->
+    <div class="modal-overlay" id="endSessionModal">
+        <div class="modal-content">
+            <div class="modal-icon">💾</div>
+            <h2 class="modal-title">Kết thúc cuộc trò chuyện?</h2>
+            <p class="modal-message">
+                Hôm nay bạn đã chia sẻ rất nhiều. SoulMate sẽ lưu lại nhật ký của bạn để có thể giúp bạn tốt hơn lần sau.
+            </p>
+            <div class="modal-buttons">
+                <button class="btn-modal btn-modal-cancel" onclick="closeEndModal()">
+                    Tiếp tục chat
+                </button>
+                <button class="btn-modal btn-modal-confirm" id="confirmEndBtn" onclick="confirmEndSession()">
+                    <span id="btnText">Lưu & Kết thúc</span>
+                    <div class="loading-spinner" id="spinner" style="display: none;"></div>
+                </button>
             </div>
         </div>
     </div>
@@ -445,9 +780,39 @@
     }
 
     async function endSession() {
-        if(confirm("Bạn muốn kết thúc cuộc trò chuyện và lưu lại nhật ký cảm xúc?")) {
-            await fetch('/api/chat/complete', { method: 'POST' });
-            window.location.href = "{{ url_for('home') }}";
+        document.getElementById('endSessionModal').classList.add('active');
+    }
+
+    function closeEndModal() {
+        document.getElementById('endSessionModal').classList.remove('active');
+    }
+
+    async function confirmEndSession() {
+        const btn = document.getElementById('confirmEndBtn');
+        const spinner = document.getElementById('spinner');
+        const btnText = document.getElementById('btnText');
+
+        // Disable button & show loading
+        btn.disabled = true;
+        btnText.style.display = 'none';
+        spinner.style.display = 'block';
+
+        try {
+            const response = await fetch('/api/chat/complete', { method: 'POST' });
+            if (response.ok) {
+                // Success - redirect after brief delay
+                setTimeout(() => {
+                    window.location.href = "{{ url_for('dashboard') }}";
+                }, 800);
+            } else {
+                throw new Error('Save failed');
+            }
+        } catch (error) {
+            // Restore button on error
+            btn.disabled = false;
+            btnText.style.display = 'inline';
+            spinner.style.display = 'none';
+            alert('Lỗi khi lưu. Vui lòng thử lại!');
         }
     }
 </script>
