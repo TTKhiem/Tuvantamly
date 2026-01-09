@@ -99,18 +99,18 @@ def init_gemini_clients(chatbot_key, pet_key, therapist_key=None):
     # Khởi tạo các Model Object (Model object không giữ key, nó dùng config global tại thời điểm gọi lệnh)
     try:
         chatbot_model = genai.GenerativeModel(model_name=MODEL_ID)
-        print("✅ SoulMate Model initialized.")
-    except Exception as e: print(f"❌ Error SoulMate Model: {e}")
+        print("[OK] SoulMate Model initialized.")
+    except Exception as e: print(f"[ERROR] SoulMate Model: {e}")
 
     try:
         pet_bot_model = genai.GenerativeModel(model_name=MODEL_ID)
-        print("✅ Pet Model initialized.")
-    except Exception as e: print(f"❌ Error Pet Model: {e}")
+        print("[OK] Pet Model initialized.")
+    except Exception as e: print(f"[ERROR] Pet Model: {e}")
 
     try:
         therapist_bot_model = genai.GenerativeModel(model_name=MODEL_ID, system_instruction=THERAPIST_ASSISTANT_PROMPT)
-        print("✅ Therapist Assistant Model initialized.")
-    except Exception as e: print(f"❌ Error Therapist Model: {e}")
+        print("[OK] Therapist Assistant Model initialized.")
+    except Exception as e: print(f"[ERROR] Therapist Model: {e}")
 
 def clean_json_response(text):
     """Làm sạch chuỗi JSON do AI trả về (xóa markdown, fix lỗi quote)."""
@@ -287,8 +287,8 @@ def get_therapist_suggestions(student_msg, context):
         
         # Kiểm tra nếu là quota exceeded error
         if "quota" in error_msg or "429" in error_msg:
-            print(f"⚠️ API Quota exceeded: {e}")
-            print("✅ Using fallback suggestions")
+            print(f"[WARNING] API Quota exceeded: {e}")
+            print("[OK] Using fallback suggestions")
             # Trả về gợi ý fallback khi hết quota
             return {
                 "empathetic": "Em cảm thấy thế nào về điều đó?",
