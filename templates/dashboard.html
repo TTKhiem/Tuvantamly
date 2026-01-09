@@ -16,7 +16,14 @@
         background-position: 0 0, 15px 15px;
     }
     
-    .dashboard-wrapper { padding: 50px 0 80px; }
+    .dashboard-wrapper { padding: 30px 0 80px; }
+    
+    /* Tối ưu container để full width */
+    .dashboard-wrapper .container {
+        max-width: 100% !important;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
 
     /* 1. PROFILE CARD (Cột trái) */
     .profile-card {
@@ -27,6 +34,7 @@
         border: 1px solid rgba(255,255,255,0.5);
         position: sticky;
         top: 100px; /* Dính khi cuộn */
+        min-height: 370px;
     }
 
     .profile-header-bg {
@@ -322,11 +330,11 @@
 
 {% block content %}
 <div class="dashboard-wrapper">
-    <div class="container">
-        <div class="row g-4">
+    <div class="container-fluid">
+        <div class="row g-3">
             
-            <!-- --- CỘT TRÁI: PROFILE CARD --- -->
-            <div class="col-lg-4">
+            <!-- --- CỘT TRÁI: PROFILE CARD (Sticky) --- -->
+            <div class="col-xl-3 col-lg-4">
                 <div class="profile-card">
                     <div class="profile-header-bg"></div>
                     
@@ -372,11 +380,11 @@
                 </div>
             </div>
 
-            <!-- --- CỘT PHẢI: WIDGETS & CONTENT --- -->
-            <div class="col-lg-8">
+            <!-- --- CỘT PHẢI: WIDGETS & CONTENT (Expanded) --- -->
+            <div class="col-xl-9 col-lg-8">
                 
                 <!-- ✨ WELCOME HERO SECTION (NEW) -->
-                <div class="welcome-hero mb-2" id="welcomeHero">
+                <div class="welcome-hero mb-3" id="welcomeHero" style="margin-bottom: 15px !important;">
                     <div class="welcome-hero-content">
                         <div class="welcome-emoji" id="welcomeEmoji">👋</div>
                         <div class="welcome-text">
@@ -432,7 +440,7 @@
                 </script>
 
                 <!-- 1. MATCH STATUS (Trạng thái kết nối) -->
-                <div class="mb-2">
+                <div class="mb-3">
                     {% if current_match_code %}
                         <!-- TRẠNG THÁI: ĐANG CÓ PHÒNG CHAT -->
                         <div class="widget-card match-card-active d-flex align-items-center justify-content-between p-3">
@@ -463,8 +471,8 @@
 
                 <div class="row g-3">
                     <!-- 2. PET WIDGET -->
-                    <div class="col-md-6">
-                        <div class="widget-card h-100 d-flex flex-column" style="padding: 15px;">
+                    <div class="col-md-4">
+                        <div class="widget-card h-100 d-flex flex-column" style="padding: 15px; min-height: 370px;">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-paw text-warning me-2"></i>Pet</h6>
                                 {% if pet %}
@@ -475,8 +483,8 @@
                             {% if pet %}
                                 <!-- TRƯỜNG HỢP 1: ĐÃ CÓ PET -->
                                 <div class="pet-preview-box" 
-                                     style="height: 120px; 
-                                            margin: 10px 0;
+                                     style="height: 180px; 
+                                            margin: 8px 0 15px 0;
                                             /* Kiểm tra nếu có link ảnh thì mới set background image */
                                             {% if pet.background_url %}
                                                 background-image: url('{{ pet.background_url }}');
@@ -523,31 +531,30 @@
                     </div>
 
                     <!-- 3. DAILY QUESTS -->
-                    <div class="col-md-6">
-                        <div class="widget-card h-100 d-flex flex-column" style="padding: 15px;">
+                    <div class="col-md-4">
+                        <div class="widget-card h-100 d-flex flex-column" style="padding: 15px; min-height: 370px;">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-tasks text-info me-2"></i>Nhiệm vụ</h6>
                                 <small class="text-muted" style="font-size: 0.7rem;">Hôm nay</small>
                             </div>
 
-                            <div class="d-flex flex-column gap-1 flex-grow-1" style="font-size: 0.85rem;">
+                            <div class="d-flex flex-column gap-2 flex-grow-1" style="font-size: 0.95rem;">
                                 {% if quests %}
                                     {% for quest in quests %}
-                                    <div class="quest-item" style="padding: 8px 0; border-bottom: 1px solid #f5f5f5;">
-                                        <div class="d-flex align-items-center gap-2">
+                                    <div class="quest-item" style="padding: 10px 0; border-bottom: 1px solid #f5f5f5; margin-right: -25px; padding-right: 25px; display: flex; align-items: center; justify-content: space-between;">
+                                        <span class="{% if quest.completed %}text-muted{% else %}fw-bold text-dark{% endif %}" style="font-size: 0.9rem; flex-grow: 1;">{{ quest.title }}</span>
+                                        <div style="width: 20px; height: 20px; flex-shrink: 0; margin-left: 8px; display: flex; align-items: center; justify-content: center;">
                                             {% if quest.completed %}
-                                                <i class="fas fa-check-circle text-success" style="font-size: 0.85rem;"></i>
-                                                <span class="small text-muted">{{ quest.title }}</span>
+                                                <i class="fas fa-check-circle text-success" style="font-size: 1rem; line-height: 1;"></i>
                                             {% else %}
-                                                <i class="far fa-circle text-muted" style="font-size: 0.85rem;"></i>
-                                                <span class="small fw-bold text-dark">{{ quest.title }}</span>
+                                                <i class="far fa-circle text-muted" style="font-size: 1rem; line-height: 1;"></i>
                                             {% endif %}
                                         </div>
                                     </div>
                                     {% endfor %}
                                     
                                     <div class="mt-auto text-center pt-2">
-                                        <a href="{{ url_for('pet_page') }}" class="text-decoration-none small fw-bold text-primary" style="font-size: 0.75rem;">
+                                        <a href="{{ url_for('pet_page') }}" class="text-decoration-none small fw-bold text-primary" style="font-size: 0.8rem;">
                                             Làm nhiệm vụ <i class="fas fa-arrow-right ms-1"></i>
                                         </a>
                                     </div>
@@ -562,9 +569,68 @@
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- FOOTER QUOTE -->
+                    <!-- 4. STREAKS & ACHIEVEMENTS (NEW) -->
+                    <div class="col-md-4">
+                        <div class="widget-card h-100 d-flex flex-column" style="padding: 15px; min-height: 370px;">
+                            <h6 class="fw-bold mb-2 text-dark"><i class="fas fa-fire text-danger me-2"></i>Thành tựu</h6>
+                            
+                            <!-- STREAK SECTION (DYNAMIC) -->
+                            {% if achievements %}
+                            <div class="mb-3">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <small class="text-muted fw-bold" style="font-size: 0.8rem;">Chuỗi Self-Care</small>
+                                    <span class="badge bg-danger text-white rounded-pill" style="font-size: 0.7rem;">🔥 {{ achievements.streak.current_streak }} ngày</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-danger" style="width: {{ achievements.streak.percentage }}%; border-radius: 4px;"></div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- ACHIEVEMENTS BADGES (DYNAMIC) -->
+                            <div class="mb-auto">
+                                <small class="text-muted fw-bold d-block mb-3" style="font-size: 0.85rem;">Huy hiệu</small>
+                                <div class="d-flex flex-wrap gap-2 justify-content-around">
+                                    {% if achievements and achievements.all_badges %}
+                                        {% for badge in achievements.all_badges %}
+                                        <div class="d-flex flex-column align-items-center" title="{% if badge.unlocked %}Đã unlock{% else %}Chưa unlock: {{ badge.description }}{% endif %}">
+                                            <div style="width: 70px; height: 70px; background: {{ badge.color }}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin-bottom: 8px; {% if not badge.unlocked %}opacity: 0.4;{% endif %} transition: 0.3s;">{{ badge.emoji }}</div>
+                                            <span style="font-size: 0.7rem; text-center; {% if badge.unlocked %}color: #333;{% else %}color: #999;{% endif %};">{{ badge.name }}</span>
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <!-- Fallback badges (static) -->
+                                        <div class="d-flex flex-column align-items-center">
+                                            <div style="width: 70px; height: 70px; background: #FFF3CD; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin-bottom: 8px;">🌟</div>
+                                            <span style="font-size: 0.7rem; text-center; color: #666;">Khởi đầu</span>
+                                        </div>
+                                        <div class="d-flex flex-column align-items-center">
+                                            <div style="width: 70px; height: 70px; background: #DCE9F5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin-bottom: 8px; opacity: 0.4;">💬</div>
+                                            <span style="font-size: 0.7rem; text-center; color: #999;">5 Cuộc chat</span>
+                                        </div>
+                                        <div class="d-flex flex-column align-items-center">
+                                            <div style="width: 70px; height: 70px; background: #DCF0E7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin-bottom: 8px; opacity: 0.4;">🎯</div>
+                                            <span style="font-size: 0.7rem; text-center; color: #999;">10 Quest</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- MOTIVATION CARD -->
+                            <div class="mt-3 p-3 rounded-3" style="background: linear-gradient(135deg, #E8F5E9 0%, #F1F8E9 100%); border-left: 3px solid #588157;">
+                                <small class="text-dark fw-bold d-block mb-1" style="font-size: 0.8rem;">💪 Tiếp tục cố gắng!</small>
+                                <small class="text-muted" style="font-size: 0.75rem;">
+                                    {% if achievements and achievements.streak.current_streak > 0 %}
+                                        Bạn đang ở chuỗi {{ achievements.streak.current_streak }} ngày. Tuyệt vời!
+                                    {% else %}
+                                        Bạn đang trên con đường phục hồi tuyệt vời.
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="mt-2 p-2 rounded-3 text-center" style="background: rgba(255,255,255,0.6); border: 1px dashed #A3B18A; font-size: 0.75rem;">
                     <p class="mb-0 fst-italic text-muted">
                         "Hạnh phúc là hành trình chúng ta đang đi." 🌿
@@ -662,3 +728,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 {% endblock %}
+
