@@ -101,3 +101,24 @@ CREATE TABLE IF NOT EXISTS matchmaking_results (
     -- FOREIGN KEY (student_user_id) REFERENCES users(user_id),
     -- FOREIGN KEY (therapist_user_id) REFERENCES users(user_id)
 );
+
+-- Bảng theo dõi Streaks & Achievements
+CREATE TABLE IF NOT EXISTS user_achievements (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    achievement_id TEXT NOT NULL,           -- 'first_chat', '5_chats', '10_quests', etc.
+    earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, achievement_id),        -- Mỗi user chỉ nhận 1 lần mỗi achievement
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Bảng theo dõi Streaks (Chuỗi Self-Care)
+CREATE TABLE IF NOT EXISTS user_streaks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL UNIQUE,
+    current_streak INTEGER DEFAULT 0,       -- Số ngày liên tiếp
+    longest_streak INTEGER DEFAULT 0,       -- Record cao nhất
+    last_activity_date DATE DEFAULT CURRENT_DATE,
+    streak_reset_date DATE,                 -- Ngày streak bị reset
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
