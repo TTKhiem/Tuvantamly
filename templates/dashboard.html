@@ -458,12 +458,12 @@
                         <!-- TRẠNG THÁI: CHƯA CÓ PHÒNG -->
                         <div class="widget-card d-flex align-items-center justify-content-between p-3" style="background: #F0FDF4; border: 1px solid #DCFCE7;">
                             <div>
-                                <h6 class="fw-bold mb-1 text-dark"><i class="fas fa-user-md text-success me-2"></i>Bạn cần chia sẻ?</h6>
-                                <p class="mb-0 text-muted small">Các chuyên gia sẵn sàng lắng nghe.</p>
+                                <h6 class="fw-bold mb-1 text-dark" style="font-size: 1.1rem;"><i class="fas fa-user-md text-success me-2"></i>Bạn cần chia sẻ?</h6>
+                                <p class="mb-0 text-muted small" style="font-size: 0.9rem;">Các chuyên gia sẵn sàng lắng nghe.</p>
                             </div>
                             <div class="d-flex gap-2">
-                                <a href="{{ url_for('chat_interface') }}" class="btn btn-outline-custom btn-sm rounded-pill bg-white" style="font-size: 0.75rem;">Chat AI</a>
-                                <a href="{{ url_for('chat_home') }}" class="btn btn-primary-custom btn-sm rounded-pill" style="font-size: 0.75rem;">Tìm chuyên gia</a>
+                                <a href="{{ url_for('chat_interface') }}" class="btn btn-outline-custom btn-sm rounded-pill bg-white" style="font-size: 0.85rem;">Chat AI</a>
+                                <a href="{{ url_for('chat_home') }}" class="btn btn-primary-custom btn-sm rounded-pill" style="font-size: 0.85rem;">Tìm chuyên gia</a>
                             </div>
                         </div>
                     {% endif %}
@@ -728,4 +728,3 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 {% endblock %}
-
