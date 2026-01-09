@@ -517,6 +517,14 @@ def play_pet_api():
 
 @app.route('/api/shop/items')
 def get_shop_items_api():
+    # Kiểm tra đăng nhập để lấy user_id
+    if 'user_id' in session:
+        db = database.get_db()
+        # Gọi hàm lọc mới viết trong pet_system
+        items = pet_system.get_filtered_shop_items(db, session['user_id'])
+        return jsonify(items)
+    
+    # Nếu chưa đăng nhập (hoặc lỗi), trả về full list như cũ
     return jsonify(pet_system.SHOP_ITEMS)
 
 @app.route('/api/shop/buy/<int:item_id>', methods=['POST'])
@@ -544,8 +552,15 @@ def buy_item_api(item_id):
         pet = pet_system.load_pet(db, user_id)
         pet.feed(item.get('value', 25))
         pet_system.save_pet(db, pet)
+    
+    updated_shop_items = pet_system.get_filtered_shop_items(db, user_id)
         
-    return jsonify({"message": "Mua thành công!", "gold": pet_system.get_user_gold(db, user_id), "inventory": pet_system.get_user_inventory(db, user_id)})
+    return jsonify({
+        "message": "Mua thành công!", 
+        "gold": pet_system.get_user_gold(db, user_id), 
+        "inventory": pet_system.get_user_inventory(db, user_id),
+        "shop_items": updated_shop_items  # <--- TRẢ VỀ DANH SÁCH SHOP MỚI
+    })
 
 # --- ROUTE MỚI: TRANG BỊ SKIN ---
 @app.route('/api/pet/equip/<int:item_id>', methods=['POST'])

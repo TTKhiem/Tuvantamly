@@ -247,6 +247,25 @@ def add_item_to_inventory(db, user_id, item_id):
         db.execute('INSERT INTO user_inventory (user_id, item_id) VALUES (?, ?)', (user_id, item_id))
         db.commit()
 
+def get_filtered_shop_items(db, user_id):
+    """
+    Trả về danh sách shop item, NHƯNG loại bỏ các item (Skin/Background) 
+    mà user đã sở hữu. Giữ lại Food.
+    """
+    # 1. Lấy danh sách ID các item user đang có trong kho
+    rows = db.execute('SELECT item_id FROM user_inventory WHERE user_id = ?', (user_id,)).fetchall()
+    owned_ids = [row['item_id'] for row in rows]
+
+    filtered_items = []
+    for item in SHOP_ITEMS:
+        # LOGIC LỌC:
+        # - Nếu là thức ăn (type='food'): Luôn hiển thị (để mua tiếp)
+        # - Nếu KHÔNG phải thức ăn: Chỉ hiển thị nếu ID chưa có trong owned_ids
+        if item['type'] == 'food' or item['id'] not in owned_ids:
+            filtered_items.append(item)
+            
+    return filtered_items
+
 def get_daily_quests(db, user_id):
     today = date.today()
     rows = db.execute('SELECT * FROM daily_quests WHERE user_id = ? AND date_assigned = ?', (user_id, today)).fetchall()

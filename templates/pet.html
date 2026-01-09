@@ -14,6 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@600&display=swap');
         body { 
             font-family: 'Nunito', sans-serif; 
             background-color: #FEFAE0; /* Nền kem đồng bộ */
@@ -81,25 +82,89 @@
 
         /* Bong bóng chat */
         #speech-bubble {
+            /* --- CĂN GIỮA (FIX CŨ) --- */
             position: absolute;
-            background: white;
-            color: #344E41;
-            border-radius: 1rem;
-            padding: 0.8rem 1.2rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            transform: translateX(-50%);
-            width: max-content; max-width: 250px;
-            opacity: 0; transition: opacity 0.3s ease-in-out;
-            pointer-events: none; z-index: 10;
-            font-weight: 700; border: 2px solid #A3B18A;
+            left: 50%;
+            /* Mặc định dịch sang trái 50% và thu nhỏ lại xíu (scale 0.8) để chuẩn bị animation */
+            transform: translateX(-50%) scale(0.8);
+            transform-origin: bottom center; /* Điểm nảy lên là từ dưới chân bong bóng */
+
+            /* --- GIAO DIỆN CUTE --- */
+            background: #ffffff;
+            color: #344E41; /* Màu rêu đậm (cùng tông với app) */
+            
+            /* Font chữ tròn trịa, dễ thương hơn */
+            font-family: 'Quicksand', sans-serif; 
+            font-weight: 700;
             font-size: 0.95rem;
+            line-height: 1.4;
+
+            /* Bo tròn mạnh hơn để trông mềm mại */
+            border-radius: 20px;
+            padding: 12px 20px;
+            
+            /* Viền mỏng và nhẹ nhàng hơn */
+            border: 2px solid #A3B18A;
+            
+            /* Bóng đổ mềm (Soft shadow) tạo độ nổi */
+            box-shadow: 0 8px 25px rgba(52, 78, 65, 0.15);
+
+            /* --- KÍCH THƯỚC --- */
+            width: max-content;
+            max-width: 220px; /* Giới hạn chiều rộng để không che hết màn hình */
+            
+            /* --- TRẠNG THÁI ẨN --- */
+            opacity: 0;
+            visibility: hidden; /* Dùng visibility để tránh click nhầm khi ẩn */
+            pointer-events: none;
+            z-index: 10;
+            
+            /* Animation mượt mà */
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Hiệu ứng nảy (Bouncy) */
         }
-        #speech-bubble.visible { opacity: 1; top: 30% !important; } /* Fix vị trí bong bóng */
+
+        /* --- TRẠNG THÁI HIỆN (VISIBLE) --- */
+        #speech-bubble.visible {
+            opacity: 1;
+            visibility: visible;
+            top: 25% !important; /* Điều chỉnh độ cao tùy ý */
+            
+            /* Scale về 1 (kích thước thật) + giữ căn giữa */
+            transform: translateX(-50%) scale(1);
+        }
+
+        /* --- MŨI TÊN (ĐUÔI BONG BÓNG) --- */
         #speech-bubble::after {
-            content: ''; position: absolute; bottom: -10px; left: 50%; 
+            content: '';
+            position: absolute;
+            bottom: -9px; /* Đẩy xuống khớp với viền */
+            left: 50%;
+            
+            /* Căn giữa mũi tên */
             transform: translateX(-50%);
-            border-width: 10px 10px 0; border-style: solid;
-            border-color: white transparent transparent transparent;
+            
+            /* Vẽ hình tam giác */
+            border-width: 10px 10px 0;
+            border-style: solid;
+            /* Màu mũi tên trùng màu nền bong bóng */
+            border-color: #ffffff transparent transparent transparent;
+            
+            /* (Tùy chọn) Thêm filter để mũi tên cũng có bóng đổ khớp với bong bóng */
+            filter: drop-shadow(0 2px 1px rgba(0,0,0,0.05));
+        }
+
+        /* (Tùy chọn) Viền cho mũi tên - để khớp với border: 2px solid #A3B18A ở trên 
+        Mẹo: Dùng ::before làm viền background cho ::after */
+        #speech-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: -12px; 
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 12px 12px 0;
+            border-style: solid;
+            border-color: #A3B18A transparent transparent transparent; /* Màu viền */
+            z-index: -1;
         }
 
         /* UI Tabs & Buttons */
@@ -537,11 +602,25 @@
 
             function renderShop(items) {
                 els.listShop.innerHTML = '';
-                if (!items) return;
+                
+                // Kiểm tra nếu không có item nào (hoặc null)
+                if (!items || items.length === 0) {
+                    els.listShop.innerHTML = `
+                        <div class="col-span-full text-center py-10 bg-gray-50 rounded-2xl">
+                            <p class="text-gray-400 font-bold text-lg">Bạn đã sở hữu tất cả vật phẩm!</p>
+                            <p class="text-sm text-gray-400">Hãy quay lại sau khi có cập nhật mới nhé.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Tách item ra 2 nhóm để hiển thị cho đẹp: Food lên đầu hoặc gom nhóm (Tùy chọn)
+                // Ở đây mình giữ nguyên thứ tự trả về từ server
                 items.forEach(item => {
                     const div = document.createElement('div');
                     div.className = 'bg-white border border-gray-100 rounded-2xl p-4 flex flex-col items-center text-center hover:shadow-lg transition duration-300 group relative overflow-hidden';
                     
+                    // Logic hiển thị nút mua
                     div.innerHTML = `
                         <div class="absolute top-0 left-0 w-full h-1 bg-[#A3B18A] transform scale-x-0 group-hover:scale-x-100 transition duration-300"></div>
                         <div class="text-5xl mb-3 transform group-hover:scale-110 transition duration-300">${item.icon}</div>
@@ -632,6 +711,9 @@
                         showToast(res.message || 'Mua thành công!', 'success');
                         renderInventory(res.inventory);
                         updateGold(res.gold);
+                        if (res.shop_items) {
+                            renderShop(res.shop_items);
+                        }
                     }
                 }
                 if (target.closest('.btn-equip')) {
