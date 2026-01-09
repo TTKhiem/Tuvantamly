@@ -697,6 +697,7 @@
     </div>
 
 <script>
+    const chatHistory = {{ chat_log | tojson | safe }};
     // --- PARTICLES EFFECT ---
     const particlesContainer = document.getElementById('particles');
     for(let i=0; i<30; i++){
@@ -714,6 +715,34 @@
     const chatBox = document.getElementById('chatBox');
     const userInput = document.getElementById('userInput');
     const typing = document.getElementById('typing');
+
+    function loadExistingHistory() {
+        if (chatHistory && chatHistory.length > 0) {
+            // Nếu có lịch sử, kích hoạt giao diện chat ngay lập tức
+            document.body.classList.add('chat-active');
+            
+            // Xóa intro screen để tránh block thao tác (dù CSS đã ẩn nhưng nên ẩn hẳn)
+            document.getElementById('introScreen').style.display = 'none';
+
+            // Render từng tin nhắn cũ
+            chatHistory.forEach(msg => {
+                // Mapping role từ DB sang class CSS ('user' hoặc 'bot')
+                let className = (msg.role === 'Sinh viên') ? 'user' : 'bot';
+                addMessage(msg.message, className);
+            });
+            
+            // Cuộn xuống cuối
+            setTimeout(() => {
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 100);
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        if (chatHistory && chatHistory.length > 0) {
+            loadExistingHistory();
+        }
+    });
 
     function startChat(initialMsg) {
         document.body.classList.add('chat-active');

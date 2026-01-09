@@ -270,7 +270,20 @@ def chat_interface():
     if 'user_id' not in session:
         flash("Vui lòng đăng nhập để chat!", "error")
         return redirect(url_for('home'))
-    return render_template('chat.html', user=session['username'])
+    db = database.get_db()
+    # Lấy lịch sử chat
+    cursor = db.execute("SELECT * FROM chat_history WHERE user_id = ? ORDER BY id ASC", (session['user_id'],))
+    rows = cursor.fetchall()
+    
+    # Chuyển đổi Row object sang List of Dictionaries để JS dễ đọc
+    # Giả sử bảng của bạn có cột: 'message' và 'role' (hoặc 'sender')
+    chat_history_data = []
+    for row in rows:
+        chat_history_data.append({
+            "message": row['message'], # Tên cột nội dung tin nhắn trong DB
+            "role": row['role']        # Tên cột xác định người gửi (ví dụ: 'user' hoặc 'bot')
+        })
+    return render_template('chat.html', user=session['username'], chat_log = chat_history_data)
 
 @app.route('/api/chat', methods=['POST'])
 def api_chat():
