@@ -8,6 +8,7 @@ from flask_socketio import SocketIO
 import socket_handlers
 # Import các module đã tách
 import pet_system
+import achievements
 import random
 from datetime import datetime
 from chatbot import analyze_student_state
@@ -115,6 +116,13 @@ def dashboard():
         
     quests_data = pet_system.get_daily_quests(db, session['user_id'])
     # -------------------------------------------
+    
+    # --- [THÊM MỚI] LẤY DỮ LIỆU ACHIEVEMENTS ---
+    achievements_data = achievements.get_achievements_data(session['user_id'])
+    # Update user streak khi vào dashboard
+    achievements.update_streak(session['user_id'])
+    # ------------------------------------------
+    
     # KIỂM TRA XEM CÓ ĐANG MATCH KHÔNG
     current_match_code = get_current_match_roomcode(session['user_id'])
     # Gửi thêm biến pet và quests sang template
@@ -122,7 +130,8 @@ def dashboard():
                            user=user_data, 
                            current_match_code=current_match_code,
                            pet=pet_data,      # <--- QUAN TRỌNG
-                           quests=quests_data) # <--- QUAN TRỌNG
+                           quests=quests_data,  # <--- QUAN TRỌNG
+                           achievements=achievements_data)  # <--- THÊM MỚI
 
 # 2. ROUTE MỚI: KẾT THÚC TRÒ CHUYỆN (Dùng chung cho cả 2)
 @app.route('/end_chat', methods=['POST'])
