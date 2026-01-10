@@ -142,9 +142,11 @@ def get_user_data_by_id(user_id):
 def notify_users_of_new_match(student_user_id, therapist_user_id, student_session_id, therapist_session_id, new_room_code):
     """
     Thông báo cho cả sinh viên và chuyên gia khi tìm thấy trận đấu.
+    - Student: redirect tới chat_room
+    - Therapist: redirect tới therapist_dashboard (consolidate vào 1 giao diện)
     """
     
-    # 1. Lấy thông tin người dùng (ĐÃ THÊM HÀM get_user_data_by_id ở trên)
+    # 1. Lấy thông tin người dùng
     student_data = get_user_data_by_id(student_user_id) 
     therapist_data = get_user_data_by_id(therapist_user_id) 
     
@@ -159,19 +161,20 @@ def notify_users_of_new_match(student_user_id, therapist_user_id, student_sessio
     
     rooms[new_room_code] = {"members": 0, "messages": []}
     
-    # 3. Notify cả hai người dùng bằng SID
-    
-    # Dữ liệu cho Sinh viên
+    # 2. Dữ liệu cho Sinh viên (redirect tới chat_room)
     match_data_student = {
         "room_code": new_room_code,
-        "matched_with": therapist_name, # Hiện tên người ghép đôi
-        "tags": common_tags
+        "matched_with": therapist_name,
+        "tags": common_tags,
+        "redirect_to": "chat_room"  # ← Flag: Student dùng giao diện chat_room
     }
-    # Dữ liệu cho Tư vấn viên
+    
+    # 3. Dữ liệu cho Tư vấn viên (redirect tới therapist_dashboard)
     match_data_therapist = {
         "room_code": new_room_code,
         "matched_with": student_name,
-        "tags": common_tags
+        "tags": common_tags,
+        "redirect_to": "therapist_dashboard"  # ← Flag: Therapist dùng dashboard
     }
     
     socketio.emit("match_found", match_data_student, to=student_session_id)
