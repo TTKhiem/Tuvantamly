@@ -608,9 +608,12 @@
 
     <!-- Session Actions -->
     <div class="session-actions">
-        <button class="action-btn" title="Kết thúc phiên tư vấn">
-            <i class="fas fa-phone-slash"></i> Kết thúc phiên
-        </button>
+        <form id="end-session-form" action="{{ url_for('end_chat') }}" method="POST" style="width: 100%;">
+            <input type="hidden" name="room_code" value="{{ code }}">
+            <button type="button" class="action-btn" title="Kết thúc phiên tư vấn" onclick="showEndSessionModal();">
+                <i class="fas fa-phone-slash"></i> Kết thúc phiên
+            </button>
+        </form>
         <button class="action-btn danger" title="Báo cáo vấn đề">
             <i class="fas fa-flag"></i> Báo cáo
         </button>
@@ -655,6 +658,148 @@
     </div>
 </div>
 
+<!-- MODAL: Kết Thúc Phiên -->
+<div id="end-session-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h5 class="modal-title">⚠️ Xác Nhận Kết Thúc Phiên</h5>
+            <button type="button" class="modal-close" onclick="hideEndSessionModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <p class="mb-0">Bạn chắc chắn muốn <strong>kết thúc phiên tư vấn</strong> này không?</p>
+            <small class="text-muted d-block mt-2">Hành động này không thể hoàn tác. Dữ liệu cuộc trò chuyện sẽ được lưu lại.</small>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="hideEndSessionModal()">
+                Hủy
+            </button>
+            <button type="button" class="btn btn-danger" onclick="confirmEndSession()">
+                <i class="fas fa-check me-1"></i>Xác Nhận Kết Thúc
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Modal Overlay */
+    .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    /* Modal Card */
+    .modal-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-width: 420px;
+        width: 90%;
+        animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .modal-header {
+        padding: 24px 24px 16px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-title {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #344E41;
+        font-family: 'Playfair Display', serif;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #999;
+        cursor: pointer;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+        background: #f1f1f1;
+        color: #333;
+    }
+
+    .modal-body {
+        padding: 20px 24px;
+        color: #555;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    .modal-footer {
+        padding: 16px 24px 24px;
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+    }
+
+    .modal-footer .btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .modal-footer .btn-secondary {
+        background: #f1f1f1;
+        color: #333;
+    }
+
+    .modal-footer .btn-secondary:hover {
+        background: #e0e0e0;
+    }
+
+    .modal-footer .btn-danger {
+        background: #E63946;
+        color: white;
+    }
+
+    .modal-footer .btn-danger:hover {
+        background: #d62e3f;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(230, 57, 70, 0.3);
+    }
+</style>
 {% endblock %}
 
 {% block scripts %}
@@ -754,5 +899,34 @@
         {% endfor %}
         scrollToBottom();
     {% endif %}
+
+    // ========== MODAL FUNCTIONS ==========
+    window.showEndSessionModal = () => {
+        document.getElementById('end-session-modal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.hideEndSessionModal = () => {
+        document.getElementById('end-session-modal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+    };
+
+    window.confirmEndSession = () => {
+        document.getElementById('end-session-form').submit();
+    };
+
+    // Close modal when clicking outside (on backdrop)
+    document.getElementById('end-session-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'end-session-modal') {
+            hideEndSessionModal();
+        }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            hideEndSessionModal();
+        }
+    });
 </script>
 {% endblock %}
