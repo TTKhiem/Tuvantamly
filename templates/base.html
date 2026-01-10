@@ -92,12 +92,12 @@
                     {% if session.get('user_id') %}
                         <!-- Đã đăng nhập -->
                         {% if session.get('role') == 'therapist' %}
-                            <li class="nav-item"><a class="nav-link fw-bold" href="{{ url_for('therapist_dashboard_redirect') }}">Góc Chuyên Gia</a></li>
+                            <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'chat_home' }}" href="{{ url_for('chat_home') }}">Tư vấn</a></li>
                         {% elif session.get('role') == 'admin' %}
                             <li class="nav-item"><a class="nav-link fw-bold text-danger" href="{{ url_for('admin_dashboard') }}">Admin Panel</a></li>
                         {% else %}
                             <li class="nav-item"><a class="nav-link" href="{{ url_for('pet_page') }}">Thú cưng</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('chat_home') }}">Tư vấn</a></li>
+                            <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'chat_home' }}" href="{{ url_for('chat_home') }}">Tư vấn</a></li>
                             <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'resources' }}" href="{{ url_for('resources') }}">Tài nguyên</a></li>
                         {% endif %}
 
