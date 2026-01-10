@@ -734,10 +734,26 @@ def chat_room_view(room_code):
             return redirect(url_for("chat_home"))
     # --- END LOGIC KHÔI PHỤC PHÒNG ---
 
+    # Lấy tên therapist từ DB dựa trên room_code
+    db = database.get_db()
+    match_result = db.execute(
+        "SELECT therapist_user_id FROM matchmaking_results WHERE roomcode = ?",
+        (room_code,)
+    ).fetchone()
+    
+    therapist_name = "Therapist"
+    if match_result:
+        therapist_user = db.execute(
+            "SELECT username FROM users WHERE id = ?",
+            (match_result["therapist_user_id"],)
+        ).fetchone()
+        if therapist_user:
+            therapist_name = therapist_user["username"]
+
     # Phòng đã sẵn sàng (trong bộ nhớ hoặc đã được khôi phục)
     session["room"] = room_code
     session.modified = True 
-    return render_template("chat_room.html", code=room_code, messages=rooms[room_code]["messages"], name=name,user_role=session.get('role'))
+    return render_template("chat_room.html", code=room_code, messages=rooms[room_code]["messages"], name=name, therapist_name=therapist_name, user_role=session.get('role'))
 
 
 
