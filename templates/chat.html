@@ -560,7 +560,7 @@
             color: transparent;
         }
 
-        /* Loading Spinner */
+        /* Loading Spinner - Hiển thị tất cả lúc */
         .loading-spinner {
             position: absolute;
             top: 50%;
@@ -571,11 +571,15 @@
             border: 3px solid rgba(255, 255, 255, 0.3);
             border-top-color: #FFFFFF;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spinLoader 1s linear infinite;
+        }
+
+        @keyframes spinLoader {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
         }
 
         @keyframes spin {
-            to { transform: translate(-50%, -50%) rotate(360deg); }
+            to { transform: rotate(360deg); }
         }
 
         /* Responsive */
@@ -823,6 +827,7 @@
 
         // Disable button & show loading
         btn.disabled = true;
+        btn.classList.add('loading');
         btnText.style.display = 'none';
         spinner.style.display = 'block';
 
@@ -839,6 +844,7 @@
         } catch (error) {
             // Restore button on error
             btn.disabled = false;
+            btn.classList.remove('loading');
             btnText.style.display = 'inline';
             spinner.style.display = 'none';
             alert('Lỗi khi lưu. Vui lòng thử lại!');
