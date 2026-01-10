@@ -377,11 +377,19 @@
             `;
             matchArea.style.display = 'block';
 
-            // Sự kiện Click Join
+            // Sự kiện Click Join - Redirect khác nhau tùy theo role
             document.getElementById('btn-join').addEventListener('click', function() {
                 this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang kết nối...';
                 this.disabled = true;
-                socket.emit("join_private_room", { room_code: data.room_code });
+                
+                // Kiểm tra redirect_to flag
+                if (data.redirect_to === 'therapist_dashboard') {
+                    // Therapist → Redirect tới therapist_dashboard + room_code
+                    window.location.href = `{{ url_for('therapist_dashboard_redirect') }}?room=${data.room_code}`;
+                } else {
+                    // Student → Sử dụng join_private_room bình thường
+                    socket.emit("join_private_room", { room_code: data.room_code });
+                }
             });
         });
 
