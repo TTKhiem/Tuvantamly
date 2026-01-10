@@ -887,48 +887,58 @@
 
     // ===== INITIALIZATION ON PAGE LOAD =====
     document.addEventListener('DOMContentLoaded', function() {
-        if (ALL_ROOM_DATA && ALL_ROOM_DATA.length > 0) {
-            // Lấy room code từ backend session (room mà therapist đang xem)
-            const firstRoomCode = ALL_ROOM_DATA[0].room_code;
-            const firstRoomEl = document.querySelector(`[data-room-code="${firstRoomCode}"]`);
+        // Kiểm tra xem có redirect từ match không (URL param: ?room=CODE)
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomFromMatch = urlParams.get('room');
+        
+        // Phòng sẽ auto-select: Nếu có ?room=CODE thì dùng nó, nếu không thì dùng phòng đầu tiên
+        let targetRoomCode = roomFromMatch || (ALL_ROOM_DATA && ALL_ROOM_DATA.length > 0 ? ALL_ROOM_DATA[0].room_code : null);
+        
+        if (ALL_ROOM_DATA && ALL_ROOM_DATA.length > 0 && targetRoomCode) {
+            const targetRoomEl = document.querySelector(`[data-room-code="${targetRoomCode}"]`);
             
-            if (firstRoomEl) {
+            if (targetRoomEl) {
                 // Set active state
-                firstRoomEl.classList.add('active');
+                targetRoomEl.classList.add('active');
                 
-                // Set room data và load messages ngay (không cần gọi switchRoom)
-                activeRoomCode = firstRoomCode;
-                ui.name.textContent = firstRoomEl.getAttribute('data-student-name');
-                ui.roomCodeDisplay.textContent = "ID: " + firstRoomCode;
+                // Set room data
+                activeRoomCode = targetRoomCode;
+                ui.name.textContent = targetRoomEl.getAttribute('data-student-name');
+                ui.roomCodeDisplay.textContent = "ID: " + targetRoomCode;
                 ui.avatar.src = `https://ui-avatars.com/api/?name=${ui.name.textContent}&background=588157&color=fff`;
-                ui.endInput.value = firstRoomCode;
+                ui.endInput.value = targetRoomCode;
                 
                 toggleView(true);
 
-                activeStudentId = firstRoomEl.getAttribute('data-student-id');
+                activeStudentId = targetRoomEl.getAttribute('data-student-id');
                 
-                // Load messages từ INITIAL_MESSAGES (dữ liệu từ backend)
-                if (INITIAL_MESSAGES && INITIAL_MESSAGES.length > 0) {
-                    historyCache.set(firstRoomCode, INITIAL_MESSAGES);
-                    renderMessages(INITIAL_MESSAGES);
+                // Load messages
+                let targetMessages = [];
+                if (historyCache.has(targetRoomCode)) {
+                    targetMessages = historyCache.get(targetRoomCode);
                 } else {
-                    ui.container.innerHTML = '<div class="text-center mt-5 text-muted small opacity-50">Bắt đầu cuộc trò chuyện mới.</div>';
+                    const roomData = ALL_ROOM_DATA.find(r => r.room_code === targetRoomCode);
+                    if (roomData && roomData.messages) {
+                        historyCache.set(targetRoomCode, roomData.messages);
+                        targetMessages = roomData.messages;
+                    }
                 }
+                renderMessages(targetMessages);
                 
-                // GỌI AI CHO PHÒNG ĐẦU TIÊN
-                const sId = firstRoomEl.getAttribute('data-student-id');
-                
+                // Setup AI summary
                 ui.summary.innerHTML = `
                 <li class="text-center text-muted small py-4">
                     <i class="fas fa-brain fa-2x mb-2 opacity-25"></i><br>
                     Sẵn sàng.<br>Nhấn nút <b>"Phân tích"</b> để bắt đầu.
                 </li>`;
                 
-                // // Gọi API
-                // fetchAiAnalysis(firstRoomCode, sId);
-                
                 // Join socket room
-                socketio.emit('join_room_request', { room_code: firstRoomCode });
+                socketio.emit('join_room_request', { room_code: targetRoomCode });
+                
+                // Clean URL sau khi đã auto-select (tùy chọn)
+                if (roomFromMatch) {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
             }
         } else {
             toggleView(false);
