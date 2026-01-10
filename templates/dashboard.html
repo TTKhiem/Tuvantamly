@@ -324,6 +324,16 @@
     }
     .btn-close-popup:hover { background: #e0e0e0; }
 
+    /* Hover effect cho nút Chat AI - giữ chữ hiển thị */
+    .btn-chat-ai {
+        transition: all 0.3s ease;
+        color: #344E41 !important;
+    }
+    .btn-chat-ai:hover {
+        background: #FFFFFF !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        color: #344E41 !important;
+    }
 
 </style>
 {% endblock %}
@@ -456,14 +466,14 @@
                         </div>
                     {% else %}
                         <!-- TRẠNG THÁI: CHƯA CÓ PHÒNG -->
-                        <div class="widget-card d-flex align-items-center justify-content-between p-3" style="background: #F0FDF4; border: 1px solid #DCFCE7;">
+                        <div class="widget-card d-flex align-items-center justify-content-between p-4" style="background: #F0FDF4; border: 1px solid #DCFCE7;">
                             <div>
                                 <h6 class="fw-bold mb-1 text-dark" style="font-size: 1.1rem;"><i class="fas fa-user-md text-success me-2"></i>Bạn cần chia sẻ?</h6>
                                 <p class="mb-0 text-muted small" style="font-size: 0.9rem;">Các chuyên gia sẵn sàng lắng nghe.</p>
                             </div>
-                            <div class="d-flex gap-2">
-                                <a href="{{ url_for('chat_interface') }}" class="btn btn-outline-custom btn-sm rounded-pill bg-white" style="font-size: 0.85rem;">Chat AI</a>
-                                <a href="{{ url_for('chat_home') }}" class="btn btn-primary-custom btn-sm rounded-pill" style="font-size: 0.85rem;">Tìm chuyên gia</a>
+                            <div class="d-flex gap-3">
+                                <a href="{{ url_for('chat_interface') }}" class="btn btn-outline-custom btn-chat-ai rounded-pill bg-white" style="font-size: 0.95rem; padding: 9px 24px; font-weight: 600;">Chat AI</a>
+                                <a href="{{ url_for('chat_home') }}" class="btn btn-primary-custom rounded-pill" style="font-size: 0.95rem; padding: 9px 24px; font-weight: 600;">Tìm chuyên gia</a>
                             </div>
                         </div>
                     {% endif %}
@@ -590,28 +600,28 @@
 
                             <!-- ACHIEVEMENTS BADGES (DYNAMIC) -->
                             <div class="mb-auto">
-                                <small class="text-muted fw-bold d-block mb-3" style="font-size: 0.85rem;">Huy hiệu</small>
+                                <small class="text-muted fw-bold d-block mb-3" style="font-size: 0.95rem;">Huy hiệu</small>
                                 <div class="d-flex flex-wrap gap-2 justify-content-around">
                                     {% if achievements and achievements.all_badges %}
                                         {% for badge in achievements.all_badges %}
                                         <div class="d-flex flex-column align-items-center" title="{% if badge.unlocked %}Đã unlock{% else %}Chưa unlock: {{ badge.description }}{% endif %}">
-                                            <div style="width: 70px; height: 70px; background: {{ badge.color }}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin-bottom: 8px; {% if not badge.unlocked %}opacity: 0.4;{% endif %} transition: 0.3s;">{{ badge.emoji }}</div>
-                                            <span style="font-size: 0.7rem; text-center; {% if badge.unlocked %}color: #333;{% else %}color: #999;{% endif %};">{{ badge.name }}</span>
+                                            <div style="width: 80px; height: 80px; background: {{ badge.color }}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 10px; {% if not badge.unlocked %}opacity: 0.4;{% endif %} transition: 0.3s;">{{ badge.emoji }}</div>
+                                            <span style="font-size: 0.8rem; text-center; {% if badge.unlocked %}color: #333;{% else %}color: #999;{% endif %};">{{ badge.name }}</span>
                                         </div>
                                         {% endfor %}
                                     {% else %}
                                         <!-- Fallback badges (static) -->
                                         <div class="d-flex flex-column align-items-center">
-                                            <div style="width: 70px; height: 70px; background: #FFF3CD; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin-bottom: 8px;">🌟</div>
-                                            <span style="font-size: 0.7rem; text-center; color: #666;">Khởi đầu</span>
+                                            <div style="width: 80px; height: 80px; background: #FFF3CD; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 10px;">🌟</div>
+                                            <span style="font-size: 0.8rem; text-center; color: #666;">Khởi đầu</span>
                                         </div>
                                         <div class="d-flex flex-column align-items-center">
-                                            <div style="width: 70px; height: 70px; background: #DCE9F5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin-bottom: 8px; opacity: 0.4;">💬</div>
-                                            <span style="font-size: 0.7rem; text-center; color: #999;">5 Cuộc chat</span>
+                                            <div style="width: 80px; height: 80px; background: #DCE9F5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 10px; opacity: 0.4;">💬</div>
+                                            <span style="font-size: 0.8rem; text-center; color: #999;">5 Cuộc chat</span>
                                         </div>
                                         <div class="d-flex flex-column align-items-center">
-                                            <div style="width: 70px; height: 70px; background: #DCF0E7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin-bottom: 8px; opacity: 0.4;">🎯</div>
-                                            <span style="font-size: 0.7rem; text-center; color: #999;">10 Quest</span>
+                                            <div style="width: 80px; height: 80px; background: #DCF0E7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 10px; opacity: 0.4;">🎯</div>
+                                            <span style="font-size: 0.8rem; text-center; color: #999;">10 Quest</span>
                                         </div>
                                     {% endif %}
                                 </div>
