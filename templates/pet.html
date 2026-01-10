@@ -778,34 +778,6 @@
                     const div = document.createElement('div');
                     div.className = `quest-card ${q.completed ? 'completed' : ''}`;
                     
-                    // Tính timer countdown
-                    const QUEST_DURATION = 60; // 60 giây
-                    const startTime = Date.now();
-                    let timerInterval;
-                    
-                    const updateTimer = () => {
-                        const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                        const remaining = Math.max(0, QUEST_DURATION - elapsed);
-                        const timerEl = div.querySelector('.quest-timer-value');
-                        const timerBadge = div.querySelector('.quest-timer');
-                        
-                        if (timerEl) {
-                            timerEl.textContent = remaining + 's';
-                        }
-                        
-                        if (timerBadge) {
-                            if (remaining <= 10) {
-                                timerBadge.classList.add('warning');
-                            } else {
-                                timerBadge.classList.remove('warning');
-                            }
-                        }
-                        
-                        if (remaining === 0) {
-                            clearInterval(timerInterval);
-                        }
-                    };
-                    
                     let actionBtn = '';
                     if (q.completed) {
                         actionBtn = `<button class="btn-quest completed" disabled>
@@ -842,24 +814,12 @@
                             </div>
                         </div>
 
-                        ${!q.completed ? `<div class="quest-timer">
-                            <span class="timer-dot"></span>
-                            <span class="quest-timer-value">60s</span>
-                            <span class="opacity-70">để hoàn thành</span>
-                        </div>` : ''}
-
                         <div class="quest-action">
                             ${actionBtn}
                         </div>
                     `;
                     
                     els.listQuest.appendChild(div);
-                    
-                    // Bắt đầu timer nếu quest chưa hoàn thành
-                    if (!q.completed) {
-                        timerInterval = setInterval(updateTimer, 1000);
-                        updateTimer(); // Cập nhật ngay lập tức
-                    }
                 });
             }
 
@@ -1136,7 +1096,7 @@
                     return;
                 }
 
-                // Original quest types (quiz, journaling)
+                // Original quest types (quiz, journaling, puzzle)
                 breathingEx.classList.add('hidden');
                 els.modalQuestContent.style.display = 'block';
 
@@ -1151,6 +1111,27 @@
                         };
                         els.modalQuestContent.appendChild(btn);
                     });
+                } else if (q.type === 'puzzle') {
+                    els.modalQuestContent.innerHTML = `
+                        <p class="mb-4 text-gray-700 font-semibold text-center text-lg">${q.data.question}</p>
+                        <div class="mb-4 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-xl text-center">
+                            <p class="text-gray-500 text-xs uppercase tracking-wider mb-2">Từ xáo trộn</p>
+                            <p class="text-2xl font-bold text-gray-800 tracking-widest">${q.data.scrambled_word}</p>
+                        </div>
+                        <input id="puzzle-in" type="text" class="w-full p-4 bg-white border border-gray-300 rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#588157] text-center text-lg font-bold uppercase" placeholder="Nhập câu trả lời..." />
+                        <button id="puzzle-sub" class="w-full mt-4 py-3 bg-[#588157] text-white rounded-xl font-bold hover:bg-[#3A5A40] transition">Kiểm tra đáp án</button>
+                    `;
+                    const puzzleInput = document.getElementById('puzzle-in');
+                    document.getElementById('puzzle-sub').onclick = () => {
+                        const userAnswer = puzzleInput.value.trim().toUpperCase();
+                        const correctAnswer = q.data.correct_answer.toUpperCase();
+                        if (userAnswer === correctAnswer) { 
+                            showToast('Chính xác! Tuyệt vời!', 'success'); 
+                            finishQuest(); 
+                        }
+                        else showToast('Sai rồi, thử lại nhé!', 'error');
+                    };
+                    puzzleInput.focus();
                 } else if (q.type === 'journaling') {
                     els.modalQuestContent.innerHTML = `
                         <p class="mb-4 text-gray-500 italic bg-gray-50 p-3 rounded-lg border border-gray-100">"${q.data.prompt}"</p>
