@@ -3,345 +3,653 @@
 {% block title %}Healing Space - {{ code }}{% endblock %}
 
 {% block head %}
-<!-- Animation & Font -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Nunito:wght@600;700&display=swap" rel="stylesheet">
 
 <style>
-    /* --- 1. GLOBAL ATMOSPHERE --- */
-    body { 
-        height: 100vh; overflow: hidden; display: flex; flex-direction: column;
-        background: #FDFCF8;
-        font-family: 'Plus Jakarta Sans', sans-serif;
-    }
+    /* --- GLOBAL STYLES --- */
+    * { box-sizing: border-box; }
     
-    /* Ẩn Layout cũ để chat room chiếm toàn màn hình */
-    .navbar-custom, footer { display: none !important; } 
-    
-    main { 
-        flex: 1; padding: 0; position: relative;
-        /* Nền giấy noise nhẹ + Gradient ấm áp */
-        background: 
-            url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E"),
-            linear-gradient(180deg, #F0FDF4 0%, #FFFBEB 100%);
+    body {
+        height: 100vh;
+        overflow: hidden;
+        background: linear-gradient(135deg, #F5F7F6 0%, #FEFAE0 100%);
+        font-family: 'Nunito', sans-serif;
     }
 
-    /* Background Blobs (Hiệu ứng thở) */
-    .blob {
-        position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.5; z-index: 0;
-        animation: floatBlob 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .blob-1 { width: 400px; height: 400px; background: #Dcfce7; top: -100px; left: -100px; }
-    .blob-2 { width: 500px; height: 500px; background: #Fef3c7; bottom: -150px; right: -150px; animation-delay: -5s; }
-    @keyframes floatBlob { from { transform: translate(0,0) scale(1); } to { transform: translate(50px, 30px) scale(1.1); } }
+    .navbar-custom, footer { display: none !important; }
 
-    /* --- 2. PREMIUM HEADER --- */
-    .glass-header {
-        position: absolute; top: 0; left: 0; right: 0; height: 80px;
-        padding: 0 30px;
-        display: flex; align-items: center; justify-content: space-between;
-        z-index: 100;
-        /* Glassmorphism cực nhẹ */
-        background: rgba(255, 255, 255, 0.4);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-bottom: 1px solid rgba(255,255,255,0.3);
+    main {
+        height: 100vh;
+        display: flex;
+        padding: 0;
+        background: #FEFAE0;
     }
 
-    .header-left { display: flex; align-items: center; gap: 15px; }
-
-    .back-btn {
-        width: 40px; height: 40px; border-radius: 12px;
-        display: flex; align-items: center; justify-content: center;
-        color: #344E41; background: rgba(255,255,255,0.6);
-        transition: 0.2s; border: 1px solid rgba(0,0,0,0.05);
-        text-decoration: none;
-    }
-    .back-btn:hover { background: white; transform: scale(1.05); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-
-    .avatar-group { position: relative; }
-    .avatar-img { 
-        width: 45px; height: 45px; object-fit: cover; border-radius: 50%; 
-        border: 3px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    }
-    /* Dấu chấm xanh (Online Dot) tích hợp vào Avatar */
-    .online-badge {
-        position: absolute; bottom: 2px; right: 2px;
-        width: 12px; height: 12px; background: #22C55E;
-        border: 2px solid white; border-radius: 50%;
-        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+    /* --- SIDEBAR PROFILE --- */
+    .chat-sidebar {
+        width: 320px;
+        background: linear-gradient(135deg, #344E41 0%, #588157 100%);
+        padding: 30px 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+        box-shadow: 8px 0 24px rgba(52, 78, 65, 0.15);
     }
 
-    .room-meta h5 { 
-        margin: 0; font-family: 'Playfair Display', serif; font-size: 1.2rem; color: #1e293b; 
-    }
-    .room-meta span { font-size: 0.75rem; color: #64748b; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }
-
-    /* --- 3. CHAT AREA --- */
-    .chat-scroll-area {
-        position: absolute; top: 80px; bottom: 100px; left: 0; right: 0;
-        overflow-y: auto; padding: 20px 15%;
-        display: flex; flex-direction: column; gap: 24px;
-        z-index: 10; scroll-behavior: smooth;
-    }
-    @media(max-width: 768px) { .chat-scroll-area { padding: 20px 15px; } }
-
-    /* Scrollbar ẩn nhưng vẫn scroll được */
-    .chat-scroll-area::-webkit-scrollbar { width: 5px; }
-    .chat-scroll-area::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
-
-    /* Message Bubbles */
-    .msg-row { display: flex; flex-direction: column; max-width: 70%; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-    .msg-content {
-        padding: 14px 24px; font-size: 1rem; line-height: 1.6;
-        position: relative; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-        word-wrap: break-word;
-    }
-
-    /* ME (Phải - Gradient Mịn) */
-    .msg-me { align-self: flex-end; align-items: flex-end; }
-    .msg-me .msg-content {
-        /* Gradient xanh rêu sang trọng */
-        background: linear-gradient(135deg, #405d4d 0%, #588157 100%);
+    .back-btn-sidebar {
+        width: 44px;
+        height: 44px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
         color: white;
-        border-radius: 24px 24px 4px 24px;
-    }
-    .msg-me .msg-time { text-align: right; color: #64748b; margin-top: 6px; font-size: 0.7rem; margin-right: 4px; }
-
-    /* PARTNER (Trái - Trắng Sứ) */
-    .msg-partner { align-self: flex-start; align-items: flex-start; }
-    .msg-partner .msg-content {
-        background: #FFFFFF;
-        color: #334155;
-        border: 1px solid rgba(255,255,255,0.8);
-        border-radius: 24px 24px 24px 4px;
-    }
-    .msg-partner .sender-name {
-        font-size: 0.8rem; font-weight: 700; color: #588157; 
-        margin-bottom: 4px; margin-left: 12px;
-    }
-    .msg-partner .msg-time { margin-left: 4px; color: #94a3b8; font-size: 0.7rem; margin-top: 6px; }
-
-    /* System Notice */
-    .sys-badge {
-        align-self: center; background: rgba(255,255,255,0.5); 
-        border: 1px solid rgba(0,0,0,0.05);
-        padding: 6px 16px; border-radius: 30px;
-        font-size: 0.75rem; color: #94a3b8; margin: 10px 0;
-        backdrop-filter: blur(4px);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-size: 1.1rem;
     }
 
-    /* --- 4. FLOATING INPUT BAR --- */
-    .input-dock {
-        position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-        width: 90%; max-width: 850px;
-        z-index: 200;
+    .back-btn-sidebar:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateX(-3px);
     }
-    
-    .glass-input-wrapper {
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(20px);
-        padding: 8px 10px;
+
+    /* Profile Card */
+    .partner-profile {
+        text-align: center;
+        padding: 25px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .partner-avatar-large {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        margin: 0 auto 15px;
+        border: 4px solid white;
+        object-fit: cover;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    .partner-name {
+        color: white;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .partner-role {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        margin: 6px 0 0;
+    }
+
+    .partner-status {
+        display: inline-block;
+        margin-top: 12px;
+        padding: 6px 12px;
+        background: rgba(16, 185, 129, 0.2);
+        border: 1px solid rgba(16, 185, 129, 0.4);
+        color: #10B981;
         border-radius: 20px;
-        box-shadow: 0 15px 40px rgba(52, 78, 65, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.6);
-        display: flex; align-items: center; gap: 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        background: #10B981;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 6px;
+    }
+
+    /* Info Grid */
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .info-item {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 12px;
+        border-radius: 12px;
+        text-align: center;
+    }
+
+    .info-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .info-value {
+        color: white;
+        font-size: 1rem;
+        font-weight: 700;
+        margin-top: 4px;
+    }
+
+    /* Action Buttons */
+    .sidebar-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .action-btn-sidebar {
+        flex: 1;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .action-btn-sidebar:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-2px);
+    }
+
+    /* Divider */
+    .sidebar-divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Chat Tips */
+    .chat-tips {
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        border-left: 3px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .tips-title {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+
+    .tips-text {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.8rem;
+        line-height: 1.5;
+    }
+
+    /* --- MAIN CHAT AREA --- */
+    .chat-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: linear-gradient(135deg, rgba(245, 247, 246, 0.8) 0%, rgba(254, 250, 224, 0.8) 100%);
+    }
+
+    /* Header */
+    .chat-header-main {
+        padding: 20px 30px;
+        background: white;
+        border-bottom: 1px solid #E2E8F0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .room-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #344E41;
+        margin: 0;
+    }
+
+    .room-subtitle {
+        color: #999;
+        font-size: 0.85rem;
+        margin: 4px 0 0;
+    }
+
+    .btn-end-chat-main {
+        background: #FEF2F2;
+        border: 1px solid #FECACA;
+        color: #DC2626;
+        padding: 10px 18px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.85rem;
         transition: all 0.3s ease;
     }
-    .glass-input-wrapper:focus-within {
-        background: white; transform: translateY(-5px);
-        box-shadow: 0 20px 50px rgba(52, 78, 65, 0.12);
+
+    .btn-end-chat-main:hover {
+        background: #DC2626;
+        color: white;
     }
 
-    .main-input {
-        flex: 1; border: none; background: transparent;
-        padding: 12px; font-size: 1rem; color: #1e293b;
-        font-family: 'Plus Jakarta Sans', sans-serif;
+    /* Messages Container */
+    .messages-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
     }
-    .main-input:focus { outline: none; }
-    .main-input::placeholder { color: #cbd5e1; font-weight: 500; }
 
-    .action-btn {
-        width: 44px; height: 44px; border-radius: 14px; border: none;
-        display: flex; align-items: center; justify-content: center;
-        background: transparent; color: #94a3b8; cursor: pointer; transition: 0.2s;
+    .messages-container::-webkit-scrollbar {
+        width: 6px;
     }
-    .action-btn:hover { background: #f1f5f9; color: #334155; }
 
-    .send-btn {
-        background: #344E41; color: white; border-radius: 14px;
-        width: 48px; height: 48px; box-shadow: 0 5px 15px rgba(52, 78, 65, 0.2);
+    .messages-container::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
     }
-    .send-btn:hover { background: #588157; transform: scale(1.05); }
 
-    /* --- 5. BUTTON END CHAT (REDUX) --- */
-    .btn-end-session {
-        padding: 8px 16px; background: #FEF2F2; color: #DC2626;
-        border: 1px solid #FECACA; border-radius: 30px;
-        font-size: 0.85rem; font-weight: 600; text-decoration: none;
-        transition: 0.2s; display: flex; align-items: center; gap: 6px;
+    /* System Message */
+    .sys-msg-main {
+        text-align: center;
+        margin: 10px 0;
+    }
+
+    .sys-badge-main {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.6);
+        border: 1px solid rgba(163, 177, 138, 0.3);
+        color: #666;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    /* Empty State */
+    .empty-state-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: #999;
+    }
+
+    .empty-state-main i {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        opacity: 0.3;
+    }
+
+    .empty-state-main p {
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+
+    /* Message Groups */
+    .msg-group-main {
+        display: flex;
+        gap: 12px;
+        animation: fadeInUp 0.4s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        object-fit: cover;
+        border: 2px solid white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .msg-content-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        max-width: 65%;
+    }
+
+    .msg-sender {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #588157;
+    }
+
+    .msg-bubble-main {
+        padding: 14px 18px;
+        border-radius: 14px;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        word-wrap: break-word;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        background: white;
+        color: #334155;
+        border: 1px solid #E2E8F0;
+    }
+
+    .msg-bubble-main:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Self Messages */
+    .msg-group-main.msg-self {
+        justify-content: flex-end;
+    }
+
+    .msg-group-main.msg-self .msg-avatar {
+        order: 2;
+    }
+
+    .msg-group-main.msg-self .msg-content-wrapper {
+        order: 1;
+        align-items: flex-end;
+        max-width: 65%;
+    }
+
+    .msg-group-main.msg-self .msg-bubble-main {
+        background: linear-gradient(135deg, #405d4d 0%, #588157 100%);
+        color: white;
+        border: none;
+        border-radius: 14px 4px 14px 14px;
+    }
+
+    .msg-time-main {
+        font-size: 0.7rem;
+        color: #999;
+        font-weight: 500;
+    }
+
+    /* Input Area */
+    .input-area-main {
+        padding: 20px 30px;
+        background: white;
+        border-top: 1px solid #E2E8F0;
+    }
+
+    .input-wrapper-main {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .input-wrapper-main input {
+        flex: 1;
+        border: 1px solid #E2E8F0;
+        border-radius: 20px;
+        padding: 12px 18px;
+        font-size: 0.95rem;
+        font-family: 'Nunito', sans-serif;
+        transition: all 0.3s ease;
+    }
+
+    .input-wrapper-main input:focus {
+        outline: none;
+        border-color: #588157;
+        box-shadow: 0 0 0 3px rgba(88, 129, 87, 0.1);
+    }
+
+    .icon-btn-main {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        border: none;
+        background: #f1f5f9;
+        color: #94a3b8;
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        font-size: 1.05rem;
     }
-    .btn-end-session:hover { background: #DC2626; color: white; border-color: #DC2626; }
+
+    .icon-btn-main:hover {
+        background: #e2e8f0;
+        color: #588157;
+        transform: scale(1.1);
+    }
+
+    .send-btn-main {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        border: none;
+        background: linear-gradient(135deg, #344E41 0%, #588157 100%);
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 16px rgba(52, 78, 65, 0.2);
+        font-weight: 600;
+    }
+
+    .send-btn-main:hover {
+        transform: scale(1.08);
+        box-shadow: 0 8px 20px rgba(52, 78, 65, 0.3);
+    }
+
+    .send-btn-main:active {
+        transform: scale(0.95);
+    }
+
+    @media (max-width: 1024px) {
+        .chat-sidebar {
+            width: 280px;
+            padding: 20px 15px;
+        }
+        .msg-content-wrapper {
+            max-width: 75%;
+        }
+    }
+
+    @media (max-width: 768px) {
+        main {
+            flex-direction: column;
+        }
+        .chat-sidebar {
+            width: 100%;
+            order: -1;
+            box-shadow: 0 4px 12px rgba(52, 78, 65, 0.1);
+        }
+    }
+
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Blobs Background -->
-<div class="blob blob-1"></div>
-<div class="blob blob-2"></div>
+<!-- SIDEBAR PROFILE -->
+<div class="chat-sidebar">
+    <a href="{{ url_for('dashboard') }}" class="back-btn-sidebar" title="Quay lại Dashboard">
+        <i class="fas fa-chevron-left"></i>
+    </a>
 
-<!-- HEADER -->
-<div class="glass-header">
-    <div class="header-left">
-        <a href="{{ url_for('dashboard') }}" class="back-btn" title="Trở về Dashboard"><i class="fas fa-chevron-left"></i></a>
+    <!-- Partner Profile Card -->
+    <div class="partner-profile">
+        <img src="https://ui-avatars.com/api/?name={{ therapist_name }}&background=588157&color=fff&size=256" alt="{{ therapist_name }}" class="partner-avatar-large">
         
-        <!-- Avatar + Online Indicator -->
-        <div class="avatar-group">
-            <img src="https://ui-avatars.com/api/?name=Partner&background=A3B18A&color=fff" class="avatar-img">
-            <span class="online-badge"></span>
+        <h3 class="partner-name">{{ therapist_name }}</h3>
+        <p class="partner-role"> Chuyên gia tâm lý</p>
+        
+        <div class="partner-status">
+            <span class="status-dot"></span>
+            Đang hoạt động
         </div>
 
-        <div class="room-meta">
-            <h5>Healing Space</h5>
-            <span>Phòng {{ code }}</span>
+        <!-- Info Grid -->
+        <div class="info-grid" style="margin-top: 18px;">
+            <div class="info-item">
+                <div class="info-label">Kinh Nghiệm</div>
+                <div class="info-value">5+ Năm</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Đánh Giá</div>
+                <div class="info-value">⭐ 4.9</div>
+            </div>
         </div>
     </div>
 
-    <!-- Right Actions -->
-    <div class="d-flex align-items-center gap-3">
-        {% if user_role == 'therapist' %}
-        <span class="badge bg-white text-success border shadow-sm px-3 py-2 rounded-pill d-none d-md-block">
-            <i class="fas fa-user-md me-1"></i> Specialist
-        </span>
-        {% endif %}
-        
-        <!-- Nút Thoát -->
-        <form action="{{ url_for('end_chat') }}" method="POST" class="m-0" onsubmit="return confirm('Hành động này sẽ ngắt kết nối với đối phương.\nBạn chắc chắn chứ?');">
-            <input type="hidden" name="room_code" value="{{code}}">
-            <button type="submit" class="btn-end-session">
-                <i class="fas fa-power-off"></i> <span class="d-none d-sm-inline">Kết thúc</span>
+    <!-- Divider -->
+    <div class="sidebar-divider"></div>
+
+    <!-- Chat Tips -->
+    <div class="chat-tips">
+        <div class="tips-title">💡 Mẹo tốt nhất</div>
+        <div class="tips-text">
+            Hãy chia sẻ cảm xúc thật của bạn. Bảo mật là ưu tiên của chúng tôi.
+        </div>
+    </div>
+</div>
+
+<!-- MAIN CHAT AREA -->
+<div class="chat-main">
+    <!-- Header -->
+    <div class="chat-header-main">
+        <div>
+            <h2 class="room-title">Healing Space</h2>
+            <p class="room-subtitle">Phòng {{ code }} • Bảo mật đầu cuối</p>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="messages-container" id="messages">
+        <!-- System Badge -->
+        <div class="sys-msg-main">
+            <div class="sys-badge-main">
+                <i class="fas fa-lock me-1"></i> Cuộc trò chuyện được mã hóa
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state-main" id="empty-state">
+            <i class="fab fa-envira"></i>
+            <p><strong>Không gian này là của bạn.</strong><br>Hãy bắt đầu cuộc trò chuyện của mình.</p>
+        </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="input-area-main">
+        <div class="input-wrapper-main">
+            <input type="text" id="message" placeholder="Nhập tin nhắn..." autocomplete="off">
+            
+            <button id="send-btn" class="send-btn-main" title="Gửi">
+                <i class="fas fa-paper-plane"></i>
             </button>
-        </form>
-    </div>
-</div>
-
-<!-- CHAT AREA -->
-<div class="chat-scroll-area" id="messages">
-    <!-- Thông báo hệ thống -->
-    <div class="sys-badge">
-        <i class="fas fa-lock me-1"></i> Bảo mật đầu cuối (E2EE) • Cuộc trò chuyện an toàn
-    </div>
-
-    <!-- Placeholder khi chưa có tin nhắn -->
-    <div class="text-center mt-5 opacity-50" id="empty-state">
-        <div class="mb-3">
-            <i class="fab fa-envira fa-3x text-success animate__animated animate__pulse animate__infinite"></i>
         </div>
-        <p class="small text-muted fw-bold">Không gian này là của bạn.<br>Hãy thả lỏng và chia sẻ.</p>
     </div>
 </div>
 
-<!-- INPUT DOCK -->
-<div class="input-dock">
-    <div class="glass-input-wrapper">
-        <button class="action-btn" title="Gửi ảnh (Demo)"><i class="far fa-image"></i></button>
-        <button class="action-btn" title="Thả tim" onclick="addEmoji('❤️')"><i class="far fa-heart"></i></button>
-        
-        <input type="text" id="message" class="main-input" placeholder="Nhập tin nhắn..." autocomplete="off">
-        
-        <button id="send-btn" class="action-btn send-btn">
-            <i class="fas fa-paper-plane"></i>
-        </button>
-    </div>
-</div>
 {% endblock %}
 
 {% block scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 <script>
-    var socketio = io();
-    const myUsername = "{{ name }}"; 
+    const socket = io();
     const messagesDiv = document.getElementById("messages");
     const messageInput = document.getElementById("message");
+    const sendBtn = document.getElementById("send-btn");
     const emptyState = document.getElementById("empty-state");
+    const myUsername = "{{ name }}";
+    const myAvatar = "https://ui-avatars.com/api/?name={{ name }}&background=405d4d&color=fff&size=256";
+    const partnerAvatar = "https://ui-avatars.com/api/?name=Partner&background=588157&color=fff&size=256";
 
-    // --- RENDER MESSAGE ---
+    function hideEmptyState() {
+        if (emptyState) emptyState.style.display = "none";
+    }
+
     const createMessage = (name, msg, timestamp, shouldScroll = true) => {
-        if(emptyState) emptyState.style.display = 'none';
+        hideEmptyState();
 
         const isOwn = (name === myUsername);
-        
-        // Xử lý Time (Nếu server chưa gửi time, lấy time hiện tại)
         let timeStr = timestamp;
+        
         if (!timeStr) {
-            timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         } else if (timeStr.includes(' ')) {
-             timeStr = timeStr.split(' ')[1];
+            timeStr = timeStr.split(' ')[1];
         }
 
-        let html = '';
-        if(isOwn) {
-            // TIN NHẮN CỦA MÌNH
-            html = `
-            <div class="msg-row msg-me">
-                <div class="msg-content">
-                    ${msg}
+        const avatar = isOwn ? myAvatar : partnerAvatar;
+        const messageClass = isOwn ? 'msg-self' : '';
+
+        const html = `
+            <div class="msg-group-main ${messageClass}">
+                <img src="${avatar}" alt="${name}" class="msg-avatar">
+                <div class="msg-content-wrapper">
+                    ${!isOwn ? `<div class="msg-sender">${name}</div>` : ''}
+                    <div class="msg-bubble-main">${msg}</div>
+                    <div class="msg-time-main">${timeStr}</div>
                 </div>
-                <div class="msg-time">${timeStr}</div>
-            </div>`;
-        } else {
-            // TIN NHẮN ĐỐI PHƯƠNG
-            html = `
-            <div class="msg-row msg-partner">
-                <div class="sender-name">${name}</div>
-                <div class="msg-content">
-                    ${msg}
-                </div>
-                <div class="msg-time">${timeStr}</div>
-            </div>`;
-        }
-        
+            </div>
+        `;
+
         messagesDiv.insertAdjacentHTML('beforeend', html);
         if (shouldScroll) scrollToBottom();
     };
 
     const scrollToBottom = () => {
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
+        setTimeout(() => {
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }, 0);
+    };
 
     const sendMessage = () => {
         const msg = messageInput.value.trim();
         if (msg === "") return;
-        socketio.emit("message", { data: msg });
+        
+        socket.emit("message", { data: msg });
         messageInput.value = "";
         messageInput.focus();
     };
 
-    // Helper Emoji
-    window.addEmoji = (icon) => {
-        messageInput.value += icon;
+    window.addEmoji = (emoji) => {
+        messageInput.value += emoji;
         messageInput.focus();
-    }
+    };
 
-    // Events
-    document.getElementById("send-btn").addEventListener("click", sendMessage);
-    messageInput.addEventListener("keypress", (e) => { 
-        if (e.key === "Enter") sendMessage(); 
+    sendBtn.addEventListener("click", sendMessage);
+    messageInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") sendMessage();
     });
 
-    // Socket Listener
-    socketio.on("message", (data) => {
+    socket.on("message", (data) => {
         createMessage(data.name, data.message, data.timestamp, true);
     });
 
-    // Load History (nếu có từ Flask)
     {% if messages %}
-        if(emptyState) emptyState.style.display = 'none';
+        hideEmptyState();
         {% for msg in messages %}
-            createMessage("{{msg.name|e}}", "{{msg.message|e}}", "{{msg.timestamp|e}}", false);
+            createMessage("{{ msg.name|e }}", "{{ msg.message|e }}", "{{ msg.timestamp|e }}", false);
         {% endfor %}
         scrollToBottom();
     {% endif %}
