@@ -201,6 +201,74 @@
         line-height: 1.5;
     }
 
+    /* Session Actions */
+    .session-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: auto;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .action-btn {
+        width: 100%;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        color: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .action-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+        border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .action-btn.danger {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: rgba(239, 68, 68, 0.4);
+        color: rgba(254, 226, 226, 0.9);
+    }
+
+    .action-btn.danger:hover {
+        background: rgba(239, 68, 68, 0.3);
+        border-color: rgba(239, 68, 68, 0.6);
+    }
+
+    /* Session Timer */
+    .session-timer {
+        text-align: center;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        margin-bottom: 10px;
+    }
+
+    .timer-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+
+    .timer-value {
+        color: rgba(163, 177, 138, 1);
+        font-size: 1.1rem;
+        font-weight: 700;
+        font-family: 'Courier New', monospace;
+    }
+
     /* --- MAIN CHAT AREA --- */
     .chat-main {
         flex: 1;
@@ -496,17 +564,18 @@
 
     <!-- Partner Profile Card -->
     <div class="partner-profile">
-        <img src="https://ui-avatars.com/api/?name={{ therapist_name }}&background=588157&color=fff&size=256" alt="{{ therapist_name }}" class="partner-avatar-large">
+        <img src="https://ui-avatars.com/api/?name={{ partner_name }}&background=588157&color=fff&size=256" alt="{{ partner_name }}" class="partner-avatar-large">
         
-        <h3 class="partner-name">{{ therapist_name }}</h3>
-        <p class="partner-role"> Chuyên gia tâm lý</p>
+        <h3 class="partner-name">{{ partner_name }}</h3>
+        <p class="partner-role">{{ partner_role }}</p>
         
         <div class="partner-status">
             <span class="status-dot"></span>
             Đang hoạt động
         </div>
 
-        <!-- Info Grid -->
+        <!-- Info Grid (Chỉ hiển thị cho Therapist) -->
+        {% if 'Chuyên gia' in partner_role %}
         <div class="info-grid" style="margin-top: 18px;">
             <div class="info-item">
                 <div class="info-label">Kinh Nghiệm</div>
@@ -517,6 +586,7 @@
                 <div class="info-value">⭐ 4.9</div>
             </div>
         </div>
+        {% endif %}
     </div>
 
     <!-- Divider -->
@@ -528,6 +598,22 @@
         <div class="tips-text">
             Hãy chia sẻ cảm xúc thật của bạn. Bảo mật là ưu tiên của chúng tôi.
         </div>
+    </div>
+
+    <!-- Session Timer -->
+    <div class="session-timer">
+        <div class="timer-label">⏱️ Thời gian phiên</div>
+        <div class="timer-value" id="session-timer">00:00</div>
+    </div>
+
+    <!-- Session Actions -->
+    <div class="session-actions">
+        <button class="action-btn" title="Kết thúc phiên tư vấn">
+            <i class="fas fa-phone-slash"></i> Kết thúc phiên
+        </button>
+        <button class="action-btn danger" title="Báo cáo vấn đề">
+            <i class="fas fa-flag"></i> Báo cáo
+        </button>
     </div>
 </div>
 
@@ -579,9 +665,24 @@
     const messageInput = document.getElementById("message");
     const sendBtn = document.getElementById("send-btn");
     const emptyState = document.getElementById("empty-state");
+    const sessionTimer = document.getElementById("session-timer");
     const myUsername = "{{ name }}";
+    const partnerUsername = "{{ partner_name }}";
     const myAvatar = "https://ui-avatars.com/api/?name={{ name }}&background=405d4d&color=fff&size=256";
-    const partnerAvatar = "https://ui-avatars.com/api/?name=Partner&background=588157&color=fff&size=256";
+    const partnerAvatar = "https://ui-avatars.com/api/?name={{ partner_name }}&background=588157&color=fff&size=256";
+
+    // --- SESSION TIMER (Không reset khi F5) ---
+    const roomStartTime = {{ room_start_time }} * 1000; // Convert to milliseconds
+    let sessionSeconds = Math.floor((Date.now() - roomStartTime) / 1000);
+    
+    setInterval(() => {
+        sessionSeconds++;
+        const minutes = Math.floor(sessionSeconds / 60);
+        const seconds = sessionSeconds % 60;
+        sessionTimer.textContent = 
+            String(minutes).padStart(2, '0') + ':' + 
+            String(seconds).padStart(2, '0');
+    }, 1000);
 
     function hideEmptyState() {
         if (emptyState) emptyState.style.display = "none";
