@@ -89,7 +89,7 @@ def connect(auth):
     join_room(room)
     now_display_format = datetime.now().strftime('%Y-%m-%d %H:%M')
     rooms[room]["members"] += 1
-    print(f"{name} tham gia phong {room} (Thanh vien: {rooms[room]['members']})")
+    # System message removed
 
 # ... (Các hàm disconnect, message, find_match, cancel_match, join_private_room giữ nguyên) ...
 
@@ -126,7 +126,7 @@ def disconnect():
         # ... (rest of the room disconnect logic)
         rooms[room]["members"] -= 1
         now_display_format = datetime.now().strftime('%Y-%m-%d %H:%M')
-        send({"name": name, "message": "da roi phong.", "timestamp": now_display_format}, to=room)
+        # System message removed: send({"name": name, "message": "da roi phong.", "timestamp": now_display_format}, to=room)
         
         if rooms[room]["members"] <= 0:
             del rooms[room] 
