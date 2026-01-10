@@ -199,6 +199,173 @@
             background-color: rgba(52, 78, 65, 0.7); /* Xanh đậm mờ */
             backdrop-filter: blur(5px);
         }
+
+        /* === UPGRADED QUEST CARD STYLES === */
+        .quest-card {
+            position: relative;
+            padding: 16px;
+            border-radius: 16px;
+            border: 2px solid #e5e7eb;
+            background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: hidden;
+        }
+
+        .quest-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #588157, #A3B18A);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .quest-card:hover {
+            border-color: #A3B18A;
+            box-shadow: 0 12px 24px rgba(88, 129, 87, 0.15);
+            transform: translateY(-4px);
+        }
+
+        .quest-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .quest-card.completed {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-color: #86efac;
+        }
+
+        /* Quest Timer Badge */
+        .quest-timer {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid #fcd34d;
+            margin-top: 8px;
+        }
+
+        .quest-timer.warning {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+            border-color: #fca5a5;
+        }
+
+        .timer-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .quest-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .quest-title.completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        .quest-rewards {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .reward-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 8px;
+            background: #ede9fe;
+            color: #6b21a8;
+            border: 1px solid #ddd6fe;
+        }
+
+        .reward-badge.gold {
+            background: #fef3c7;
+            color: #b45309;
+            border-color: #fcd34d;
+        }
+
+        .reward-badge.exp {
+            background: #dbeafe;
+            color: #1e40af;
+            border-color: #bfdbfe;
+        }
+
+        .quest-action {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            align-items: center;
+        }
+
+        .btn-quest {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn-quest.primary {
+            background: linear-gradient(135deg, #588157 0%, #405d4d 100%);
+            color: white;
+        }
+
+        .btn-quest.primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(88, 129, 87, 0.3);
+        }
+
+        .btn-quest.secondary {
+            background: linear-gradient(135deg, #2f3e46 0%, #1f2937 100%);
+            color: white;
+        }
+
+        .btn-quest.secondary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(47, 62, 70, 0.3);
+        }
+
+        .btn-quest.completed {
+            background: #d1fae5;
+            color: #065f46;
+            cursor: default;
+        }
+
+        .btn-quest.completed:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        }
         
         /* Chat UI */
         .chat-msg-bot { background-color: #E9EDC9; color: #344E41; border-radius: 12px 12px 12px 0; }
@@ -401,8 +568,42 @@
             <button id="modal-close-button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-xl">&times;</button>
             
             <h2 id="modal-title" class="text-2xl font-bold text-[#344E41] mb-4 pr-8">Tiêu đề nhiệm vụ</h2>
+            
+            <!-- Quest Content -->
             <div id="modal-content" class="text-gray-600 leading-relaxed">
                 <!-- Nội dung quest -->
+            </div>
+
+            <!-- Breathing Exercise Timer (Hidden by default) -->
+            <div id="breathing-exercise" class="hidden text-center py-8">
+                <h3 class="text-xl font-bold text-[#344E41] mb-6">Bài tập hít thở - Giữ bình tĩnh</h3>
+                
+                <!-- Breathing Circle Animation -->
+                <div class="flex justify-center mb-8">
+                    <div class="relative w-32 h-32 flex items-center justify-center">
+                        <!-- Outer circle -->
+                        <div class="absolute w-32 h-32 rounded-full border-4 border-[#588157] opacity-20"></div>
+                        
+                        <!-- Breathing animation circle -->
+                        <div id="breathing-circle" class="w-24 h-24 rounded-full bg-gradient-to-br from-[#A3B18A] to-[#588157] animate-pulse flex items-center justify-center">
+                            <div class="text-center">
+                                <div id="breathing-timer" class="text-4xl font-bold text-white">60</div>
+                                <div class="text-xs text-white mt-1">giây</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Breathing instructions -->
+                <div class="space-y-3 mb-6">
+                    <p id="breathing-instruction" class="text-lg font-semibold text-[#344E41]">Hít vào (4 giây)</p>
+                    <p class="text-sm text-gray-500">Hãy tập trung vào hơi thở của bạn</p>
+                </div>
+
+                <!-- Complete button (Disabled during countdown) -->
+                <button id="complete-breathing-btn" class="w-full py-3 bg-gray-300 text-gray-500 rounded-xl font-bold cursor-not-allowed" disabled>
+                    Đang tập luyện... Vui lòng chờ
+                </button>
             </div>
         </div>
     </div>
@@ -573,30 +774,92 @@
                     els.listQuest.innerHTML = '<div class="col-span-full text-gray-400 text-center p-8 bg-gray-50 rounded-2xl">Đã hoàn thành hết nhiệm vụ hôm nay! Tuyệt vời! 🎉</div>';
                     return;
                 }
-                quests.forEach(q => {
+                quests.forEach((q, idx) => {
                     const div = document.createElement('div');
-                    div.className = `flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border transition shadow-sm ${q.completed ? 'bg-green-50 border-green-100' : 'bg-white border-gray-100 hover:shadow-md hover:border-[#A3B18A]'}`;
+                    div.className = `quest-card ${q.completed ? 'completed' : ''}`;
                     
-                    let btn = '';
+                    // Tính timer countdown
+                    const QUEST_DURATION = 60; // 60 giây
+                    const startTime = Date.now();
+                    let timerInterval;
+                    
+                    const updateTimer = () => {
+                        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                        const remaining = Math.max(0, QUEST_DURATION - elapsed);
+                        const timerEl = div.querySelector('.quest-timer-value');
+                        const timerBadge = div.querySelector('.quest-timer');
+                        
+                        if (timerEl) {
+                            timerEl.textContent = remaining + 's';
+                        }
+                        
+                        if (timerBadge) {
+                            if (remaining <= 10) {
+                                timerBadge.classList.add('warning');
+                            } else {
+                                timerBadge.classList.remove('warning');
+                            }
+                        }
+                        
+                        if (remaining === 0) {
+                            clearInterval(timerInterval);
+                        }
+                    };
+                    
+                    let actionBtn = '';
                     if (q.completed) {
-                        btn = `<span class="px-4 py-2 bg-green-100 text-green-700 rounded-lg font-bold text-sm flex items-center gap-1"><i class="fas fa-check"></i> Đã xong</span>`;
+                        actionBtn = `<button class="btn-quest completed" disabled>
+                            <i class="fas fa-check mr-1"></i> Đã hoàn thành
+                        </button>`;
                     } else if (q.type === 'simple') {
-                        btn = `<button data-id="${q.id}" class="btn-complete px-5 py-2.5 bg-[#588157] hover:bg-[#3A5A40] text-white rounded-xl font-bold text-sm transition shadow-sm transform hover:-translate-y-0.5">Xong ngay</button>`;
+                        actionBtn = `<button data-id="${q.id}" class="btn-quest primary btn-complete">
+                            <i class="fas fa-lightning-bolt mr-1"></i> Hoàn thành ngay
+                        </button>`;
                     } else {
-                        btn = `<button data-id="${q.id}" class="btn-start px-5 py-2.5 bg-[#2F3E46] hover:bg-black text-white rounded-xl font-bold text-sm transition shadow-sm transform hover:-translate-y-0.5">Thực hiện</button>`;
+                        actionBtn = `<button data-id="${q.id}" class="btn-quest secondary btn-start">
+                            <i class="fas fa-play mr-1"></i> Thực hiện
+                        </button>`;
                     }
 
                     div.innerHTML = `
-                        <div class="mb-3 md:mb-0">
-                            <h4 class="font-bold text-gray-800 text-lg ${q.completed ? 'line-through opacity-60' : ''}">${q.title}</h4>
-                            <div class="flex items-center gap-3 mt-1">
-                                <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded font-bold">+${q.reward_gold} Vàng</span>
-                                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-bold">+${q.reward_exp} XP</span>
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex-1">
+                                <h4 class="quest-title ${q.completed ? 'completed' : ''}">${q.title}</h4>
+                            </div>
+                            ${!q.completed ? `<span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-lg font-bold whitespace-nowrap ml-2">${q.type === 'simple' ? '⚡ Nhanh' : '🎮 Tương tác'}</span>` : ''}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="quest-rewards">
+                                <span class="reward-badge gold">
+                                    <span>🪙</span>
+                                    <span>+${q.reward_gold}</span>
+                                </span>
+                                <span class="reward-badge exp">
+                                    <span>⭐</span>
+                                    <span>+${q.reward_exp} XP</span>
+                                </span>
                             </div>
                         </div>
-                        <div>${btn}</div>
+
+                        ${!q.completed ? `<div class="quest-timer">
+                            <span class="timer-dot"></span>
+                            <span class="quest-timer-value">60s</span>
+                            <span class="opacity-70">để hoàn thành</span>
+                        </div>` : ''}
+
+                        <div class="quest-action">
+                            ${actionBtn}
+                        </div>
                     `;
+                    
                     els.listQuest.appendChild(div);
+                    
+                    // Bắt đầu timer nếu quest chưa hoàn thành
+                    if (!q.completed) {
+                        timerInterval = setInterval(updateTimer, 1000);
+                        updateTimer(); // Cập nhật ngay lập tức
+                    }
                 });
             }
 
@@ -830,6 +1093,53 @@
                 els.modalQuestContent.innerHTML = ''; 
                 els.modalQuest.classList.remove('hidden');
 
+                const breathingEx = document.getElementById('breathing-exercise');
+                const completBtn = document.getElementById('complete-breathing-btn');
+
+                // Check if this is a breathing exercise quest
+                if (q.title && q.title.includes('Hít') || q.title.includes('Thở') || q.data?.isBreathing) {
+                    // Show breathing exercise
+                    els.modalQuestContent.style.display = 'none';
+                    breathingEx.classList.remove('hidden');
+                    
+                    // Start countdown
+                    let timeLeft = 60;
+                    completBtn.disabled = true;
+                    completBtn.textContent = 'Đang tập luyện... Vui lòng chờ';
+                    completBtn.className = 'w-full py-3 bg-gray-300 text-gray-500 rounded-xl font-bold cursor-not-allowed';
+                    
+                    // Breathing instruction cycle (4s inhale, 4s hold, 4s exhale)
+                    const instructions = ['Hít vào (4 giây)', 'Giữ (4 giây)', 'Thở ra (4 giây)'];
+                    let instructionIdx = 0;
+                    const instructionEl = document.getElementById('breathing-instruction');
+                    
+                    const instructionInterval = setInterval(() => {
+                        instructionIdx = (instructionIdx + 1) % instructions.length;
+                        instructionEl.textContent = instructions[instructionIdx];
+                    }, 4000);
+                    
+                    const timerInterval = setInterval(() => {
+                        timeLeft--;
+                        document.getElementById('breathing-timer').textContent = timeLeft;
+                        
+                        if (timeLeft <= 0) {
+                            clearInterval(timerInterval);
+                            clearInterval(instructionInterval);
+                            
+                            // Enable complete button
+                            completBtn.disabled = false;
+                            completBtn.textContent = '✓ Hoàn thành bài tập';
+                            completBtn.className = 'w-full py-3 bg-[#588157] hover:bg-[#3A5A40] text-white rounded-xl font-bold transition cursor-pointer';
+                        }
+                    }, 1000);
+                    
+                    return;
+                }
+
+                // Original quest types (quiz, journaling)
+                breathingEx.classList.add('hidden');
+                els.modalQuestContent.style.display = 'block';
+
                 if (q.type === 'quiz') {
                     q.data.options.forEach(opt => {
                         const btn = document.createElement('button');
@@ -865,7 +1175,16 @@
                 }
             }
 
-            els.btns.closeQuest.onclick = () => els.modalQuest.classList.add('hidden');
+            els.btns.closeQuest.onclick = () => {
+                els.modalQuest.classList.add('hidden');
+                document.getElementById('breathing-exercise').classList.add('hidden');
+                els.modalQuestContent.style.display = 'block';
+            };
+
+            // Complete breathing exercise button
+            document.getElementById('complete-breathing-btn').onclick = () => {
+                finishQuest();
+            };
 
             // Tabs Logic
             els.tabs.forEach(btn => {
@@ -894,3 +1213,4 @@
     </script>
 </body>
 </html>
+
