@@ -15,6 +15,7 @@ from chatbot import analyze_student_state
 from socket_helperfuncs import generate_unique_code1, get_user_data, notify_users_of_new_match,get_user_data_by_id
 from socket_handlers import load_room_data_from_sqlite
 from matchmaking_repository import get_all_matched_roomcodes_for_therapist,delete_match_by_roomcode,get_current_match_roomcode,get_all_users,get_all_matchmaking_results,admin_create_match_result
+import time
 
 
 #TESTING FUNCTION
@@ -734,26 +735,51 @@ def chat_room_view(room_code):
             return redirect(url_for("chat_home"))
     # --- END LOGIC KHÔI PHỤC PHÒNG ---
 
-    # Lấy tên therapist từ DB dựa trên room_code
+    # Lấy thông tin match từ DB dựa trên room_code
     db = database.get_db()
     match_result = db.execute(
-        "SELECT therapist_user_id FROM matchmaking_results WHERE roomcode = ?",
+        "SELECT therapist_user_id, student_user_id FROM matchmaking_results WHERE roomcode = ?",
         (room_code,)
     ).fetchone()
     
-    therapist_name = "Therapist"
+    # Xác định vai trò của user hiện tại và lấy tên đối phương
+    user_role = session.get('role')
+    current_user_id = session.get('user_id')
+    partner_name = "Partner"
+    partner_role = "Chuyên gia tâm lý"
+    
     if match_result:
-        therapist_user = db.execute(
-            "SELECT username FROM users WHERE id = ?",
-            (match_result["therapist_user_id"],)
-        ).fetchone()
-        if therapist_user:
-            therapist_name = therapist_user["username"]
+        # Nếu user hiện tại là therapist, lấy tên student
+        if user_role == 'therapist':
+            student_user = db.execute(
+                "SELECT username FROM users WHERE id = ?",
+                (match_result["student_user_id"],)
+            ).fetchone()
+            if student_user:
+                partner_name = student_user["username"]
+            partner_role = "Sinh viên"
+        # Nếu user hiện tại là student, lấy tên therapist
+        else:
+            therapist_user = db.execute(
+                "SELECT username FROM users WHERE id = ?",
+                (match_result["therapist_user_id"],)
+            ).fetchone()
+            if therapist_user:
+                partner_name = therapist_user["username"]
+            partner_role = "Chuyên gia tâm lý"
 
     # Phòng đã sẵn sàng (trong bộ nhớ hoặc đã được khôi phục)
     session["room"] = room_code
+    
+    # Lưu thời gian bắt đầu session nếu chưa có
+    session_key = f"room_{room_code}_start_time"
+    if session_key not in session:
+        session[session_key] = time.time()
+    
+    room_start_time = session[session_key]
     session.modified = True 
-    return render_template("chat_room.html", code=room_code, messages=rooms[room_code]["messages"], name=name, therapist_name=therapist_name, user_role=session.get('role'))
+    
+    return render_template("chat_room.html", code=room_code, messages=rooms[room_code]["messages"], name=name, partner_name=partner_name, partner_role=partner_role, user_role=session.get('role'), room_start_time=room_start_time)
 
 
 
