@@ -1,521 +1,652 @@
 {% extends "base.html" %}
 
-{% block title %}Tài Nguyên Hỗ Trợ{% endblock %}
+{% block title %}Tài Nguyên Hỗ Trợ - SoulMate{% endblock %}
 
 {% block head %}
     <style>
-        /* --- Styles for this page only --- */
+        /* --- MODERN RESOURCES PAGE STYLING --- */
         body {
-            background-color: #ffffff;
-            font-family: 'Inter', 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #F5F7F6 0%, #FEFAE0 100%);
+            font-family: 'Inter', sans-serif;
         }
 
-        .content-wrapper {
-            max-width: 1200px;
+        .resources-wrapper {
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 40px 20px;
-            background: transparent;
-            border-radius: 0;
-            box-shadow: none;
+            padding: 20px 20px 30px;
         }
 
-        h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 2rem;
+        /* --- FILTER TABS --- */
+        .resource-filters {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            padding: 0;
+        }
+
+        .filter-btn {
+            padding: 10px 22px;
+            border: 2px solid #588157;
+            background: white;
+            color: #588157;
+            border-radius: 24px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            box-shadow: 0 2px 6px rgba(88, 129, 87, 0.1);
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: #588157;
+            color: white;
+            border-color: #588157;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(88, 129, 87, 0.2);
+        }
+
+
+
+        /* --- SECTION TITLES --- */
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.4rem;
             font-weight: 700;
-            margin-top: 0;
+            color: #344E41;
+            margin: 20px 0 25px 0;
+            font-family: 'Nunito', sans-serif;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #A3B18A;
         }
-        
-        /* --- FIX 1: Style for the "no chat" message --- */
-        .no-chat-message {
-            text-align: center;
-            padding: 40px;
-        }
-        .no-chat-message h1 {
-            color: #d9534f; /* A gentle error/warning color */
-        }
-        .no-chat-message p {
-            font-size: 1.1rem;
-            color: #555;
-        }
-        /* --- End of Fix 1 Styles --- */
 
-        h2 {
-            color: #555;
-            font-size: 1.5rem;
-            margin-top: 30px;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 5px;
+        .section-icon {
+            font-size: 1.8rem;
         }
-        
-        /* --- Carousel Styles --- */
+
+        /* --- CAROUSEL STYLES (Videos & Books) --- */
         .carousel {
             position: relative;
             width: 100%;
-            padding: 10px 0;
+            padding: 15px 0;
         }
 
         .carousel-container {
             width: 100%;
             overflow: hidden;
+            border-radius: 10px;
         }
 
         .carousel-track {
             display: flex;
-            transition: transform 0.3s ease-in-out;
+            gap: 18px;
+            transition: transform 0.5s ease;
         }
 
         .card {
-            flex-shrink: 0;
-            width: 270px; 
-            margin: 0 10px;
-            background: #fff;
-            border-radius: 8px;
+            flex: 0 0 calc(25% - 14px);
+            min-width: 200px;
+            background: white;
+            border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
             cursor: pointer;
-            transition: transform 0.2s;
-            user-select: none;
+            display: flex;
+            flex-direction: column;
         }
 
         .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-6px);
+            box-shadow: 0 6px 16px rgba(88, 129, 87, 0.15);
         }
 
-        .card-thumbnail {
+        .card-image {
             width: 100%;
-            height: 150px;
+            height: 160px;
             object-fit: cover;
-            background-color: #eee;
-            border-bottom: 1px solid #f0f0f0;
+            background: linear-gradient(135deg, #A3B18A 0%, #588157 100%);
         }
 
-        /* --- FIX FOR PROBLEM 2: LONG TITLES --- */
+        .card-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(88, 129, 87, 0.85);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 16px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            z-index: 10;
+        }
+
+        .card-content {
+            padding: 14px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
         .card-title {
-            padding: 12px;
             font-size: 0.9rem;
-            font-weight: 600;
-            color: #333;
-
-            /* New multi-line truncation logic */
-            height: 3.8em; /* Gives space for 2 lines */
-            line-height: 1.4;
+            font-weight: 700;
+            color: #2F3E46;
+            margin: 0 0 8px 0;
+            min-height: 36px;
             overflow: hidden;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2; /* Limit to 2 lines */
-            -webkit-box-orient: vertical;
+            line-height: 1.4;
         }
 
+        .card-meta {
+            font-size: 0.75rem;
+            color: #999;
+            margin-top: auto;
+        }
+
+        /* --- CAROUSEL ARROW BUTTONS --- */
         .carousel-arrow {
             position: absolute;
             top: 50%;
-            margin-top: -35px; /* Aligns with middle of thumbnail */
             transform: translateY(-50%);
-            background-color: rgba(255, 255, 255, 0.9);
-            border: 1px solid #ddd;
+            background: #588157;
+            color: white;
+            border: none;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
-            width: 44px;
-            height: 44px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #333;
             cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            z-index: 10;
+            font-size: 1.1rem;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 20;
         }
+
         .carousel-arrow:hover {
-            background-color: #fff;
+            background: #344E41;
+            transform: translateY(-50%) scale(1.1);
         }
 
         .arrow-prev {
-            left: -22px;
+            left: -50px;
         }
 
         .arrow-next {
-            right: -22px;
+            right: -50px;
         }
-        
-        /* --- Video Modal Styles (Pop-up) --- */
+
+        /* --- ARTICLES SECTION --- */
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .article-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .article-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 6px 16px rgba(88, 129, 87, 0.15);
+        }
+
+        .article-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #344E41;
+            margin: 0 0 10px 0;
+        }
+
+        .article-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: #999;
+            margin-bottom: 10px;
+        }
+
+        .article-content {
+            font-size: 0.85rem;
+            color: #666;
+            line-height: 1.5;
+            flex-grow: 1;
+            margin-bottom: 10px;
+        }
+
+        .article-author {
+            font-size: 0.8rem;
+            color: #999;
+            font-style: italic;
+        }
+
+        /* --- EXERCISES SECTION --- */
+        .exercises-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 18px;
+            margin: 25px 0;
+        }
+
+        .exercise-card {
+            background: white;
+            border-radius: 10px;
+            padding: 18px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .exercise-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 6px 16px rgba(88, 129, 87, 0.15);
+        }
+
+        .exercise-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #344E41;
+            margin: 0 0 8px 0;
+        }
+
+        .exercise-desc {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .exercise-steps {
+            background: #f9f9f9;
+            border-left: 2px solid #A3B18A;
+            padding: 10px 14px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .exercise-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 0.75rem;
+            color: #999;
+            margin-top: 10px;
+        }
+
+        .difficulty-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .difficulty-beginner {
+            background: #D4EDDA;
+            color: #155724;
+        }
+
+        .difficulty-intermediate {
+            background: #FFF3CD;
+            color: #856404;
+        }
+
+
+        /* --- AFFIRMATIONS SECTION --- */
+        .affirmations-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin: 25px 0;
+        }
+
+        .affirmation-set {
+            background: linear-gradient(135deg, #F8D7DA 0%, #FCE4EC 100%);
+            border-radius: 10px;
+            padding: 18px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .affirmation-category {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #C2185B;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .affirmation-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .affirmation-item {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(194, 24, 91, 0.15);
+            color: #880E4F;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .affirmation-item:last-child {
+            border-bottom: none;
+        }
+
+        .affirmation-item::before {
+            content: "✨ ";
+            margin-right: 6px;
+            color: #C2185B;
+        }
+
+        /* --- VIDEO MODAL --- */
         .modal {
-            display: none; /* Hidden by default */
+            display: none;
             position: fixed;
-            z-index: 1000;
-            left: 0;
             top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.7); /* Dim background */
-            justify-content: center;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
             align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
         }
 
         .modal-content {
             position: relative;
-            background-color: #fefefe;
-            margin: auto;
-            border-radius: 8px;
             width: 90%;
-            max-width: 800px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            transform: scale(0.9);
-            opacity: 0;
-            transition: transform 0.2s ease, opacity 0.2s ease;
-        }
-        
-        .modal.is-open {
-            display: flex;
-        }
-        .modal.is-open .modal-content {
-            transform: scale(1);
-            opacity: 1;
-        }
-        
-        .modal-header {
-            padding: 15px 20px;
-            background-color: #fff;
-            color: #333;
-            border-bottom: 1px solid #eee;
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
-        }
-        
-        .modal-title {
-            margin: 0;
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-
-        .close-button {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            line-height: 20px;
-        }
-
-        .close-button:hover,
-        .close-button:focus {
-            color: #000;
-        }
-        
-        .modal-body {
-            padding: 0;
-            overflow: hidden;
-            border-bottom-left-radius: 8px;
-            border-bottom-right-radius: 8px;
-        }
-
-        .video-container {
-            position: relative;
-            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
-            height: 0;
+            max-width: 900px;
+            background: white;
+            border-radius: 12px;
             overflow: hidden;
         }
 
-        .video-container iframe {
+        .modal-close {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
             border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            z-index: 1010;
+            transition: all 0.3s ease;
         }
-        
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
+
+        .modal-close:hover {
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .modal-video {
+            width: 100%;
+            aspect-ratio: 16/9;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 1200px) {
             .card {
-                width: 220px; /* Slightly smaller on mobile */
-            }
-            .carousel-arrow {
-                left: 5px;
-                top: 40%;
-            }
-            .arrow-next {
-                right: 5px;
-            }
-            .modal-content {
-                width: 95%;
+                flex: 0 0 calc(33.333% - 12px);
             }
         }
 
+        @media (max-width: 768px) {
+            .resources-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .resources-header p {
+                font-size: 0.9rem;
+            }
+
+            .section-title {
+                font-size: 1.2rem;
+                gap: 8px;
+            }
+
+            .section-icon {
+                font-size: 1.5rem;
+            }
+
+            .card {
+                flex: 0 0 calc(50% - 9px);
+            }
+
+            .carousel-arrow {
+                width: 30px;
+                height: 30px;
+                font-size: 0.9rem;
+            }
+
+            .arrow-prev {
+                left: -42px;
+            }
+
+            .arrow-next {
+                right: -42px;
+            }
+
+            .articles-grid,
+            .exercises-grid,
+
+        }
     </style>
 {% endblock %}
 
 {% block content %}
-<div class="content-wrapper">
-    <!-- --- FIX FOR PROBLEM 1: "NO CHAT" MESSAGE --- -->
-    <!-- This Jinja block now correctly handles all 3 conditions -->
-    {% if error_message %}
-        <!-- Condition 1: User hasn't chatted -->
-        <div class="no-chat-message">
-            <h1>{{ error_message }}</h1>
-            <p>Hãy trò chuyện với chatbot để chúng tôi có thể hiểu và đề xuất tài nguyên phù hợp nhất với bạn.</p>
-        </div>
-    
-    {% else %}
-        <!-- Conditions 2 & 3: User has chatted -->
-        <h1>{{ headline }}</h1>
-        
-        <!-- --- Video Carousel --- -->
-        <!-- We also check if the videos list is not empty -->
-        {% if videos %}
-        <h2>Videos Hỗ Trợ</h2>
-        <div class="carousel" id="video-carousel">
-            <div class="carousel-container">
-                <div class="carousel-track" id="video-track">
-                    
-                    <!-- Jinja loop builds the cards on the server -->
-                    {% for video in videos %}
-                    <div class="card video-card" data-video-id="{{ video.youtube_video_id }}" data-title="{{ video.title }}">
-                        <!-- Thumbnail link is auto-generated -->
-                        <img src="https://img.youtube.com/vi/{{ video.youtube_video_id }}/hqdefault.jpg" alt="{{ video.title }}" class="card-thumbnail">
-                        <div class="card-title">{{ video.title }}</div>
-                            </div>
-                            {% endfor %}
-                    
-                    </div>
-                </div>
-                <button class="carousel-arrow arrow-prev" id="video-prev">&lt;</button>
-                <button class="carousel-arrow arrow-next" id="video-next">&gt;</button>
-            </div>
-        {% endif %}
-
-        <!-- --- E-book Carousel --- -->
-        <!-- We also check if the ebooks list is not empty -->
-        {% if ebooks %}
-        <h2>E-books & Tài Liệu</h2>
-        <div class="carousel" id="ebook-carousel">
-            <div class="carousel-container">
-                <div class="carousel-track" id="ebook-track">
-
-                    <!-- Jinja loop builds the cards on the server -->
-                    {% for ebook in ebooks %}
-                    <div class="card ebook-card" data-pdf-link="{{ ebook.pdf_link }}">
-                        <img src="{{ ebook.thumbnail_image_link }}" alt="{{ ebook.title }}" class="card-thumbnail">
-                        <div class="card-title">{{ ebook.title }}</div>
-                    </div>
-                    {% endfor %}
-                    
-                </div>
-            </div>
-            <button class="carousel-arrow arrow-prev" id="ebook-prev">&lt;</button>
-            <button class="carousel-arrow arrow-next" id="ebook-next">&gt;</button>
-        </div>
-        {% endif %}
-        
-        <!-- Case where user chatted, but no resources were found -->
-        {% if not videos and not ebooks %}
-            <div class="no-chat-message">
-                <h3>Không tìm thấy tài nguyên phù hợp</h3>
-                <p>Chúng tôi không tìm thấy tài nguyên nào khớp với các chủ đề trò chuyện của bạn. Hãy thử xem các <a href="{{ url_for('resources') }}?all=true">tài nguyên chung</a> của chúng tôi.</p>
-            </div>
-        {% endif %}
-
-    {% endif %}
-    <!-- --- END OF FIX 1 --- -->
-
-</div>
-
-<!-- --- Video Modal (Pop-up) --- -->
-<div id="videoModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-                <span class="modal-title" id="modalVideoTitle">Video Title</span>
-                <span class="close-button" id="modalClose">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="video-container">
-                    <iframe id="videoIframe" src="" frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                </div>
-            </div>
-        </div>
+<div class="resources-wrapper">
+    <!-- FILTER BUTTONS -->
+    <div class="resource-filters">
+        <button class="filter-btn active" onclick="filterResources('all')">Tất cả</button>
+        <button class="filter-btn" onclick="filterResources('Academic')">Học Tập</button>
+        <button class="filter-btn" onclick="filterResources('Relationship')">Mối Quan Hệ</button>
+        <button class="filter-btn" onclick="filterResources('Loneliness')">Cô Đơn</button>
+        <button class="filter-btn" onclick="filterResources('General')">Tổng Quát</button>
     </div>
 
-    <script>
-        console.log('🔍 Resources page script loaded!');
+    <!-- VIDEOS SECTION -->
+    <div class="carousel" id="videosCarousel">
+        <button class="carousel-arrow arrow-prev" onclick="scrollCarousel('videosCarousel', -1)">❮</button>
+        <div class="carousel-container">
+            <div class="carousel-track">
+                {% for video in videos %}
+                <div class="card" data-category="{{ video.tags }}" onclick="playVideo('{{ video.youtube_video_id }}', '{{ video.title }}')">
+                    <img src="https://img.youtube.com/vi/{{ video.youtube_video_id }}/maxresdefault.jpg" alt="{{ video.title }}" class="card-image">
+                    <div class="card-badge">{{ video.tags }}</div>
+                    <div class="card-content">
+                        <h3 class="card-title">{{ video.title }}</h3>
+                        <p class="card-meta">⏱️ {{ video.duration }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <button class="carousel-arrow arrow-next" onclick="scrollCarousel('videosCarousel', 1)">❯</button>
+    </div>
+
+    <!-- EBOOKS SECTION -->
+    <div class="section-title">
+        <span class="section-icon">📚</span>
+        <span>E-books & Tài Liệu</span>
+    </div>
+    <div class="carousel" id="ebooksCarousel">
+        <button class="carousel-arrow arrow-prev" onclick="scrollCarousel('ebooksCarousel', -1)">❮</button>
+        <div class="carousel-container">
+            <div class="carousel-track">
+                {% for ebook in ebooks %}
+                <div class="card" data-category="{{ ebook.tags }}" onclick="openPDF('{{ ebook.pdf_link }}')">
+                    <img src="{{ ebook.thumbnail_image_link }}" alt="{{ ebook.title }}" class="card-image">
+                    <div class="card-badge">{{ ebook.tags }}</div>
+                    <div class="card-content">
+                        <h3 class="card-title">{{ ebook.title }}</h3>
+                        <p class="card-meta">✍️ {{ ebook.author }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <button class="carousel-arrow arrow-next" onclick="scrollCarousel('ebooksCarousel', 1)">❯</button>
+    </div>
+
+    <!-- ARTICLES SECTION -->
+    <div class="section-title">
+        <span class="section-icon">📖</span>
+        <span>Bài Viết & Hướng Dẫn</span>
+    </div>
+    <div class="articles-grid">
+        {% for article in articles %}
+        <div class="article-card" data-category="{{ article.category }}">
+            <h3 class="article-title">{{ article.title }}</h3>
+            <div class="article-meta">
+                <span>{{ article.category }}</span>
+                <span>{{ article.readTime }}</span>
+            </div>
+            <p class="article-content">{{ article.content }}</p>
+            <p class="article-author">— {{ article.author }}</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- EXERCISES SECTION -->
+    <div class="section-title">
+        <span class="section-icon">💪</span>
+        <span>Bài Tập & Kỹ Năng</span>
+    </div>
+    <div class="exercises-grid">
+        {% for exercise in exercises %}
+        <div class="exercise-card" data-category="{{ exercise.category }}">
+            <h3 class="exercise-title">{{ exercise.title }}</h3>
+            <p class="exercise-desc">{{ exercise.description }}</p>
+            <div class="exercise-steps">
+                <strong>Các bước:</strong>
+                <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+                    {% for step in exercise.steps %}
+                    <li>{{ step }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="exercise-meta">
+                <span>⏱️ {{ exercise.duration }}</span>
+                <span class="difficulty-badge difficulty-{{ exercise.difficulty|lower }}">{{ exercise.difficulty }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+
+    <!-- AFFIRMATIONS SECTION -->
+    <div class="section-title">
+        <span class="section-icon">💝</span>
+        <span>Khẳng Định Tích Cực</span>
+    </div>
+    <div class="affirmations-container">
+        {% for affirmation in affirmations %}
+        <div class="affirmation-set">
+            <h3 class="affirmation-category">{{ affirmation.category }}</h3>
+            <ul class="affirmation-list">
+                {% for statement in affirmation.statements %}
+                <li class="affirmation-item">{{ statement }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- VIDEO MODAL -->
+<div class="modal" id="videoModal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeVideoModal()">✕</button>
+        <iframe class="modal-video" id="videoPlayer" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+</div>
+
+<script>
+    // Filter Resources by Category
+    function filterResources(category) {
+        const cards = document.querySelectorAll('[data-category]');
+        const buttons = document.querySelectorAll('.filter-btn');
         
-        // Wait for the full page to load before running scripts
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ DOMContentLoaded fired!');
+        // Update active button
+        buttons.forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
         
-        /**
-         * ----------------------------------------------------------------
-         * CAROUSEL LOGIC
-         * ----------------------------------------------------------------
-         */
-        function setupCarousel(carouselId) {
-            const carousel = document.getElementById(carouselId);
-            // If the carousel element isn't on the page, stop.
-            if (!carousel) { return; }
-            
-            const track = carousel.querySelector('.carousel-track');
-            const prevBtn = carousel.querySelector('.arrow-prev');
-            const nextBtn = carousel.querySelector('.arrow-next');
-            const items = carousel.querySelectorAll('.card');
-
-            // If any core parts are missing (like no items), hide controls and stop.
-            if (!track || !prevBtn || !nextBtn || items.length === 0) {
-                if (prevBtn) prevBtn.style.display = 'none';
-                if (nextBtn) nextBtn.style.display = 'none';
-                return;
+        // Filter cards
+        cards.forEach(card => {
+            if (category === 'all' || card.dataset.category === category) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
             }
-
-            let currentIndex = 0;
-            let itemWidth = 0; // Will be calculated
-            let itemsToShow = 0; // Will be calculated
-            let maxIndex = 0; // Will be calculated
-            
-            function calculateMetrics() {
-                if (items.length === 0) return;
-                // Recalculate item width and items to show
-                itemWidth = items[0].offsetWidth + (parseFloat(getComputedStyle(items[0]).marginRight) * 2);
-                if (itemWidth <= 0) itemWidth = 290; // Fallback width
-
-                itemsToShow = Math.floor(carousel.querySelector('.carousel-container').offsetWidth / itemWidth);
-                if (itemsToShow < 1) { itemsToShow = 1; }
-                
-                maxIndex = items.length - itemsToShow;
-                if (maxIndex < 0) { maxIndex = 0; }
-                
-                if (currentIndex > maxIndex) { currentIndex = maxIndex; }
-            }
-
-            function updateTrack() {
-                track.style.transform = `translateX(-${currentIndex * itemWidth}px)`;
-                
-                // Hide arrows if carousel is not scrollable
-                if (items.length <= itemsToShow) {
-                    prevBtn.style.display = 'none';
-                    nextBtn.style.display = 'none';
-                } else {
-                    // Logic for *non-looping* arrows (better UX)
-                    // prevBtn.style.display = (currentIndex === 0) ? 'none' : 'flex';
-                    // nextBtn.style.display = (currentIndex >= maxIndex) ? 'none' : 'flex';
-
-                    // Logic for *looping* arrows
-                    prevBtn.style.display = 'flex';
-                    nextBtn.style.display = 'flex';
-                }
-            }
-
-            nextBtn.addEventListener('click', function() {
-                calculateMetrics(); // Recalculate on click just in case
-                if (currentIndex < maxIndex) {
-                    currentIndex++;
-                } else {
-                    currentIndex = 0; // Loop back to start
-                }
-                updateTrack();
-            });
-
-            prevBtn.addEventListener('click', function() {
-                calculateMetrics(); // Recalculate on click
-                if (currentIndex > 0) {
-                    currentIndex--;
-                } else {
-                    currentIndex = maxIndex; // Loop back to end
-                }
-                updateTrack();
-            });
-
-            // Recalculate all metrics on window resize
-            window.addEventListener('resize', function() {
-                calculateMetrics();
-                updateTrack();
-            });
-            
-            // Initial calculation and drawing
-            // Use a small delay to ensure CSS has loaded
-            setTimeout(() => {
-                calculateMetrics();
-                updateTrack();
-            }, 100);
-        }
-
-        // Setup both carousels
-        setupCarousel('video-carousel');
-        setupCarousel('ebook-carousel');
-
-        /**
-         * ----------------------------------------------------------------
-         * VIDEO MODAL LOGIC
-         * ----------------------------------------------------------------
-         */
-        const modal = document.getElementById('videoModal');
-        const modalClose = document.getElementById('modalClose');
-        const videoIframe = document.getElementById('videoIframe');
-        const modalVideoTitle = document.getElementById('modalVideoTitle');
-        const videoCards = document.querySelectorAll('.video-card');
-
-        console.log('Found video cards:', videoCards.length);
-
-        if(modal && modalClose && videoIframe && modalVideoTitle) {
-            for (const card of videoCards) {
-                console.log('Attaching click handler to video card:', card.dataset.videoId);
-                card.addEventListener('click', function() {
-                    const videoId = card.dataset.videoId;
-                    const title = card.dataset.title;
-                    
-                    console.log('Video card clicked! Video ID:', videoId, 'Title:', title);
-                    
-                    // This is the fixed URL without autoplay
-                    const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0`;
-                    
-                    modalVideoTitle.textContent = title;
-                    videoIframe.src = embedUrl;
-                    modal.classList.add('is-open');
-                });
-            }
-            
-            function closeModal() {
-                modal.classList.remove('is-open');
-                videoIframe.src = ''; // Stop video playback
-            }
-
-            modalClose.addEventListener('click', closeModal);
-
-            // Also close modal by clicking on the dim background
-            modal.addEventListener('click', function(event) {
-                if (event.target === modal) {
-                    closeModal();
-                }
-            });
-        } else {
-            console.error('Modal elements not found!', {modal, modalClose, videoIframe, modalVideoTitle});
-        }
-
-        /**
-         * ----------------------------------------------------------------
-         * E-BOOK CLICK LOGIC
-         * ----------------------------------------------------------------
-         */
-        const ebookCards = document.querySelectorAll('.ebook-card');
-        console.log('Found ebook cards:', ebookCards.length);
-        
-        for (const card of ebookCards) {
-            console.log('Attaching click handler to ebook card:', card.dataset.pdfLink);
-            card.addEventListener('click', function() {
-                const pdfLink = card.dataset.pdfLink;
-                console.log('Ebook card clicked! PDF link:', pdfLink);
-                // Ensure the link is not null or empty before trying to open
-                if (pdfLink && pdfLink.trim()) {
-                    window.open(pdfLink, '_blank'); 
-                } else {
-                    console.error('PDF link is empty or null!');
-                }
-            });
-        }
-
         });
-    </script>
+    }
 
+    // Carousel Scroll Function
+    function scrollCarousel(carouselId, direction) {
+        const carousel = document.getElementById(carouselId);
+        const track = carousel.querySelector('.carousel-track');
+        const items = carousel.querySelectorAll('.card');
+        if (items.length === 0) return;
+        
+        const itemWidth = items[0].offsetWidth + 20;
+        const container = carousel.querySelector('.carousel-container');
+        const currentScroll = container.scrollLeft;
+        const scrollAmount = itemWidth * direction;
+        
+        container.scrollTo({
+            left: currentScroll + scrollAmount,
+            behavior: 'smooth'
+        });
+    }
+
+    // Play Video in Modal
+    function playVideo(videoId, title) {
+        const modal = document.getElementById('videoModal');
+        const player = document.getElementById('videoPlayer');
+        player.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        modal.classList.add('active');
+    }
+
+    // Close Video Modal
+    function closeVideoModal() {
+        const modal = document.getElementById('videoModal');
+        const player = document.getElementById('videoPlayer');
+        player.src = '';
+        modal.classList.remove('active');
+    }
+
+    // Open PDF
+    function openPDF(pdfLink) {
+        window.open(pdfLink, '_blank');
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('videoModal')?.addEventListener('click', function(event) {
+        if (event.target === this) {
+            closeVideoModal();
+        }
+    });
+</script>
 {% endblock %}
